@@ -18,7 +18,7 @@ def load_all():
 	'''
 	plugin_dir = config['plugins']['directory']
 	for plugin in config['plugins']['active']:
-		sys.path.insert(0, os.path.join(plugin_dir, plugin))
+		sys.path.insert(0, os.path.join(plugin_dir, f'canvas-pl-{plugin}'))
 		log.debug(f'Importing plugin {plugin}')
 		try:
 			__import__(plugin)
