@@ -1,0 +1,9 @@
+#	Core
+celery==3.1.25
+werkzeug
+psycopg2
+#	Rendering
+jinja2
+htmlmin
+markdown
+lesscpy

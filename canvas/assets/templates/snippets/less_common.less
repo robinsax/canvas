@@ -1,0 +1,7 @@
+{% for name, palette in config.styling.palettes.items() %}
+	{% for color_name, color in palette.items() %}
+		@{{ name }}_{{ color_name }}: {{ color }};
+	{% endfor %}
+{% endfor %}
+
+@header_height: {{ config.styling.header_height }}px;

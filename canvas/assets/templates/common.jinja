@@ -1,0 +1,114 @@
+{#
+	Common HTML macros, available in any `page` or `component` 
+	template as `c`.
+#}
+
+{#
+	Create an icon that triggers an action TODO: Doc and attrs as dict
+#}
+{% macro icon(icon=None, action=None, href=None, cls='', tooltip=None, attrs='') %}
+	{% if action is not none and href is not none %}
+		{{ parameter_error('Cannot create action icon with both action and href') }}
+	{% endif %}
+	{% set tag = 'a' if href is not none else 'div' %}
+	<{{ tag }} class="fa fa-{{ icon }} action-icon {{ cls }}"{% if tooltip is not none %} cv-tooltip="{{ tooltip }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %}{% if action is not none %} cv-action="{{ action }}"{% endif %} {{ attrs }}></{{ tag }}>
+{% endmacro %}
+
+{#
+	Create a button or link. One of `text` or `icon` is required. 
+	`action` and `submit` are mutually exclusive with `href`
+	:text The button text
+	:icon The name of the FontAwesome icon to use (without the `fa-`
+		prefix)
+	:id The buttons `id` attribute value
+	:cls Additional button classes
+	:tooltip The tooltip text for the button
+	:fancy_tooltip Whether to use a quicksite tooltip rather than the 
+		`title` attribute
+	:action The action this button represents. Used to identify form
+		submission type among other things
+	:href The href target of this button. Setting causes an `a` tag to be used
+	:submit Whether this button should cause its containing form to 
+		be submitted
+	:attrs Additional button attributes
+	:protected Whether this button should be protected by a 'Confirm'/'Cancel' 
+		layer. Doesn't work on links
+#}
+{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, action=None, href=None, submit=False, attrs='', protected=False) %}
+	{% set text_span = '' %}
+	{% set icon_span = '' %}
+	{% set submit_action = '' %}
+	{% set tag = 'a' if href is not none else 'div' %}
+	{% if text is none and icon is none %}
+		{{ parameter_error('Cannot create button without text or icon') }}
+	{% endif %}
+	{% if action is not none and href is not none %}
+		{{ parameter_error('Cannot create button with both action and href') }}
+	{% endif %}
+	{% if submit %}
+		{% set submit_action = '' %}
+		{% if action is not none %}
+			{% set submit_action = ' cv-send-action="%s"'%action %}
+		{% endif %}
+		{% set action = '__submit__' %}
+	{% endif %}
+	{% if text is not none %}
+		{% set text_span = '<span class="text">%s</span>'%text %}
+		{% set cls = 'texted %s'%cls %}
+	{% endif %}
+	{% if icon is not none %}
+		{% set icon_span = '<span class="fa fa-%s icon"></span>'%icon %}
+		{% set cls = 'iconed %s'%cls %}
+	{% endif %}
+	{% if protected %}
+		{% set cls = 'protected %s'%cls %}
+	{% endif %}
+	{% if icon_right %}
+		{% set cls = 'icon-right %s'%cls %}
+	{% endif %}
+	{% if tooltip is not none %}
+		{% set tooltip_str = ' %s="%s"'%('cv-tooltip' if fancy_tooltip else 'title', tooltip) %}
+	{% else %}
+		{% set tooltip_str = '' %}
+	{% endif %}
+	{% if protected %}
+		<span class="condom">
+	{% endif %}
+	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{% if action is not none %} cv-action="{{ action }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %}{{ submit_action }} {{ attrs }}>
+		{% if icon_right %}
+			{{ text_span }}{{ icon_span }}
+		{% else %}
+			{{ icon_span }}{{ text_span }}
+		{% endif %}
+	</{{ tag }}>
+	{% if protected %}
+			{{ button(text='Cancel', icon='ban', action='__cancel__', cls='cancel hidden') }}
+			{{ button(text='Confirm', icon='check', action='__confirm__', cls='confirm hidden') }}
+		</span>
+	{% endif %}
+{% endmacro %}
+
+{#
+	Create a basic loading placeholder for AJAX-populated components
+	:size The size of the placeholder, in pixels
+	:cls Additional classes
+#}
+{% macro loading_placeholder(size=40, cls='') %}
+	{% set c = '%spx'%size %}
+	<div class="loading-pl-wrap hover-highlight {{ cls }}" cv-tooltip="Getting it ready..." style="width: {{ c }}; height: {{ c }}; line-height: {{ c }};">
+		<div class="fa fa-gear fa-spin" style="font-size: {{ c }};"></div>
+	</div>
+{% endmacro %}
+
+{# TODO: less cmon #}
+{% macro breakpoint_1() %}
+	@media screen and (max-width: {{ config.styling.breakpoints[0] }}px)
+{% endmacro %}
+
+{% macro breakpoint_2() %}
+	@media screen and (max-width: {{ config.styling.breakpoints[1] }}px)
+{% endmacro %}
+
+{% macro breakpoint_3() %}
+	@media screen and (max-width: {{ config.styling.breakpoints[2] }}px)
+{% endmacro %}

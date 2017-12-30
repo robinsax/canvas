@@ -1,0 +1,9 @@
+{% macro write_palettes() %}
+	{% for palette_name, palette in config.styling.palettes.items() %}
+		{% for color_name, color in palette.items() %}
+			@{{ palette_name }}_{{ color_name }}: {{ color }};
+		{% endfor %}
+	{% endfor %}
+{% endmacro %}
+
+{{ write_palettes() }}

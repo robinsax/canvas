@@ -1,0 +1,14 @@
+{% page %}
+
+{% block content %}
+	<div class="component col-8">
+		<h2>{{ '%d %s'%(error.code, error.description) }}</h2>
+		{% if config.debug %}
+			<h4 class="align-left">Traceback</h4>
+			<pre><code>{{ debug_info.traceback }}</code></pre>
+			<h4 class="align-left">Context</h4>
+			<pre><code>{{ debug_info.context }}</code></pre>
+		{% endif %}
+		</div>
+	</div>
+{% endblock %}

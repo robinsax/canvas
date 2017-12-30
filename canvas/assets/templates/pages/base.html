@@ -1,0 +1,77 @@
+{% import 'common.jinja' as c with context %}
+{% import 'forms.jinja' as f with context %}
+
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		{% block head %}
+			<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
+			<meta charset="utf-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+
+			<title>{{ config.name }} - {{ page_name }}</title>
+			<meta name="description" content="{{ __page__.description}}">
+			<link rel="icon" type="image/png" href="{{ asset_url('media/site_icon.png') }}"/>
+			
+			{# TODO: Open-graphing #}
+			
+			{% set dependencies = __page__.collect_dependencies(__ctx__) %}
+			{% for file in dependencies[1] %}
+				{% if file.endswith('.css') %}
+					<link rel="stylesheet" type="text/css" href="{{ asset_url('lib/%s'%file) }}">
+				{% elif file.endswith('.js') %}
+					<script type="text/javascript" src="{{ asset_url('lib/%s'%file) }}"></script>
+				{% endif %}
+			{% endfor %}
+			
+			{% for file in dependencies[0] %}
+				{% if file.endswith('.css') %}
+					<link rel="stylesheet" type="text/css" href="{{ asset_url(file) }}">
+				{% elif file.endswith('.js') %}
+					<script type="text/javascript" src="{{ asset_url(file) }}"></script>
+				{% endif %}
+			{% endfor %}
+		{% endblock %}
+	</head>
+	<body>
+		<div class="meta-page hidden">
+			{% block meta_page %}
+				<textarea class="clipboard-staging"></textarea>
+				<div class="templates">
+					{% block templates %}{% endblock %}
+				</div>
+			{% endblock %}
+			{% set flash_message = get_flash_message() %}
+			{% if flash_message is not none %}
+				<div class='init-message'>{{ flash_message }}</div>
+			{% endif %}
+		</div>
+		<div class="full-page">
+			{% block header %}
+				<header class="main-header">
+					{% block pre_header_left %}{% endblock %}
+					<div class="component">
+						{% block header_left %}{% endblock %}
+					</div>
+					<div class="component right">
+						{{ c.button(icon='bars', cls='mobile-menu-access', tooltip='Menu', fancy_tooltip=False) }}
+					</div>
+					<div class="component right">
+						{% block header_right %}{% endblock %}
+					</div>
+					{% block post_header_right %}{% endblock %}
+					<div class="button-highlight"></div>
+				</header>
+			{% endblock %}
+			<div class="page-content-wrap">
+				<div class="mobile-menu-modal hidden">
+					<div class="mobile-menu"></div>
+				</div>
+				<div class="page-content">
+					{% block content %}{% endblock %}
+				</div>
+				<div class="flash-message hidden"></div>
+			</div>
+		</div>
+	</body>
+</html>

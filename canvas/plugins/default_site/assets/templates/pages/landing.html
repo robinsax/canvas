@@ -1,0 +1,17 @@
+{% page %}
+
+{% block content %}
+	<div class="row">
+		<div class="component col-4">
+			{{ markdown_file('welcome.md') }}
+		</div>
+		<div class="component col-8">
+			{{ c.button(icon='lock', protected='true', action='flash_message', attrs='cv-message="Hi!" cv-tooltip="bruh"')}}
+			{{ c.button(text='copy', action='clipboard', attrs='cv-target="h1"')}}
+			{{ c.button(text='toggle', action='toggle_hide', attrs='cv-target="h1"') }}
+		</div>
+		<div class="component col-8">
+			{{ c.loading_placeholder() }}
+		</div>
+	</div>
+{% endblock %}

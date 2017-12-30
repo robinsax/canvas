@@ -1,0 +1,77 @@
+{
+	"name": "canvas",
+	"description": "Fast, customizable websites and web applications",
+	"cookie_secret_key": "ivSILnPkJ4QvPtbB0X4d",
+	"debug": true,
+	"global_assets": {
+		"internal": [
+			"style.css",
+			"canvas.js"
+		],
+		"library": [
+			"line-awesome.min.css",
+			"toolkit.js"
+		]
+	},
+	"plugins": {
+		"directory": "./canvas/plugins",
+		"active": [
+			"default_site"
+		]
+	},
+	"logging": {
+		"level": "debug",
+		"create_custom": false,
+		"custom_path": null
+	},
+	"database": {
+		"database": "test",
+		"user": "testuser",
+		"password": "backendpls",
+		"host": "localhost"
+	},
+	"deferral": {	
+	},
+	"styling": {
+		"header_height": 50,
+		"breakpoints": [850, 675, 450],
+		"font_set": {
+			"sans_serif": "site-sans.otf",
+			"serif": "site-serif.otf"
+		},
+		"palettes": {
+			"base": {
+				"background1": "white",
+				"background2": "white",
+				"theme1": "black",
+				"theme2": "black",
+				"theme3": "black",
+				"highlight": "red"
+			},
+			"text": {
+				"title": "red",
+				"text": "black",
+				"subtext": "grey",
+				"link": "blue",
+				"link_clicked": "darkblue"
+			},
+			"misc": {
+				"background1": "grey",
+				"background2": "darkgrey",
+				"text": "black",
+				"misc1": "orange",
+				"misc2": "purple",
+				"misc3": "magenta",
+				"misc4": "lightblue",
+				"misc5": "yellow"
+			},
+			"error_level": {
+				"success": "darkgreen",
+				"neutral": "darkgrey",
+				"warning": "orange",
+				"error": "red",
+				"label": "white"
+			}
+		}
+	}
+}

@@ -1,0 +1,18 @@
+{% overlays %}
+
+{% block extras %}
+	{{ super() }}
+
+	.canvas-brand {
+		padding: 0px 15px;
+		text-decoration: none;
+		font-size: 22pt;
+
+		.c {
+			color: @text_title;
+		}
+		.v {
+			color: @text_title;
+		}
+	}
+{% endblock extras %}

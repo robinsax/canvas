@@ -1,0 +1,9 @@
+{% import 'common.jinja' as c with context %}
+{% import 'forms.jinja' as f with context %}
+
+<span cv-component="{{ __component__.name }}">
+	<div class="cv-templates">
+		{% block templates %}{% endblock %}
+	</div>
+	{% block content %}{% endblock %}
+</span>
