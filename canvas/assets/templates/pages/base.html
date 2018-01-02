@@ -33,14 +33,13 @@
 			{% endfor %}
 		{% endblock %}
 	</head>
-	<body>
+	<body cv-route="{{ __page__.route }}">
 		<div class="meta-page hidden">
-			{% block meta_page %}
-				<textarea class="clipboard-staging"></textarea>
-				<div class="templates">
-					{% block templates %}{% endblock %}
-				</div>
-			{% endblock %}
+			<textarea class="clipboard-staging"></textarea>
+			<div class="cv-templates">
+				{% block templates %}{% endblock %}
+			</div>
+			{% block meta %}{% endblock %}
 			{% set flash_message = get_flash_message() %}
 			{% if flash_message is not none %}
 				<div class='init-message'>{{ flash_message }}</div>

@@ -36,8 +36,7 @@ from . import model, controllers
 
 plugins.load_all()
 
-for func in get_registered('callback:pre_init'):
-	func()
+call_registered('callback:pre_init')
 
 #	Place registered models and controllers to
 #	make plugin packaging easier
@@ -49,10 +48,8 @@ model.create_tables()
 controllers.create_everything()
 
 #	Call initialization functions
-for func in get_registered('callback:init'):
-	func()
-for func in get_registered('callback:post_init'):
-	func()
+call_registered('callback:init')
+call_registered('callback:post_init')
 
 log.info('Initialized')
 

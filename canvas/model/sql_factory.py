@@ -146,7 +146,10 @@ def row_update(model):
 	#	Create assignment statement
 	assignments, values = [], []
 	for name, column in model_cls.schema_iter():
-		values.append(column.serialized_for(model))
+		value = column.serialized_for(model)
+		if value is _sentinel:
+			continue
+		values.append(value)
 		assignments.append(f'{name} = %s')
 	
 	#	Comma-seperate assignments

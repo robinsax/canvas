@@ -11,6 +11,12 @@ var tk = createToolkit({
 			},
 			'cv_show': function(value){
 				return value ? '' : 'hidden';
+			},
+			'cv_as_safe_ref': function(value){
+				return '#_' + value;
+			},
+			'cv_as_safe_id': function(value){
+				return '_' + value
 			}
 		}
 	})
@@ -26,6 +32,7 @@ var cv = (function(){
 	var INPUT_SELECTOR = 'input, textarea, select';
 
 	this.query = {};
+	this.route = null;
 	var page;
 	this.page = null;
 	var clipboardStaging = null;
@@ -157,6 +164,9 @@ var cv = (function(){
 		if (tk.prop(pl, 'init')){
 			this.addInitFunction(pl.init);
 		}
+		if (tk.prop(pl, 'bind')){
+			this.addBindFunction(pl.bind);
+		}
 		if (tk.prop(pl, 'actions')){
 			this.addActions(pl.actions);
 		}
@@ -244,7 +254,7 @@ var cv = (function(){
 
 		//	Send
 		cv.request(data, form, function(data){
-			var summary = tk.prop(data, 'summary', null);
+			var summary = tk.prop(data, 'error_summary', null);
 			if (summary != null){
 				//	Show error summary
 				form.children('.error-summary').text(summary)
@@ -321,6 +331,10 @@ var cv = (function(){
 		(flag ? mobileMenu : header).append(headerAreas.remove());
 	}
 
+	var bindFns = [];
+	this.addBindFunction = function(fn){
+		bindFns.push(fn);
+	}
 	function bind(root){
 		//	Bind callbacks
 		root.children('[cv-tooltip]').iter(function(e){
@@ -398,13 +412,23 @@ var cv = (function(){
 				});
 			}
 		});
+
+		tk.iter(bindFns, function(f){ f(); })
 	}
 
 	var initFns = [];
 	this.addInitFunction = function(f){
-		initFns.push(f);
+		if (initialized){
+			f();
+		}
+		else {
+			initFns.push(f);
+		}
 	}
+	var initialized = false;
 	function onInit(){
+		self.route = tk('body').attr('cv-route');
+
 		//	Highlight open header button if present
 		tk('.main-header .button').classify('open', function(e){
 			return e.attr('href') == window.location.pathname;
@@ -437,6 +461,7 @@ var cv = (function(){
 		flashArea = page.children('.flash-message')
 		self.page = page;
 		self.header = header;
+		self.meta = meta;
 
 		//	Create header highlighter
 		//	TODO: packaging
@@ -465,6 +490,7 @@ var cv = (function(){
 			flash(initial.text());
 		}
 
+		initialized = true;
 		tk.iter(initFns, function(f){
 			f();
 		});

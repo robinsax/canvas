@@ -24,7 +24,7 @@ __all__ = [
 	'get_component'
 ]
 
-GLOBAL_DEPS = config['global_assets']
+GLOBAL_DEPS = config['client_globals']
 
 class Controller:
 	'''The base controller object to be extended'''
@@ -92,8 +92,8 @@ class Page(Controller):
 		super().__init__(route, **super_kwargs)
 		self.template = 'pages/%s.html'%(template if template is not None else route)
 		self.name = name
-		self.dependencies = GLOBAL_DEPS['internal'][:] + dependencies
-		self.library_dependencies = GLOBAL_DEPS['library'][:] + library_dependencies
+		self.dependencies = GLOBAL_DEPS['dependencies'][:] + dependencies
+		self.library_dependencies = GLOBAL_DEPS['library_dependencies'][:] + library_dependencies
 		self.template_params = template_params
 
 	#	TODO: Better
@@ -122,9 +122,17 @@ class Page(Controller):
 		'''
 		Return the rendered template for this page
 		'''
+
+		#	Call generators in template_params
+		resolved_params = {}
+		for k, v in self.template_params.items():
+			if callable(v):
+				v = v(ctx)
+			resolved_params[k] = v
+
 		return render_template(self.template, response=True, template_globals={
 			**ctx,
-			**self.template_params,
+			**resolved_params,
 			**{
 				'render_component': self.render_component,
 				'render_components': self.render_components,
@@ -146,7 +154,7 @@ class APIEndpoint(Controller):
 		if not self.route.startswith('/api/'):
 			raise APIRouteDefinitionError(f'{route} not prefixed with api/')
 
-		self.desc = desc
+		self.description = description
 
 @register('template_global')
 def get_controller(route_or_controller):

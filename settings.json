@@ -3,20 +3,21 @@
 	"description": "Fast, customizable websites and web applications",
 	"cookie_secret_key": "ivSILnPkJ4QvPtbB0X4d",
 	"debug": true,
-	"global_assets": {
-		"internal": [
+	"client_globals": {
+		"dependencies": [
 			"style.css",
 			"canvas.js"
 		],
-		"library": [
+		"library_dependencies": [
 			"line-awesome.min.css",
 			"toolkit.js"
 		]
 	},
 	"plugins": {
-		"directory": "./canvas/plugins",
+		"directory": "C:\\Users\\Robin\\Desktop\\canvas_local_plugins",
 		"active": [
-			"default_site"
+			"users",
+			"wirefire_cce"
 		]
 	},
 	"logging": {
@@ -29,8 +30,6 @@
 		"user": "testuser",
 		"password": "backendpls",
 		"host": "localhost"
-	},
-	"deferral": {	
 	},
 	"styling": {
 		"header_height": 50,

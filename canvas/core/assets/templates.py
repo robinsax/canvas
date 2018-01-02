@@ -6,6 +6,8 @@ Jinja template actualization
 import os
 import jinja2
 
+from urllib import parse
+
 from htmlmin import minify as minify_html
 
 from jinja2 import Markup
@@ -75,6 +77,10 @@ def markdown(markdown, return_markup=True):
 	if return_markup:
 		return markup(rendered)
 	return rendered
+
+@register('template_filter')
+def uri_encode(s):
+	return parse.quote(s)
 
 @register('template_global')
 def parameter_error(msg):

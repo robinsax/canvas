@@ -89,6 +89,13 @@
 {% endmacro %}
 
 {#
+	Helper macro for toolkit binding
+#}
+{% macro data_bind(target, onto=None, via=None, action=None) %}
+	cv-bind="{{ target }}"{% if onto is not none %} cv-onto="{{ onto }}"{% endif %}{% if via is not none %} cv-via="{{ via }}"{% endif %}{% if action is not none %} cv-action="{{ action }}"{% endif %}
+{% endmacro %}
+
+{#
 	Create a basic loading placeholder for AJAX-populated components
 	:size The size of the placeholder, in pixels
 	:cls Additional classes

@@ -161,13 +161,20 @@ class Column:
 		Return the serialized value of this column
 		on the given model object
 		'''
-		return self.type.serialize(self.value_for(model_obj))
+		pre = self.value_for(model_obj)
+		if pre is None:
+			return None
+		if pre is _sentinel:
+			return _sentinel
+		return self.type.serialize(pre)
 
 	def deserialize_onto(self, model_obj, value):
 		'''
 		Deserialize the given value of this column
 		onto the given model object
 		'''
+		if value is None:
+			return None
 		self.set_value_for(model_obj, self.type.deserialize(value))
 
 	#	Comparison yields a `ColumnComparator`

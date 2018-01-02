@@ -11,14 +11,14 @@
 	{% if title is not none %}
 		<h2>{{ title }}</h2>
 	{% endif %}
-	<div class="error-summary"></div>
+	<p class="error-summary"></p>
 {% endmacro %}
 
 {#
 	Create the area to display errors
 #}
 {% macro error_area() %}
-	<div class="error-summary"></div>
+	<p class="error-summary"></p>
 {% endmacro %}
 
 {#
@@ -92,7 +92,7 @@
 	:values A list of `name, value` pairs to use if this is a select
 		input
 #}
-{% macro field(type=None, name=None, placeholder=None, label=None, icon=None, model=None, attr=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
+{% macro field(type=None, name=None, placeholder=None, label=None, icon=None, model=None, attr=None, attrs=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
 	{% if (name is none or type is none) and attr is none %}
 		{{ parameter_error('Cannot create field without name and type, or attr') }}
 	{% endif %}
@@ -153,7 +153,7 @@
 			<div class="text label">{{ label }}</div>
 		{% endif %}
 		{% if type == 'textarea' %}
-			<textarea {{ common_attrs }} placeholder="{{ placeholder }}"></textarea>
+			<textarea {{ common_attrs }}{% if attrs is not none %} {{ attrs }}{% endif %} placeholder="{{ placeholder }}"></textarea>
 		{% elif type == 'select' %}
 			<select {{ common_attrs }}>
 				{% if placeholder is not none %}
@@ -164,7 +164,7 @@
 				{% endfor %}
 			</select>
 		{% else %}
-			<input type="{{ type }}" {{ common_attrs }} placeholder="{{ placeholder }}"/>
+			<input type="{{ type }}" {{ common_attrs }}{% if attrs is not none %} {{ attrs }}{% endif %} placeholder="{{ placeholder }}"/>
 		{% endif %}
 		<div class="error-desc"></div>
 	</div>

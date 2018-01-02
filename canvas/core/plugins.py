@@ -12,13 +12,15 @@ from .. import CANVAS_HOME, config
 
 log = logging.getLogger(__name__)
 
+def plugin_base_path(name):
+	return os.path.join(config['plugins']['directory'], f'canvas-pl-{name}')
+
 def load_all():
 	'''
 	Load all activated plugins
 	'''
-	plugin_dir = config['plugins']['directory']
 	for plugin in config['plugins']['active']:
-		sys.path.insert(0, os.path.join(plugin_dir, f'canvas-pl-{plugin}'))
+		sys.path.insert(0, plugin_base_path(plugin))
 		log.debug(f'Importing plugin {plugin}')
 		try:
 			__import__(plugin)
@@ -41,19 +43,19 @@ def get_path_occurrences(target, include_base=True, filter=os.path.exists):
 		canvas package, if it exists
 	'''
 	occurrences = []
-
-	if include_base:
-		#	Check this base since it has lowest priority
-		base_instance_path = os.path.join(CANVAS_HOME, 'canvas', target)
-		if filter(base_instance_path):
-			occurrences.append(base_instance_path)
 	
 	for plugin in reversed(config['plugins']['active']):
 		#	Check plugins in reverse order so
 		#	the first loaded would go on last,
 		#	etc.
-		path = os.path.join(config['plugins']['directory'], plugin, target)
+		path = os.path.join(plugin_base_path(plugin), target)
 		if filter(path):
-			occurrences.append(path)
+			occurrences.insert(0, path)
+
+	if include_base:
+		#	Check this base since it has lowest priority
+		base_instance_path = os.path.join(CANVAS_HOME, 'canvas', target)
+		if filter(base_instance_path):
+			occurrences.insert(0, base_instance_path)
 
 	return occurrences

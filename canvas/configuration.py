@@ -67,8 +67,14 @@ def update_from_plugins(config):
 
 	def careful_updates(target, source):
 		for key, val in source.items():
+			#	TODO: Not triggering properly
 			if target is config and key in ILLEGAL_OVERRIDES:
 				raise PluginConfigError(f'{key} cannot be set by a plugin')
+			if key == 'client_globals':
+				#	TODO: Reword
+				config['client_globals']['dependencies'] += val['dependencies']
+				config['client_globals']['library_dependencies'] += val['library_dependencies']
+				continue
 			if not key in target:
 				target[key] = val
 				continue
@@ -82,4 +88,5 @@ def update_from_plugins(config):
 		with open(config_path, 'r') as f:
 			careful_updates(config, json.load(f))
 	
+	#	TODO: Log end state here
 	return WrappedDict(config, ConfigKeyError)

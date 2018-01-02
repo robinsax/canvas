@@ -232,8 +232,8 @@ def handle_controller_request(req, cookie):
 				'__ctx__': ctx,
 				'__page__': {
 					'collect_dependencies': lambda *args: (
-						config['global_assets']['internal'],
-						config['global_assets']['library']
+						config['client_globals']['dependencies'],
+						config['client_globals']['library_dependencies']
 					),
 					'description': config['description']
 				},
