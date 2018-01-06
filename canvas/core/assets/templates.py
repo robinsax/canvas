@@ -4,6 +4,7 @@ Jinja template actualization
 '''
 
 import os
+import json as jsonlib
 import jinja2
 
 from urllib import parse
@@ -49,6 +50,8 @@ def render_template(template_path, response=False, minify=None, status=200, head
 		return rendered
 	return rendered, status, headers, 'text/html'
 
+#	TODO: Bounce below to a utils module
+
 @register('template_filter')
 def markup(text):
 	'''
@@ -81,6 +84,10 @@ def markdown(markdown, return_markup=True):
 @register('template_filter')
 def uri_encode(s):
 	return parse.quote(s)
+
+@register('template_filter')
+def json(o):
+	return jsonlib.dumps(o)
 
 @register('template_global')
 def parameter_error(msg):

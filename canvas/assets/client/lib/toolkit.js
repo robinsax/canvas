@@ -37,8 +37,7 @@ function createToolkit(){
 		dataPrefix: 'tk',
 		globalTemplateFunctions: {}, 
 		bindFunction: function(){},
-		debug: false,
-		logElement: null
+		debug: false
 	};
 	if (arguments.length > 0){
 		var ovr = arguments[0];
@@ -48,14 +47,17 @@ function createToolkit(){
 	}
 
 	//	Define attribute names
-	var ATTR_BIND = config.dataPrefix + '-bind',
-		ATTR_ONTO = config.dataPrefix + '-onto',
-		ATTR_VIEW_WITH = config.dataPrefix + '-via', // TODO: Rename
-		ATTR_SRC = config.dataPrefix + '-src',
-		ATTR_CALLBACK = config.dataPrefix + '-callback',
-		ATTR_EVENT = config.dataPrefix + '-event',
-		ATTR_ON = config.dataPrefix + '-on',
-		ATTR_TEMPLATE = config.dataPrefix + '-template';
+	function makeDefault(ext){ return config.dataPrefix + '-' + ext; }
+	var attrNames = {
+		bind: makeDefault('bind'),
+		onto: makeDefault('onto'),
+		viewFn: makeDefault('view-fn'),
+		src: makeDefault('src'),
+		callback: makeDefault('callback'),
+		event: makeDefault('event'),
+		on: makeDefault('on'),
+		template: makeDefault('template')
+	}
 	
 	/* ## Debug logging (Extra) */
 	/*
@@ -66,9 +68,6 @@ function createToolkit(){
 	function debug(){
 		if (config.debug){
 			console.log.apply(null, arguments);
-			if (config.logElement != null){
-
-			}
 		}
 	}
 	/*
@@ -174,18 +173,46 @@ function createToolkit(){
 		return h ? o[p] : arguments[2];
 	}
 
+	/*	
+		Return a version of `prop()` bound to the
+		given object.
+	*/
+	prop.on = function(o){
+		return function(p){
+			if (arguments.length == 2){
+				return prop(o, p, arguments[1]);
+			}
+			return prop(o, p);
+		}
+	}
+
 	/*
 		Call a function later.
 
-		Note: *Just an alias for setTimeout*.
-
-		::argspec func, milliseconds
+		::argspec func, milliseconds, initial
 		:func The function to call
 		:milliseconds The timeout before the function is
 			called, in milliseconds
+		:initial Whether to call the function now, too
 	*/
 	function defer(fn, t){
 		setTimeout(fn, t);
+		if (varg(arguments, 2, false)){
+			fn();
+		}
+	}
+
+	//	TODO: Doc.
+	function repeat(fn, t){
+		var i = setInterval(fn, t);
+		if (varg(arguments, 2, false)){
+			fn();
+		}
+		return {
+			stop: function(){
+				clearInterval(i);
+			}
+		}
 	}
 
 	/* ## Variable argument utilities (Extra) */
@@ -1259,17 +1286,24 @@ function createToolkit(){
 					if (remove){
 						e.attr(a, null);
 					}
-					return v.split(/\s+/g);
+					var found = v.match(/(?:(?:<.*?>)|[^\s]+)(?:\s+|$)/g);
+					iter(found, function(s, i){
+						if (s.indexOf('<') == 0){
+							s = s.substring(1, s.length - 1);
+						}
+						found[i] = s.trim();
+					});
+					return found;
 				}
 				return [];
 			}
 
-			node.children('[' + ATTR_BIND + ']').iter(function(e, i){
+			node.children('[' + attrNames.bind + ']').iter(function(e, i){
 				//	Read binding parameters
-				var to = param(e, ATTR_BIND),
-					onto = param(e, ATTR_ONTO),
-					viewWith = param(e, ATTR_VIEW_WITH),
-					callback = param(e, ATTR_CALLBACK);
+				var to = param(e, attrNames.bind),
+					onto = param(e, attrNames.onto),
+					viewWith = param(e, attrNames.viewFn),
+					callback = param(e, attrNames.callback);
 				iter(to, function(t, j){
 					if (!prop(bindings, t)){
 						bindings[t] = [];
@@ -1308,22 +1342,22 @@ function createToolkit(){
 
 		//	Bind generally without worrying about
 		//	depth since subtemplates are gone
-		node.children('[' + ATTR_SRC + ']').on('keyup', function(e){
-			self[e.attr(ATTR_SRC)] = e.value();
+		node.children('[' + attrNames.src + ']').on('keyup', function(e){
+			self[e.attr(attrNames.src)] = e.value();
 		});
-		node.children('[' + ATTR_EVENT + ']').on(function(e){
+		node.children('[' + attrNames.event + ']').on(function(e){
 			//	Check if target event was specified
-			return e.is('[' + ATTR_ON + ']') ? e.attr(ATTR_ON) : 'click';
+			return e.is('[' + attrNames.on + ']') ? e.attr(attrNames.on) : 'click';
 		}, function(e, i){
-			funcs[e.attr(ATTR_EVENT)](self, e, i);
+			funcs[e.attr(attrNames.event)](self, e, i);
 		});
 
 		//	Realize a property binding
 		function applyBind(p){
 			//	On value change new value is specified since
 			//	it hasn't applied yet
-			var v = varg(arguments, 1, self[p]);
-			if (v instanceof MappedArray){
+			var value = varg(arguments, 1, self[p]);
+			if (value instanceof MappedArray){
 				//	TODO: Y? lol
 				return;
 			}
@@ -1333,26 +1367,36 @@ function createToolkit(){
 				return;
 			}
 			iter(bound, function(b, i){
-				if (v instanceof Array){
+				if (value instanceof Array){
 					//	Subtemplate
-					self[p] = new MappedArray(v, subtemplates[p], b.e, funcs);
+					self[p] = new MappedArray(value, subtemplates[p], b.e, funcs);
 				}
 				else {
 					//	Transform
-					var lv = b.viewWith != '-' ? funcs[b.viewWith](v, p) : v;
+					var asViewed = value;
+					if  (b.viewWith != '-'){
+						if (b.viewWith.indexOf('lambda:') > -1){
+							//	Evaluate lambda
+							var v = value;
+							asViewed = eval('(function(){ return ' + b.viewWith.substring(7) + ' })();');
+						}
+						else {
+							asViewed = funcs[b.viewWith](value, p);
+						}
+					}
 					//	Place
 					if (b.onto == 'html'){
-						b.e.html(lv);
+						b.e.html(asViewed);
 					}
-					else if (b.onto.startsWith('attr')){
-						b.e.attr(b.onto.split(':')[1], lv);
+					else if (b.onto.indexOf('attr:') > -1){
+						b.e.attr(b.onto.substring(5), asViewed);
 					}
 					else {
-						throw BindParameterError('Invalid bind ' + ATTR_BIND + '="' + b.onto + '"');
+						throw new BindParameterError('Invalid bind ' + attrNames.bind + '="' + b.onto + '"');
 					}
 					//	Callback
 					if (b.callback != '-'){
-						funcs[b.callback](v);
+						funcs[b.callback](asViewed);
 					}
 				}
 			});
@@ -1462,7 +1506,7 @@ function createToolkit(){
 		this.push = function(){
 			for (var i = 0; i < arguments.length; i++){
 				var v = arguments[i];
-				var node = template.copy();
+				var node = template.copy().attr('tk-template', null);
 				applyIndex(self.length, new MappedObject(v, node, self));
 				self.length++;
 				target.append(node);
@@ -1622,7 +1666,7 @@ function createToolkit(){
 		return tk;
 	}
 
-	var templateMap = {};
+	var templates = {};
 	/*
 		Create an return a live mapping between `data`,
 		and it's imposition on `template`, inserted as
@@ -1630,7 +1674,7 @@ function createToolkit(){
 
 		TODO: Better doc.
 	*/
-	function mapping(data, template, target){
+	function map(data, template, target){
 		var t = typeof data;
 		if (t == 'string' || t == 'number' || t == 'boolean'){
 			return data;
@@ -1639,7 +1683,7 @@ function createToolkit(){
 		if (wrap){
 			data = [data];
 		}
-		var m = new MappedArray(data, templateMap[template], 
+		var m = new MappedArray(data, templates[template], 
 				target, varg(arguments, 3, {}));
 		return wrap ? m[0] : m;
 	}
@@ -1666,12 +1710,15 @@ function createToolkit(){
 	tk.debug = debug;
 	tk.varg = varg;
 	tk.defer = defer;
+	tk.repeat = repeat;
 	tk.iter = iter;
 	tk.e = createElement;
 	tk.request = request;
-	tk.mapping = mapping;
-	tk.templateMap = templateMap;
+	tk.map = map;
+	tk.templates = templates;
 	tk.init = init;
+	tk.typeCheck = typeCheck;
+	tk.attrNames = attrNames;
 	tk.types = {
 		ToolkitInstance: ToolkitInstance,
 		MappedObject: MappedObject,
@@ -1682,16 +1729,16 @@ function createToolkit(){
 	function doInit(){
 		//	Remove and map templates
 		var container = tk(config.templateContainer).remove();
-		var templates = container.children('[' + ATTR_TEMPLATE + ']', false)
+		container.children('[' + attrNames.template + ']', false)
 			.iter(function(e){
-				templateMap[e.attr(ATTR_TEMPLATE)] = e;
-			});
-		debug('Loaded templates:', templateMap);
+				templates[e.attr(attrNames.template)] = e;
+			}).attr(attrNames.template, null);
+		debug('Loaded templates:', templates);
 		
 		//	Call init. functions
 		iter(initFns, function(f){
 			f();
-		})
+		});
 	}
 	
 	//	Initialize or wait

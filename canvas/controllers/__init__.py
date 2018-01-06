@@ -3,6 +3,8 @@
 TODO
 '''
 
+import types
+
 from ..exceptions import (
 	UnsupportedMethod, 
 	APIRouteDefinitionError,
@@ -126,7 +128,7 @@ class Page(Controller):
 		#	Call generators in template_params
 		resolved_params = {}
 		for k, v in self.template_params.items():
-			if callable(v):
+			if isinstance(v, types.LambdaType):
 				v = v(ctx)
 			resolved_params[k] = v
 

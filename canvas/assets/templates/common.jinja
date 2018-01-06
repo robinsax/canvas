@@ -4,19 +4,19 @@
 #}
 
 {#
-	Create an icon that triggers an action TODO: Doc and attrs as dict
+	Create an icon that triggers an event TODO: Doc and attrs as dict
 #}
-{% macro icon(icon=None, action=None, href=None, cls='', tooltip=None, attrs='') %}
-	{% if action is not none and href is not none %}
-		{{ parameter_error('Cannot create action icon with both action and href') }}
+{% macro icon(icon=None, event=None, href=None, cls='', tooltip=None, attrs='') %}
+	{% if event is not none and href is not none %}
+		{{ parameter_error('Cannot create event icon with both event and href') }}
 	{% endif %}
 	{% set tag = 'a' if href is not none else 'div' %}
-	<{{ tag }} class="fa fa-{{ icon }} action-icon {{ cls }}"{% if tooltip is not none %} cv-tooltip="{{ tooltip }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %}{% if action is not none %} cv-action="{{ action }}"{% endif %} {{ attrs }}></{{ tag }}>
+	<{{ tag }} class="fa fa-{{ icon }} event-icon {{ cls }}"{% if tooltip is not none %} cv-tooltip="{{ tooltip }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %}{% if event is not none %} cv-event="{{ event }}"{% endif %} {{ attrs }}></{{ tag }}>
 {% endmacro %}
 
 {#
 	Create a button or link. One of `text` or `icon` is required. 
-	`action` and `submit` are mutually exclusive with `href`
+	`event` and `submit` are mutually exclusive with `href`
 	:text The button text
 	:icon The name of the FontAwesome icon to use (without the `fa-`
 		prefix)
@@ -25,7 +25,7 @@
 	:tooltip The tooltip text for the button
 	:fancy_tooltip Whether to use a quicksite tooltip rather than the 
 		`title` attribute
-	:action The action this button represents. Used to identify form
+	:event The event this button represents. Used to identify form
 		submission type among other things
 	:href The href target of this button. Setting causes an `a` tag to be used
 	:submit Whether this button should cause its containing form to 
@@ -34,23 +34,15 @@
 	:protected Whether this button should be protected by a 'Confirm'/'Cancel' 
 		layer. Doesn't work on links
 #}
-{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, action=None, href=None, submit=False, attrs='', protected=False) %}
+{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, event=None, href=None, attrs='', protected=False) %}
 	{% set text_span = '' %}
 	{% set icon_span = '' %}
-	{% set submit_action = '' %}
 	{% set tag = 'a' if href is not none else 'div' %}
 	{% if text is none and icon is none %}
 		{{ parameter_error('Cannot create button without text or icon') }}
 	{% endif %}
-	{% if action is not none and href is not none %}
-		{{ parameter_error('Cannot create button with both action and href') }}
-	{% endif %}
-	{% if submit %}
-		{% set submit_action = '' %}
-		{% if action is not none %}
-			{% set submit_action = ' cv-send-action="%s"'%action %}
-		{% endif %}
-		{% set action = '__submit__' %}
+	{% if event is not none and href is not none %}
+		{{ parameter_error('Cannot create button with both event and href') }}
 	{% endif %}
 	{% if text is not none %}
 		{% set text_span = '<span class="text">%s</span>'%text %}
@@ -74,7 +66,7 @@
 	{% if protected %}
 		<span class="condom">
 	{% endif %}
-	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{% if action is not none %} cv-action="{{ action }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %}{{ submit_action }} {{ attrs }}>
+	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %} {{ attrs }}>
 		{% if icon_right %}
 			{{ text_span }}{{ icon_span }}
 		{% else %}
@@ -82,8 +74,8 @@
 		{% endif %}
 	</{{ tag }}>
 	{% if protected %}
-			{{ button(text='Cancel', icon='ban', action='__cancel__', cls='cancel hidden') }}
-			{{ button(text='Confirm', icon='check', action='__confirm__', cls='confirm hidden') }}
+			{{ button(text='Cancel', icon='ban', event='__cancel__', cls='cancel hidden') }}
+			{{ button(text='Confirm', icon='check', event='__confirm__', cls='confirm hidden') }}
 		</span>
 	{% endif %}
 {% endmacro %}
@@ -91,8 +83,8 @@
 {#
 	Helper macro for toolkit binding
 #}
-{% macro data_bind(target, onto=None, via=None, action=None) %}
-	cv-bind="{{ target }}"{% if onto is not none %} cv-onto="{{ onto }}"{% endif %}{% if via is not none %} cv-via="{{ via }}"{% endif %}{% if action is not none %} cv-action="{{ action }}"{% endif %}
+{% macro data_bind(target, onto=None, view_fn=None, event=None) %}
+	cv-bind="{{ target }}"{% if onto is not none %} cv-onto="{{ onto }}"{% endif %}{% if view_fn is not none %} cv-view-fn="{{ view_fn }}"{% endif %}{% if event is not none %} cv-event="{{ event }}"{% endif %}
 {% endmacro %}
 
 {#

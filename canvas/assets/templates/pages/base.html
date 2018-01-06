@@ -34,26 +34,12 @@
 		{% endblock %}
 	</head>
 	<body cv-route="{{ __page__.route }}">
-		<div class="meta-page hidden">
-			<textarea class="clipboard-staging"></textarea>
-			<div class="cv-templates">
-				{% block templates %}{% endblock %}
-			</div>
-			{% block meta %}{% endblock %}
-			{% set flash_message = get_flash_message() %}
-			{% if flash_message is not none %}
-				<div class='init-message'>{{ flash_message }}</div>
-			{% endif %}
-		</div>
-		<div class="full-page">
+		<div class="page">
 			{% block header %}
 				<header class="main-header">
 					{% block pre_header_left %}{% endblock %}
 					<div class="component">
 						{% block header_left %}{% endblock %}
-					</div>
-					<div class="component right">
-						{{ c.button(icon='bars', cls='mobile-menu-access', tooltip='Menu', fancy_tooltip=False) }}
 					</div>
 					<div class="component right">
 						{% block header_right %}{% endblock %}
@@ -63,14 +49,23 @@
 				</header>
 			{% endblock %}
 			<div class="page-content-wrap">
-				<div class="mobile-menu-modal hidden">
-					<div class="mobile-menu"></div>
-				</div>
+				{% block pre_content %}{% endblock %}
 				<div class="page-content">
 					{% block content %}{% endblock %}
 				</div>
+				{% block post_content %}{% endblock %}
 				<div class="flash-message hidden"></div>
 			</div>
+		</div>
+		<div class="meta-page">
+			<div class="cv-templates">
+				{% block templates %}{% endblock %}
+			</div>
+			{% block meta %}{% endblock %}
+			{% set flash_message = get_flash_message() %}
+			{% if flash_message is not none %}
+				<div class='init-message'>{{ flash_message }}</div>
+			{% endif %}
 		</div>
 	</body>
 </html>

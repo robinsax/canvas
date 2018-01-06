@@ -11,14 +11,14 @@
 	{% if title is not none %}
 		<h2>{{ title }}</h2>
 	{% endif %}
-	<p class="error-summary"></p>
+	<p class="error-summary hidden"></p>
 {% endmacro %}
 
 {#
 	Create the area to display errors
 #}
 {% macro error_area() %}
-	<p class="error-summary"></p>
+	<p class="error-summary hidden"></p>
 {% endmacro %}
 
 {#
@@ -35,7 +35,7 @@
 
 {#
 	Add an attribute that causes requests fired from below this point in the
-	DOM who don't have an `action` specified yet to have their `action` property
+	DOM who don't have an `action` specified yet to have their `event` property
 	set
 	:action The name of the action to set
 #}
@@ -187,6 +187,6 @@
 #}
 {% macro submit_button(text=None, icon='arrow-right', cls='', action=None) %}
 	<div class="align-right">
-		{{ c.button(text=text, icon=icon, cls=cls, action=action, submit=True) }}
+		{{ c.button(text=text, icon=icon, cls=cls, event='submit', attrs='' if action is none else 'cv-send-action="%s"'%action) }}
 	</div>
 {% endmacro %}

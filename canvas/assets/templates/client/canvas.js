@@ -1,179 +1,177 @@
+//	Create canvas toolkit object
 var tk = createToolkit({
 		debug: '{{ config.debug }}' == 'True',
 		templateContainer: '.cv-templates',
-		dataPrefix: 'cv',
-		globalTemplateFunctions: {
-			'cv_param_format': function(value, prop){
-				return prop + '=' + value;
-			},
-			'cv_hide': function(value){
-				return value ? 'hidden' : '';
-			},
-			'cv_show': function(value){
-				return value ? '' : 'hidden';
-			},
-			'cv_as_safe_ref': function(value){
-				return '#_' + value;
-			},
-			'cv_as_safe_id': function(value){
-				return '_' + value
-			}
-		}
+		dataPrefix: 'cv'
 	})
 	.request.processor(function(r){
 		r.setRequestHeader('X-Canvas-View-Request', '1');
 	});
+//	Resolve the -event name conflict
+tk.attrNames.event = 'cv-mapped-event';
 
-var cv = (function(){
+//	Create canvas core object
+//	TODO: Packaging (scope this tighter)
+function CanvasCore(){
 	'use strict';
-	var self = this;
-	this.palettes = {{ config.styling.palettes }};
-	this.breakpoints = {{ config.styling.breakpoints }};
 	var INPUT_SELECTOR = 'input, textarea, select';
 
+	//	Scoping helper
+	var self = this;
+
+	//	Insert configured style properties
+	//	for reference
+	this.palettes = JSON.parse('{{ config.styling.palettes|json }}');
+	this.breakpoints = JSON.parse('{{ config.styling.breakpoints|json }}');
+
+	//	To contain the query string
 	this.query = {};
+	//	To contain current route (although redundant 
+	//	to canonical implementations)
 	this.route = null;
-	var page;
+
+	//	To contain the meta page element
+	this.metaPage = null;
+	//	To contain the root page element
 	this.page = null;
-	var clipboardStaging = null;
+	//	To contain the root header element
+	this.header = null;
 
-	//	Validator management
-	var validators = {
-		'regex': function(repr, val){
-			repr = repr.split(':');
-			var obj = new RegExp(decodeURIComponent(repr[0]), repr[1] == '1' ? 'i' : ''),
-				neg = repr[2] == '1';
-			return neg != obj.test(val);
-		},
-		'range': function(repr, val){
-			repr = repr.split(',')
-			var min = parseFloat(repr[0]), max = parseFloat(repr[1]);
-			return val >= min && val <= max;
-		},
-		'none': function(){ return true; }
-	}
-	this.addValidators = function(add){
-		for (var name in add){
-			validators[name] = add;
+	//	Containers
+	var initFns = [],
+		bindFns = [],
+		validators = {},
+		actions = {},
+		events = {};
+
+	/* -- Plugin interface -- */
+	//	List of loaded plugins
+	this.plugins = [];
+	//	Internal list of plugins to load when
+	//	loadPlugins() called
+	var unloadedPlugins = [];
+
+	//	Function decorators
+	function stored(map, fn, name){
+		if (name === undefined){
+			var declaration = fn.toString().match(/^function\s*([^\s(]+)/);
+			if (declaration != null){
+				name = declaration[1];
+			}
+			else {
+				fn.__canvasAddTo = map;
+			}
 		}
+		map[name] = fn;
+		return fn;
+	}
+	this.action = function(fn, name){
+		return stored(actions, fn, name);
+	}
+	this.event = function(fn, name){
+		return stored(events, fn, name);
+	}
+	this.validator = function(fn, name){
+		return stored(validators, fn, name);
+	}
+	
+	//	Primary plugin interface
+	this.plugin = function(PluginClass){
+		var cond = tk.varg(arguments, 1, true),
+			condT = tk.typeCheck(cond, ['string', 'function', 'boolean']);
+		unloadedPlugins.push([
+			PluginClass, cond, condT
+		]);
 	}
 
-	//	Action management
-	var actions = {
-		'__submit__': function(src){
-			//	Submit the form at `src`
-			self.submitForm(src);
-		},
-		'__confirm__': function(src){
-			//	Invoked by confirm being selected for a 
-			//	protected button
-			var group = src.parents('.condom').ith(0).children('.button');
-			var original = group.reduce('.protected');
-			self.callAction(original.attr('cv-action'), original);
-			group.classify('hidden', function(e){ return !e.is('.protected'); });
-		},
-		'__cancel__': function(src){
-			//	Invoked by cancel being selected for a
-			//	protected button
-			var $condom = src.parents('.condom', false);
-			var $src = src.parents('.condom').ith(0)
-				.children('.button').classify('hidden', function(e){ return !e.is('.protected'); });
-		},
-		'multi': function(data){
-			//	Call multiple actions
-			var actions = data['actions'];
-			for (var i = 0; i < actions.length; i++){
-				self.callAction(actions[i], data);
+	//	Expose this in case plugins are loaded
+	//	deferred
+	this.loadPlugins = function(){
+		tk.iter(unloadedPlugins, function(packed){
+			var PluginClass = packed[0], cond = packed[1],
+				condT = packed[2];
+			switch (condT){
+				case 0:
+					cond = self.route == cond;
+					break;
+				case 1:
+					cond = cond();
+					break;
+				default:
+					break;
 			}
-		},
-		'show': function(arg, param){
-			//	Show by selector
-			tk(param('target')).classify('hidden', false);
-		},
-		'hide': function(arg, param){
-			//	Hide by selector
-			tk(param('target')).classify('hidden', true);
-		},
-		'toggle_hide': function(arg, param, isJSON){
-			//	Toggle by selector
-			tk(param('target')).classify('hidden', 'toggle');
-		},
-		'update_view': function(data){
-			//	A generic content-update action for
-			//	simple view updates
-			var updates = data.updates;
-			for (var id in updates){
-				tk('#' + id).html(updates[id]);
-			}
-		},
-		'flash_message': function(arg, param){
-			//	Flash a message
-			self.flash(param('message'));
-		},
-		'redirect': function(arg, param){
-			//	Redirection for P-R-G, etc.
-			window.location.href = param('url');
-		},
-		'refresh': function(arg){
-			//	Refresh page and prevent caching
-			var refresh = 1;
-			var currentRefresh = self.query['refresh'];
-			if (currentRefresh != null){
-				refresh = parseInt(currentRefresh) + 1;
-			}
-			//	TODO: Handle edge cases
-			window.location.href = window.location.pathname + '?refresh=' + refresh;
-		},
-		'clipboard': function(arg, param){
-			//	TODO: Not working
-			//	Copy element content to clipboard
-			clipboardStaging.html(tk(param('target')).text())
-				.select();
-			try {
-				if (document.execCommand('copy')){
-					self.flash('Copied');
-					return;
+			if (cond){
+				//	Create the instance
+				var inst = new PluginClass();
+				tk.debug('Loading plugin:', inst);
+				//	Grab relevent methods
+				var prop = tk.prop.on(inst);
+				if (prop('init')){
+					initFns.push(inst.init);
+				}
+				if (prop('bind')){
+					bindFns.push(inst.bind);
+				}
+				
+				//	Catch deferred declarations
+				for (var pName in inst){
+					var val = inst[pName];
+					if (tk.prop(val, '__canvasAddTo')){
+						val.__canvasAddTo[pName] = val;
+					}
 				}
 			}
-			catch (e){}
-			self.flashError();
-		}
-	}
-	this.addActions = function(o){
-		tk.iter(o, function(name, fn){
-			actions[name] = fn;
 		});
-	}
-	this.callAction = function(action, arg){
-		if (actions.hasOwnProperty(action)){
-			var isJSON = !(arg instanceof tk.types.ToolkitInstance);
-			
-			function param(name){
-				return isJSON ? arg[name] : arg.attr('cv-' + name);
-			}
-	
-			actions[action](arg, param, isJSON);
-		}
-		else {
-			throw 'No action ' + action;
-		}
+		unloadedPlugins = [];
 	}
 
-	//	Combined mangement
-	this.plugin = function(pl){
-		if (tk.prop(pl, 'init')){
-			this.addInitFunction(pl.init);
+	//	Base validator definitions
+	this.validator(function(repr, val){
+		repr = repr.split(':');
+		var obj = new RegExp(decodeURIComponent(repr[0]), repr[1] == '1' ? 'i' : ''),
+			neg = repr[2] == '1';
+		return neg != obj.test(val);
+	}, 'regex');
+	this.validator(function(repr, val){
+		repr = repr.split(',')
+		var min = parseFloat(repr[0]), max = parseFloat(repr[1]);
+		return val >= min && val <= max;
+	}, 'range');
+	this.validator(function(){
+		return true;
+	}, 'none');
+
+	//	Base event definitions
+	this.event(function(src){
+		//	Invoked by confirm being selected for a 
+		//	protected button
+		var group = src.parents('.condom').ith(0).children('.button');
+		var original = group.reduce('.protected');
+		events[original.attr('cv-event')](original);
+		group.classify('hidden', function(e){ return !e.is('.protected'); });
+	}, '__confirm__');
+	this.event(function(src){
+		//	Invoked by cancel being selected for a
+		//	protected button
+		src.parents('.condom').ith(0)
+			.children('.button')
+			.classify('hidden', function(e){ return !e.is('.protected'); });
+	}, '__cancel__');
+
+	//	Core action definitions
+	this.action(function(data){
+		window.location.href = data.url;
+	}, 'redirect');
+	this.action(function(data){
+		//	Refresh page and prevent caching
+		var refresh = 1;
+		var currentRefresh = self.query['refresh'];
+		if (currentRefresh != null){
+			refresh = (+currentRefresh) + 1;
 		}
-		if (tk.prop(pl, 'bind')){
-			this.addBindFunction(pl.bind);
-		}
-		if (tk.prop(pl, 'actions')){
-			this.addActions(pl.actions);
-		}
-		if (tk.prop(pl, 'validators')){
-			this.addValidators(pl.validators);
-		}
-	}
+		//	TODO: Handle edge cases
+		window.location.href = window.location.pathname + '?refresh=' + refresh;
+	}, 'refresh');
 	
 	//	Sub-controller checking
 	this.componentFor = function(loc){
@@ -214,7 +212,7 @@ var cv = (function(){
 		field.classify('error', true)
 			.children('.error-desc').text(tk.varg(arguments, 1, input.attr('cv-error')));
 	}
-	this.submitForm = function(src){
+	this.submitForm = this.event(function(src){
 		src = src.extend(src.parents());
 		//	Find form
 		var form = src.reduce('form', 1);
@@ -253,7 +251,7 @@ var cv = (function(){
 		});
 
 		//	Send
-		cv.request(data, form, function(data){
+		self.request(data, form, function(data){
 			var summary = tk.prop(data, 'error_summary', null);
 			if (summary != null){
 				//	Show error summary
@@ -264,16 +262,38 @@ var cv = (function(){
 				self.fieldError(form.children('[name="' + k + '"]'), v);
 			});
 		});
-	}
+	}, 'submit');
 
 	//	Flash messages
 	var flashArea = null;
-	this.flash = function(msg){
+	function flash(msg){
 		flashArea.text(msg).classify('hidden', false, 5000);
 	}
-	this.flashError = function(){
+	this.flash = this.event(flash);
+
+	function flashError(){
 		self.flash(tk.varg(arguments, 0, 'An error occurred'));
 	}
+	this.flashError = this.event(flashError);
+
+	function createTooltip(target, text){
+		var pos = target.offset();
+		var tooltip = tk.varg(arguments, 2, null);
+		if (tooltip == null){
+			tooltip = tk.e('div', 'tooltip', text);
+		}
+		this.page.append(tooltip);
+		var right = pos.x > self.page.size().width/2;
+		//	TODO: make right do something
+		tooltip.css({
+			'top': pos.y - 5 + 'px',
+			'left': pos.x - 5 + 'px'
+		})
+		.classify('hidden', false)
+		.classify('right', right);
+		return tooltip;
+	}
+	this.createTooltip = this.event(createTooltip);
 
 	//	Canonical AJAX requests
 	//	::argspec data, src, url, method, success, failure
@@ -304,9 +324,8 @@ var cv = (function(){
 				if (success != null){
 					success(data)
 				}
-				var action = tk.prop(data, 'action', null);
-				if (action != null){
-					self.callAction(action, data, status);
+				if (tk.prop(data, 'action')){
+					actions[data.action](data);
 				}
 			}
 		}
@@ -314,46 +333,13 @@ var cv = (function(){
 		tk.request(url, method, data, handleResponse);
 	}
 
-	//	Mobile menu
-	var mobileMenuModal = null, mobileMenu = null,
-		mobileMenuButton = null, headerAreas = null,
-		mobileMenuOpen = false, header = null;
-	this.toggleMobileMenu = function(){
-		var flag = tk.varg(arguments, 0, !mobileMenuOpen);
-		if (mobileMenuOpen == flag){
-			return;
-		}
-		mobileMenuOpen = flag;
-		
-		mobileMenuModal.classify('hidden', !flag);
-		mobileMenuButton.classify('open', flag);
-		
-		(flag ? mobileMenu : header).append(headerAreas.remove());
-	}
-
-	var bindFns = [];
-	this.addBindFunction = function(fn){
-		bindFns.push(fn);
-	}
 	function bind(root){
 		//	Bind callbacks
 		root.children('[cv-tooltip]').iter(function(e){
 			var tooltip = null;
 			e.on({
 				'mouseover': function(){
-					var pos = e.offset();
-					if (tooltip == null){
-						tooltip = tk.e('div', 'tooltip', decodeURIComponent(e.attr('cv-tooltip')));
-						page.append(tooltip);
-					}
-					var right = pos.x > page.size().width/2;
-					//	TODO: make right do something
-					tooltip.css({
-						'top': pos.y - 5 + 'px',
-						'left': pos.x - 5 + 'px'
-					})
-					.classify('hidden', false)
-					.classify('right', right);
+					tooltip = self.createTooltip(e, e.attr('cv-tooltip'), tooltip);
 				},
 				'mouseleave': function(){
 					tooltip.classify('hidden');
@@ -361,7 +347,7 @@ var cv = (function(){
 			});
 		});
 
-		root.children('[cv-action]').iter(function(e){
+		root.children('[cv-event]').iter(function(e){
 			e.off('click').on('click', (function(){
 				if (e.is('.button.protected')){
 					return function(){
@@ -371,7 +357,13 @@ var cv = (function(){
 				}
 				else {
 					return function(){
-						self.callAction(e.attr('cv-action'), e);
+						var event = tk.prop(events, e.attr('cv-event'), null);
+						if (event != null){
+							event(e);
+						}
+						else {
+							throw 'No event ' + e.attr('cv-event');
+						}
 					}
 				}
 			})());
@@ -416,17 +408,7 @@ var cv = (function(){
 		tk.iter(bindFns, function(f){ f(); })
 	}
 
-	var initFns = [];
-	this.addInitFunction = function(f){
-		if (initialized){
-			f();
-		}
-		else {
-			initFns.push(f);
-		}
-	}
-	var initialized = false;
-	function onInit(){
+	function init(){
 		self.route = tk('body').attr('cv-route');
 
 		//	Highlight open header button if present
@@ -441,32 +423,15 @@ var cv = (function(){
 		});
 
 		//	Grab elements
-		page = tk('.full-page').on('click', function(e){
-			tk('.button.menu-access.open').classify('open', false);
-			tk('.menu').classify('hidden', true);
-		});
-		var meta = tk('.meta-page');
-		clipboardStaging = meta.children('.clipboard-staging');
-		header = page.children('header.main-header');
-		headerAreas = header.children('.component.area', false);
-		mobileMenuModal = page.children('.mobile-menu-modal')
-			.on('click', function(){
-				self.toggleMobileMenu(false);
-			});
-		mobileMenu = mobileMenuModal.children('.mobile-menu');
-		mobileMenuButton = header.children('.button.mobile-menu-access')
-			.on('click', function(){
-				self.toggleMobileMenu();
-			});
-		flashArea = page.children('.flash-message')
-		self.page = page;
-		self.header = header;
-		self.meta = meta;
+		self.page = tk('body > .page');
+		self.meta = tk('.meta-page');
+		self.header = self.page.children('header.main-header');
+		flashArea = self.page.children('.flash-message')
 
 		//	Create header highlighter
 		//	TODO: packaging
-		var highlighter = header.children('.button-highlight');
-		header.children('.button').on({
+		var highlighter = self.header.children('.button-highlight');
+		self.header.children('.button').on({
 			'mouseover': function(e){
 				var w = e.size().width;
 				highlighter.css({
@@ -480,25 +445,23 @@ var cv = (function(){
 			}
 		});
 
+		//	Flash initial
+		var initial = self.meta.children('.init-message');
+		if (!initial.empty){
+			self.flash(initial.text());
+		}
+
+		//	Load plugins
+		self.loadPlugins();
+
 		//	Apply bindings
 		bind(tk('body'));
 		tk.config.bindFunction = bind;
 
-		//	Flash initial
-		var initial = meta.children('.init-message');
-		if (!initial.empty){
-			flash(initial.text());
-		}
-
-		initialized = true;
 		tk.iter(initFns, function(f){
 			f();
 		});
 	}
-	tk.init(onInit);
-
-	//	TODO: Packaging
-	return this;
-}).apply({});
-
-{% block extras %}{% endblock %}
+	tk.init(init);
+}
+var core = new CanvasCore();

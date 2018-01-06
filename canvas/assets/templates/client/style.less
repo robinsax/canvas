@@ -16,7 +16,7 @@
 	padding: 0px;
 }
 
-html, body, .full-page {
+html, body, body > .page {
 	width: 100%;
 	height: 100%;
 	font-size: 12pt;
@@ -38,7 +38,7 @@ body {
 		display: none;
 	}
 	
-	.full-page {
+	& > .page {
 		position: fixed;
 		font-family: default-serif;
 		background-color: @base_background1;
@@ -144,8 +144,11 @@ body {
 		}
 
 		//	Cursor modifiers
-		[data-tooltip]:hover {
+		[cv-tooltip]:hover {
 			cursor: help;
+		}
+		[cv-event]:hover {
+			cursor: pointer;
 		}
 
 		//	Buttons
@@ -245,7 +248,7 @@ body {
 		}
 
 		//	Button variants
-		.action-icon {
+		.event-icon {
 			margin: 0px 10px;
 			text-decoration: none;
 			vertical-align: middle;
@@ -539,9 +542,13 @@ body {
 						margin: 11px 10px;
 					}
 
+					.form-width {
+						max-width: 450px;
+					}
+
 					.field_variant(@sel, @lwidth){
 						&.@{sel} {
-							input, select, textarea {
+							input, select, textarea, .form-width {
 								width: e('calc(100% - ')@{lwidth}e('px)');
 							}
 						}
@@ -555,13 +562,10 @@ body {
 					}
 
 					.field_variant('iconed:not(.labeled)', 50);
-					.field_variant('iconed.error:not(.labeled)', 54);
 					.field_variant_error('iconed.error:not(.labeled)', 54);
 					.field_variant('labeled:not(.iconed)', 130);
-					.field_variant('labeled:error:not(.iconed)', 134);
 					.field_variant_error('labeled.error:not(.iconed)', 134);
 					.field_variant('iconed.labeled', 180);
-					.field_variant('iconed.labeled.error', 184);
 					.field_variant_error('labeled.iconed.error', 184);
 				}
 			}
