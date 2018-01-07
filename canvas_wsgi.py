@@ -10,7 +10,7 @@ from sys import path
 
 CANVAS_HOME = 'CANVAS_HOME'
 if CANVAS_HOME not in os.environ:
-	os.environ[CANVAS_HOME] = '/var/www'
+	os.environ[CANVAS_HOME] = '/var/www/canvas'
 path.insert(0, os.environ['CANVAS_HOME'])
 
 from canvas import application
