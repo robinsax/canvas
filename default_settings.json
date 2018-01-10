@@ -14,7 +14,8 @@
 		]
 	},
 	"plugins": {
-		"directory": "../canvas_plugins"
+		"directory": "../canvas_plugins",
+		"active": []
 	},
 	"logging": {
 		"level": "debug",
