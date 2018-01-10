@@ -14,10 +14,9 @@
 		]
 	},
 	"plugins": {
-		"directory": "C:\\Users\\Robin\\Desktop\\canvas_local_plugins",
+		"directory": "../canvas_plugins",
 		"active": [
-			"users",
-			"wirefire_cce"
+			"users"
 		]
 	},
 	"logging": {
