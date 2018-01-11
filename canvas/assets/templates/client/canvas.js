@@ -428,18 +428,20 @@ function CanvasCore(){
 		self.header = self.page.children('header.main-header');
 		flashArea = self.page.children('.flash-message')
 
+		self.headerHighlight = function(e){
+			var w = e.size().width;
+			highlighter.css({
+				'opacity': 1,
+				'width': w + 'px',
+				'left': e.offset().x + w/2 + 'px'
+			});
+		}
+
 		//	Create header highlighter
 		//	TODO: packaging
 		var highlighter = self.header.children('.button-highlight');
 		self.header.children('.button').on({
-			'mouseover': function(e){
-				var w = e.size().width;
-				highlighter.css({
-					'opacity': 1,
-					'width': w + 'px',
-					'left': e.offset().x + w/2 + 'px'
-				});
-			},
+			'mouseover': self.headerHighlight,
 			'mouseleave': function(e){
 				highlighter.css('opacity', 0);
 			}
@@ -459,7 +461,7 @@ function CanvasCore(){
 		tk.config.bindFunction = bind;
 
 		tk.iter(initFns, function(f){
-			f();
+			f(self);
 		});
 	}
 	tk.init(init);
