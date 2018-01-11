@@ -222,7 +222,7 @@ def handle_controller_request(req, cookie):
 		return make_json('error', error_data, status=error_code, default=lambda o: o.__repr__())
 	else:
 		#	TODO: Holy fuck!
-		return render_template('pages/error.html', response=True, template_globals={
+		return render_template('pages/error.html', response=True, template_params={
 			**ctx,
 			**{
 				'debug_info': {

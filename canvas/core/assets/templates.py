@@ -21,6 +21,8 @@ from ..plugins import get_path_occurrences
 from .jinja_extensions import CanvasJinjaEnvironment
 from ... import config
 
+#	TODO: Investigate thread safety of _render_environ
+
 _render_environ = None
 @register('callback:pre_init')
 def create_environment():
@@ -31,15 +33,16 @@ def create_environment():
 	_render_environ = CanvasJinjaEnvironment(load_paths)
 del create_environment
 
-def render_template(template_path, response=False, minify=None, status=200, headers={}, template_globals={}):
+def render_template(template_path, response=False, minify=None, status=200, headers={}, template_params={}):
 	'''
-	Renders a Jinja2 template.
+	Renders a Jinja2 template
+	
 	:template_path The path of the template to render, below `/templates`
 	:minify Whether or not to minify the template as HTML
-	:template_globals An optional dictionary of variables for the render context
+	:template_params An optional dictionary of variables for the render context
 	'''
 	#	Render
-	rendered = _render_environ.get_template(template_path).render(template_globals)
+	rendered = _render_environ.get_template(template_path).render(template_params)
 	if minify is None:
 		#	Guess
 		minify = template_path.endswith('.html')

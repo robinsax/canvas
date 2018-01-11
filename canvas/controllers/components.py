@@ -79,7 +79,7 @@ class PageComponent(Component):
 		'''
 		Return the rendered template for this component
 		'''
-		return render_template(self.template, template_globals={
+		return render_template(self.template, template_params={
 			**ctx,
 			**{
 				'__component__': self

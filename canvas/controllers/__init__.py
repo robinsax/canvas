@@ -132,7 +132,7 @@ class Page(Controller):
 				v = v(ctx)
 			resolved_params[k] = v
 
-		return render_template(self.template, response=True, template_globals={
+		return render_template(self.template, response=True, template_params={
 			**ctx,
 			**resolved_params,
 			**{
