@@ -2,7 +2,7 @@
 {% import 'forms.jinja' as f with context %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" {% block html_attributes %}{% endblock %}>
 	<head>
 		{% block head %}
 			<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
@@ -33,7 +33,7 @@
 			{% endfor %}
 		{% endblock %}
 	</head>
-	<body cv-route="{{ __page__.route }}">
+	<body cv-route="{{ __page__.route }}" {% block body_attributes %}{% endblock %}>
 		<div class="page">
 			{% block header %}
 				<header class="main-header">
