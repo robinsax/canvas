@@ -13,7 +13,7 @@ from jinja2.nodes import Const, Extends, Include
 from jinja2.loaders import BaseLoader
 
 from ...exceptions import TemplateNotFound, TemplateOverlayError
-from ...utils import get_registered_by_name
+from ...utils import get_registered, get_registered_by_name
 from ... import config
 
 log = logging.getLogger(__name__)
@@ -131,7 +131,7 @@ class CanvasJinjaEnvironment(Environment):
 				PageTag,
 				ComponentTag,
 				LessTag
-			]
+			].extend(get_registered('jinja_extension'))
 		})
 		
 		self.filters.update(get_registered_by_name('template_filter'))
