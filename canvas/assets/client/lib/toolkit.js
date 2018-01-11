@@ -30,6 +30,10 @@ function createToolkit(){
 	if (!Element.prototype.matches){
 		Element.prototype.matches = Element.prototype.msMatchesSelector;
 	}
+	//	Placeholder Window for non-browser environs
+	if (!Window){
+		var Window = function(){};
+	}
 
 	//	Load configuration
 	var config = {
@@ -389,7 +393,7 @@ function createToolkit(){
 			}
 		})();
 		//	Parent for back()
-		this.parent = varg(arguments, 1, null);
+		this.backP = varg(arguments, 1, null);
 		//	Cardinality properties
 		this.length = this.set.length;
 		this.empty = this.length == 0;
@@ -425,10 +429,10 @@ function createToolkit(){
 			```
 		*/
 		this.back = function(){
-			if (this.parent == null){
-				throw ChainingError('Called back() without parent');
+			if (this.backP == null){
+				throw new ChainingError('Called back() without parent');
 			}
-			return this.parent;
+			return this.backP;
 		}
 
 		/*
@@ -562,6 +566,8 @@ function createToolkit(){
 				or only immediate ones
 		*/
 		this.children = function(){
+			//	TODO: Allow children(false) for shallow any
+			//	TODO: Vargify
 			var l = [], s = arguments.length > 0 ? arguments[0] : '*',
 				d = arguments.length > 1 ? arguments[1] : true;
 			if (d){
@@ -1057,15 +1063,26 @@ function createToolkit(){
 			:element The element or `ToolkitInstance` to append
 		*/
 		this.append = function(e){
-			switch (typeCheck(e, [ToolkitInstance, Element])){
+			switch (typeCheck(e, [Array, ToolkitInstance, Element])){
 				case 0:
-					e.iter(function(e_){
-						e_.remove();
-						self.set[0].appendChild(e_.set[0]);
-						config.bindFunction(e_);
+					//	TODO: Efficiency
+					var set = [];
+					iter(e, function(g){
+						var tki = self.append(g);
+						tki.iter(function(h){
+							set.push(h.set[0]);
+						});
 					});
-					return e;
+					return new ToolkitInstance(set, this);
 				case 1:
+					e.iter(function(g){
+						g.remove();
+						self.set[0].appendChild(g.set[0]);
+						config.bindFunction(g);
+					});
+					e.backP = this;
+					return e;
+				case 2:
 					self.set[0].appendChild(e);
 					config.bindFunction(e);
 					return new ToolkitInstance(e, this);
@@ -1085,19 +1102,54 @@ function createToolkit(){
 			:element The element or `ToolkitInstance` to append
 		*/
 		this.prepend = function(e){
-			switch (typeCheck(e, [ToolkitInstance, Element])){
+			switch (typeCheck(e, [Array, ToolkitInstance, Element])){
 				case 0:
-					e.reverse().iter(function(e_){
-						e_.remove();
-						self.set[0].insertBefore(e_.set[0], self.set[0].firstChild);
-						config.bindFunction(e);
-					}).reverse();
-					return e;
+					//	TODO: Efficiency
+					var set = [];
+					e = e.splice(0).reverse();
+					iter(e, function(g){
+						var tki = self.prepend(g);
+						tki.iter(function(h){
+							set.push(h.set[0]);
+						});
+					});
+					return new ToolkitInstance(set, this);
 				case 1:
+					e.reverse().iter(function(g){
+						g.remove();
+						self.set[0].insertBefore(g.set[0], self.set[0].firstChild);
+						config.bindFunction(g);
+					});
+					e.backP = this;
+					return e;
+				case 2:
 					self.set[0].insertBefore(e, this.set[0].firstChild);
 					config.bindFunction(e);
 					return new ToolkitInstance(e, this);
 			}
+		}
+
+		//	TODO: Doc
+		this.tag = function(){
+			return this.set[0].tagName;
+		}
+
+		//	TODO: Doc and move
+		this.next = function(){
+			var n = this.set[0].nextElementSibling;
+			if (n == null){
+				n = [];
+			}
+			return new ToolkitInstance(n, this);
+		}
+
+		//	TODO: Doc and move
+		this.prev = function(){
+			var n = this.set[0].previousElementSibling;
+			if (n == null){
+				n = [];
+			}
+			return new ToolkitInstance(n, this);
 		}
 
 		/*
@@ -1246,7 +1298,6 @@ function createToolkit(){
 		var props = Object.getOwnPropertyNames(obj),
 			subtemplates = {};
 		this.node = node;
-		this.parent = parent;
 		
 		/*
 			Remove this object from its parent array.
@@ -1590,8 +1641,8 @@ function createToolkit(){
 	function createElement(){
 		var v = varg.on(arguments);
 		var e = document.createElement(v(0, 'div'));
-		e.className = v(1, '');
-		e.innerHTML = v(2, '');
+		e.className = v(1, '', true);
+		e.innerHTML = v(2, '', true);
 		iter(v(3, {}), function(a, v){
 			e.setAttribute(a, v);
 		});
@@ -1746,7 +1797,9 @@ function createToolkit(){
 		doInit();
 	}
 	else {
-		window.addEventListener('DOMContentLoaded', doInit);
+		if (window){
+			window.addEventListener('DOMContentLoaded', doInit);
+		}
 	}
 	return tk;
 }
