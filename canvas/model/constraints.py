@@ -7,7 +7,10 @@ import re
 
 from urllib.parse import quote
 
-from ..exceptions import UnsupportedEnformentMethod
+from ..exceptions import (
+	ColumnDefinitionError, 
+	UnsupportedEnformentMethod
+)
 
 __all__ = [
 	'get_constraint',
@@ -107,6 +110,37 @@ class RegexConstraint(Constraint):
 	def check(self, model, value):
 		flags = re.I if self.ignore_case else 0
 		return re.match(self.regex, value, flags=flags) is not None
+
+class RangeConstraint(Constraint):
+	#	TODO: Complex range constraints
+
+	#	TODO: Allow either to be none in JS impl.
+	def __init__(self, name, error_msg, max_value=None, min_value=None):
+		super().__init__(name, error_msg)
+		
+		#	Assert validity
+		if max_value is None and min_value is None:
+			raise ColumnDefinitionError('Invalid range: none specified')
+
+		self.max_value, self.min_value = max_value, min_value
+
+	def as_client_parsable(self):
+		max_ = 'null' if self.max_value is None else self.max_value
+		min_ = 'null' if self.min_value is None else self.min_value
+		return f'range:{min_},{max_}'
+
+	def as_sql(self):
+		col_ref = f'{self.target_column.model.__table__}.{self.target_column.name}'
+		
+		#	Create SQL
+		ends = []
+		if self.max_value is not None:
+			ends.append(f'{col_ref} <= {self.max_value}')
+		if self.min_value is not None:
+			ends.append(f'{col_ref} >= {self.min_value}')
+		ends = ' AND '.join(ends)
+
+		return f'CHECK ({ends})'
 
 class UniquenessConstraint(Constraint):
 

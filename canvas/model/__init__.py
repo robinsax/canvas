@@ -3,7 +3,7 @@
 ORM
 '''
 
-#	TODO: No
+#	TODO: Required by .columns but shouldn't live here
 _all_enum = {}
 
 from ..exceptions import ColumnDefinitionError
