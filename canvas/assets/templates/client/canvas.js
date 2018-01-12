@@ -88,7 +88,7 @@ function CanvasCore(){
 	//	deferred
 	this.loadPlugins = function(){
 		tk.iter(unloadedPlugins, function(packed){
-			var PluginClass = packed[0], cond = packed[1],
+			var plugin = packed[0], cond = packed[1],
 				condT = packed[2];
 			switch (condT){
 				case 0:
@@ -102,7 +102,13 @@ function CanvasCore(){
 			}
 			if (cond){
 				//	Create the instance
-				var inst = new PluginClass();
+				var inst;
+				if (typeof plugin == 'function'){
+					inst = new plugin();
+				}
+				else {
+					inst = plugin;
+				}
 				tk.debug('Loading plugin:', inst);
 				//	Grab relevent methods
 				var prop = tk.prop.on(inst);
@@ -217,7 +223,7 @@ function CanvasCore(){
 		//	Find form
 		var form = src.reduce('form', 1);
 		if (form.empty){
-			throw 'No form here!';
+			throw 'No form here';
 		}
 
 		//	Get action
