@@ -134,8 +134,14 @@ function CanvasCore(){
 	}, 'regex');
 	this.validator(function(repr, val){
 		repr = repr.split(',')
-		var min = parseFloat(repr[0]), max = parseFloat(repr[1]);
-		return val >= min && val <= max;
+		var min = null, max = null;
+		if (repr[0] != 'null'){
+			min = parseFloat(repr[0]);
+		}
+		if (repr[1] != 'null'){
+			max = parseFloat(repr[1]);
+		}
+		return (min == null || val >= min) && (max == null || val <= max);
 	}, 'range');
 	this.validator(function(){
 		return true;
