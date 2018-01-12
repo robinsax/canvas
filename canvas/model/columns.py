@@ -6,11 +6,14 @@ Column types and instances
 import re
 import json
 import uuid
+import datetime as dt
 
 from ..exceptions import ColumnDefinitionError
 
 #	TODO: Greasy
 from . import _all_enum
+
+INTERNAL_DT_FMT = '%Y-%m-%dT%H:%M:%S'
 
 #	Used to identify columns that have not
 #	yet been initialized when issuing row 
@@ -70,21 +73,22 @@ class EnumColumnType(ColumnType):
 	An enum column type, stored in database by 
 	value name
 	'''
-	
+
 	def __init__(self, enum_name):
 		'''
 		Create a enum column type targeting the enum 
 		registered as `enum_name`
 		'''
-		super().__init__(enum_name)
-
 		#	TODO: Sub-par practice
 		enum_cls = _all_enum[enum_name]
 
-		self.serialize = lambda v: v.name
-		self.deserialize = lambda v: enum_cls[v]
+		super().__init__(enum_name, **{
+			'serialize': lambda v: v.name,
+			'deserialize': lambda v: enum_cls[v]
+		})
 
 #	Define the basic column types
+#	TODO: Improve some of these
 _column_types = {
 	'int(?:eger)*': ColumnType('INTEGER', 'number'),
 	'real|float': ColumnType('REAL'),
@@ -93,7 +97,9 @@ _column_types = {
 	'json': ColumnType('TEXT', serialize=json.dumps, deserialize=json.loads),
 	'bool(?:ean)*':	ColumnType('BOOLEAN', 'checkbox'),
 	'uuid': ColumnType('CHAR(32)', default=lambda: uuid.uuid4().hex),
-	'pw|pass(?:word)*': ColumnType('TEXT', 'password')
+	'pw|pass(?:word)*': ColumnType('TEXT', 'password'),
+	'dt|datetime': ColumnType('TEXT', serialize=lambda v: v.strftime(INTERNAL_DT_FMT), 
+			deserialize=lambda v: dt.datetime.strptime(v, INTERNAL_DT_FMT))
 }
 
 class Column:
