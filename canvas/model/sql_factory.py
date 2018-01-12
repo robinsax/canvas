@@ -101,7 +101,7 @@ def enum_creation(enum_cls):
 	return f'''
 		DO $$ BEGIN
 			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = {name}) THEN
-				CREATE TYPE {name} AS ({type_format})
+				CREATE TYPE {name} AS ENUM ({type_format});
 			END IF;
 		END$$;
 	''', [e.name for e in enum_cls]

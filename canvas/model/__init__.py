@@ -3,6 +3,9 @@
 ORM
 '''
 
+#	TODO: No
+_all_enum = {}
+
 from ..exceptions import ColumnDefinitionError
 from ..utils import register
 from .columns import Column, ColumnType, ForeignKeyColumnType, EnumColumnType
@@ -106,7 +109,6 @@ def schema(table_name, schema, accessors=[]):
 		return cls
 	return wrap
 
-_all_enum = {}
 def enum(name):
 	'''
 	Define and register the model of the decorated
