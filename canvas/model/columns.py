@@ -9,6 +9,9 @@ import uuid
 
 from ..exceptions import ColumnDefinitionError
 
+#	TODO: Greasy
+from . import _all_enum
+
 #	Used to identify columns that have not
 #	yet been initialized when issuing row 
 #	creation
@@ -61,19 +64,23 @@ class ForeignKeyColumnType(ColumnType):
 		self.target = target
 		self.target_model = None
 
+#	TODO: Form inputs
 class EnumColumnType(ColumnType):
 	'''
 	An enum column type, stored in database by 
 	value name
 	'''
-
+	
 	def __init__(self, enum_name):
 		'''
 		Create a enum column type targeting the enum 
 		registered as `enum_name`
 		'''
 		super().__init__(enum_name)
-		enum_cls = get_registered_by_name()[enum_name]
+
+		#	TODO: Sub-par practice
+		enum_cls = _all_enum[enum_name]
+
 		self.serialize = lambda v: v.name
 		self.deserialize = lambda v: enum_cls[v]
 
@@ -113,7 +120,7 @@ class Column:
 		self.type = None
 		if type_str.startswith('fk:'):
 			self.type = ForeignKeyColumnType(type_str[3:])
-		elif type_str.startswith('enum:')
+		elif type_str.startswith('enum:'):
 			self.type = EnumColumnType(type_str[5:])
 		else:
 			#	Check against each regular expression key

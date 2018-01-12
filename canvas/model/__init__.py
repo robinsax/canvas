@@ -4,7 +4,7 @@ ORM
 '''
 
 from ..exceptions import ColumnDefinitionError
-from ..utils import register, get_registered
+from ..utils import register
 from .columns import Column, ColumnType, ForeignKeyColumnType, EnumColumnType
 from .constraints import *
 from .session import Session
@@ -21,6 +21,7 @@ __all__ = [
 ]
 
 #	TODO: Encode default into SQL when possible
+#	TODO: Comments
 
 class ColumnIterator:
 
@@ -105,6 +106,22 @@ def schema(table_name, schema, accessors=[]):
 		return cls
 	return wrap
 
+_all_enum = {}
+def enum(name):
+	'''
+	Define and register the model of the decorated
+	enumerable type declaration
+
+	TODO: Some kind of dynamic packaging for enums (to model?)
+	'''
+	def wrap(cls):
+		cls.__type_name__ = name
+		
+		#	Register
+		_all_enum[name] = cls
+		return cls
+	return wrap
+
 def dictize(model_obj, omit=[]):
 	return {
 		name: getattr(model_obj, name, None) for name in model_obj.__class__.__columns__ if name not in omit
@@ -133,7 +150,7 @@ def create_everything():
 	session = create_session()
 
 	#	Create types
-	for enum in get_registered('enum_model'):
+	for name, enum in _all_enum.items():
 		session.execute(*enum_creation(enum))
 	
 	#	Create tables	

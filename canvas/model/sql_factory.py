@@ -96,7 +96,7 @@ def enum_creation(enum_cls):
 	Enum type creation. Complicated by the lack of
 	an IF NOT EXISTS option.
 	'''
-	name = enum_cls.__name__
+	name = enum_cls.__type_name__
 	type_format = ', '.join(['%s']*len(enum_cls))
 	return f'''
 		DO $$ BEGIN
