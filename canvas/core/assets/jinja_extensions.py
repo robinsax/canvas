@@ -123,15 +123,17 @@ class OverlayTag(Extension):
 class CanvasJinjaEnvironment(Environment):
 
 	def __init__(self, target_paths):
+		extensions =  [
+			OverlayTag,
+			PageTag,
+			ComponentTag,
+			LessTag
+		]
+		extensions.extend(get_registered('jinja_extension'))
 		super().__init__(**{
 			'loader': DeepFileSystemLoader(target_paths),
 			'autoescape': select_autoescape(['html', 'xml']),
-			'extensions': [
-				OverlayTag,
-				PageTag,
-				ComponentTag,
-				LessTag
-			].extend(get_registered('jinja_extension'))
+			'extensions': extensions
 		})
 		
 		self.filters.update(get_registered_by_name('template_filter'))

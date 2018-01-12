@@ -91,6 +91,21 @@ def comparator_expression(expr, _values=None):
 	#	_values is shared
 	return ret
 
+def enum_creation(enum_cls):
+	'''
+	Enum type creation. Complicated by the lack of
+	an IF NOT EXISTS option.
+	'''
+	name = enum_cls.__name__
+	type_format = ', '.join(['%s']*len(enum_cls))
+	return f'''
+		DO $$ BEGIN
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = {name}) THEN
+				CREATE TYPE {name} AS ({type_format})
+			END IF;
+		END$$;
+	''', [e.name for e in enum_cls]
+
 def table_creation(model_cls):
 	'''
 	Table creation SQL with IF NOT EXISTS option

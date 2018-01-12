@@ -44,7 +44,7 @@ place_registered_on('canvas.model', 'model')
 place_registered_on('canvas.controllers', 'controller')
 
 #	Instantiate singleton everything
-model.create_tables()
+model.create_everything()
 controllers.create_everything()
 
 #	Call initialization functions

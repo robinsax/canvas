@@ -4,16 +4,16 @@ ORM
 '''
 
 from ..exceptions import ColumnDefinitionError
-from ..utils import register
-from .columns import Column, ColumnType, ForeignKeyColumnType
+from ..utils import register, get_registered
+from .columns import Column, ColumnType, ForeignKeyColumnType, EnumColumnType
 from .constraints import *
 from .session import Session
-from .sql_factory import table_creation
+from .sql_factory import table_creation, enum_creation
 
 __all__ = [
 	'schema',
 	'create_session',
-	'create_tables',
+	'create_everything',
 	'Column',
 	'Constraint',
 	'RegexConstraint',
@@ -113,7 +113,7 @@ def dictize(model_obj, omit=[]):
 def create_session():
 	return Session()
 
-def create_tables():
+def create_everything():
 	#	Resolve foreign keys
 	for table, m_cls in _all_orm.items():
 		for c_name, c_obj in m_cls.__schema__.items():
@@ -129,9 +129,14 @@ def create_tables():
 
 			referenced = dest_schema[dest_col_n]
 			c_obj.reference = referenced
-			
-	#	Create tables
+
 	session = create_session()
+
+	#	Create types
+	for enum in get_registered('enum_model'):
+		session.execute(*enum_creation(enum))
+	
+	#	Create tables	
 	for tn, model in _all_orm.items():
 		session.execute(*table_creation(model))
 	session.commit()
