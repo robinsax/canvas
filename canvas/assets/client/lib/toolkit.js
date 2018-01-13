@@ -719,6 +719,9 @@ function createToolkit(){
 				return this;
 			}
 			else {
+				if (this.set[0].type == 'checkbox'){
+					return this.set[0].checked;
+				}
 				return this.set[0].value;
 			}
 		}

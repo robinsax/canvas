@@ -534,6 +534,12 @@ body {
 						height: 200px;	
 					}
 
+					.checkbox-wrap {
+						display: inline-block;
+						text-align: left;
+						max-width: 450px;
+					}
+
 					input[type="checkbox"] {
 						position: relative;
 						top: 5px;
@@ -548,7 +554,7 @@ body {
 
 					.field_variant(@sel, @lwidth){
 						&.@{sel} {
-							input, select, textarea, .form-width {
+							input:not([type="checkbox"]), select, textarea, .form-width, .checkbox-wrap {
 								width: e('calc(100% - ')@{lwidth}e('px)');
 							}
 						}
