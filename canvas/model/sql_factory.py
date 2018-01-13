@@ -218,4 +218,4 @@ def row_deletion(model):
 	pk_col = model_cls.__primary_key__.name
 
 	#	Form statement
-	return f'DELETE FROM {model_cls.__table__} WHERE {pk_col};', (model.__orm_ref__,)
+	return f'DELETE FROM {model_cls.__table__} WHERE {pk_col} = %s;', (model.__orm_ref__,)
