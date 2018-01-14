@@ -74,6 +74,9 @@ function CanvasCore(){
 	this.validator = function(fn, name){
 		return stored(validators, fn, name);
 	}
+	this.mappedEvent = function(fn, name){
+		return stored(tk.config.globalTemplateFunctions, fn, name);
+	}
 	
 	//	Primary plugin interface
 	this.plugin = function(PluginClass){
@@ -275,7 +278,9 @@ function CanvasCore(){
 	function flash(msg){
 		flashArea.text(msg).classify('hidden', false, 5000);
 	}
-	this.flash = this.event(flash);
+	this.flash = this.event(flash, 'flashMessage');
+	//	Also bind as action
+	this.action(flash, 'flash_message');
 
 	function flashError(){
 		self.flash(tk.varg(arguments, 0, 'An error occurred'));
@@ -389,6 +394,14 @@ function CanvasCore(){
 					e.parents('form').children('.error-summary')
 						.classify('hidden');
 					self.validateField(e);
+				},
+				'change': function(h, event){
+					//	TODO: Race cond.
+					tk.defer(function(){
+						e.parents('form').children('.error-summary')
+							.classify('hidden');
+						self.validateField(e);
+					}, 100)
 				},
 				'keydown': function(h, event){
 					if (submits && event.keyCode == 13){

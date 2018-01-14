@@ -97,6 +97,124 @@ body {
 			margin: 20px 10px;
 			color: @text_text;
 		}
+		
+		form {
+			.error-summary {
+				color: @error_level_error;
+			}
+
+			.field {
+				margin-bottom: 20px;
+
+				.icon {
+					font-size: 16pt;
+					width: 40px;
+					padding-left: 0px;
+					margin-right: 10px;
+				}
+
+				.label {
+					display: inline-block;
+					width: 100px;
+					margin-right: 10px;
+					text-align: left;
+				}
+
+				.error-desc {
+					max-width: 450px;
+					text-align: left;
+					margin-top: 5px;
+					display: none;
+				}
+
+				&.error {
+					margin-bottom: 10px;
+
+					input, textarea {
+						border: 2px solid @error_level_error;
+					}
+
+					.error-desc {
+						display: inline-block;
+					}
+				}
+				
+				&.textarea {
+					.icon, .label {
+						vertical-align: top;
+					}
+				}
+
+				input,
+				select,
+				textarea {
+					outline: none;
+					border: none;
+					font-size: 12pt;
+					height: 40px;
+					max-width: 450px;
+					font-family: default-serif;
+					padding: 0px 10px;
+					transition: color .5s, background-color .5s;
+					color: @misc_text;
+					background-color: @misc_background1;
+
+					&.error-highlight {
+						color: @error_level_label;
+						background-color: @error_level_error;
+					}
+
+					&:hover {
+						background-color: @misc_background2;
+					}
+				}
+
+				textarea {
+					padding: 10px;
+					height: 200px;	
+				}
+
+				.checkbox-wrap {
+					display: inline-block;
+					text-align: left;
+					max-width: 450px;
+				}
+
+				input[type="checkbox"] {
+					position: relative;
+					top: 5px;
+					height: 18px;
+					width: 30px;
+					margin: 0px;
+				}
+
+				.form-width {
+					max-width: 450px;
+				}
+
+				.field_variant(@sel, @lwidth){
+					&.@{sel} {
+						input:not([type="checkbox"]), select, textarea, .form-width, .checkbox-wrap {
+							width: e('calc(100% - ')@{lwidth}e('px)');
+						}
+					}
+				}
+
+				.field_variant_error(@sel, @lwidth){
+					&.@{sel} .error-desc {
+						width: e('calc(100% - ')@{lwidth}e('px)');
+						margin-left: @{lwidth}px;
+					}
+				}
+
+				.field_variant('iconed:not(.labeled)', 50);
+				.field_variant_error('iconed.error:not(.labeled)', 54);
+				.field_variant('labeled:not(.iconed)', 130);
+				.field_variant_error('labeled.error:not(.iconed)', 134);
+				.field_variant('iconed.labeled', 180);
+				.field_variant_error('labeled.iconed.error', 184);
+			}
+		}
 
 		//	Visiblity modifiers
 		.invisible {
@@ -458,124 +576,6 @@ body {
 				}
 			}
 
-			form {
-				.error-summary {
-					color: @error_level_error;
-				}
-
-				.field {
-					margin-bottom: 20px;
-
-					.icon {
-						font-size: 16pt;
-						width: 40px;
-						padding-left: 0px;
-						margin-right: 10px;
-					}
-
-					.label {
-						display: inline-block;
-						width: 100px;
-						margin-right: 10px;
-						text-align: left;
-					}
-
-					.error-desc {
-						max-width: 450px;
-						text-align: left;
-						margin-top: 5px;
-						display: none;
-					}
-
-					&.error {
-						margin-bottom: 10px;
-
-						input, textarea {
-							border: 2px solid @error_level_error;
-						}
-
-						.error-desc {
-							display: inline-block;
-						}
-					}
-					
-					&.textarea {
-						.icon, .label {
-							vertical-align: top;
-						}
-					}
-
-					input,
-					select,
-					textarea {
-						outline: none;
-						border: none;
-						font-size: 12pt;
-						height: 40px;
-						max-width: 450px;
-						font-family: default-serif;
-						padding: 0px 10px;
-						transition: color .5s, background-color .5s;
-						color: @misc_text;
-						background-color: @misc_background1;
-
-						&.error-highlight {
-							color: @error_level_label;
-							background-color: @error_level_error;
-						}
-
-						&:hover {
-							background-color: @misc_background2;
-						}
-					}
-
-					textarea {
-						padding: 10px;
-						height: 200px;	
-					}
-
-					.checkbox-wrap {
-						display: inline-block;
-						text-align: left;
-						max-width: 450px;
-					}
-
-					input[type="checkbox"] {
-						position: relative;
-						top: 5px;
-						height: 18px;
-						width: 30px;
-						margin: 0px;
-					}
-
-					.form-width {
-						max-width: 450px;
-					}
-
-					.field_variant(@sel, @lwidth){
-						&.@{sel} {
-							input:not([type="checkbox"]), select, textarea, .form-width, .checkbox-wrap {
-								width: e('calc(100% - ')@{lwidth}e('px)');
-							}
-						}
-					}
-
-					.field_variant_error(@sel, @lwidth){
-						&.@{sel} .error-desc {
-							width: e('calc(100% - ')@{lwidth}e('px)');
-							margin-left: @{lwidth}px;
-						}
-					}
-
-					.field_variant('iconed:not(.labeled)', 50);
-					.field_variant_error('iconed.error:not(.labeled)', 54);
-					.field_variant('labeled:not(.iconed)', 130);
-					.field_variant_error('labeled.error:not(.iconed)', 134);
-					.field_variant('iconed.labeled', 180);
-					.field_variant_error('labeled.iconed.error', 184);
-				}
-			}
-			
 			pre {
 				background-color: @misc_background1;
 				text-align: left;

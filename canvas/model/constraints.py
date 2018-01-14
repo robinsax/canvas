@@ -16,6 +16,7 @@ __all__ = [
 	'get_constraint',
 	'Constraint',
 	'RegexConstraint',
+	'RangeConstraint',
 	'UniquenessConstraint',
 	'NotNullConstraint'
 ]
