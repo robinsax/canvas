@@ -1330,6 +1330,8 @@ function createToolkit(){
 
 		this.remap = function(d){
 			parent.remap([d]);
+			//	TODO: This is a hotfix; the object should be mutable
+			return parent[0];
 		}
 
 		var bindings = {};
