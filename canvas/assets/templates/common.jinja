@@ -111,3 +111,25 @@
 {% macro breakpoint_3() %}
 	@media screen and (max-width: {{ config.styling.breakpoints[2] }}px)
 {% endmacro %}
+
+{% macro modal_head(template_name) %}
+	<div cv-template="{{ template_name }}">
+		<div class="modal" cv-event="closeModal">
+			<form class="panel" cv-event="stopPropagation">
+				<i class="fa fa-close closer" cv-event="closeModal"></i>
+{% endmacro %}
+
+{% macro modal_foot() %}
+			</form>
+		</div>
+	</div>
+{% endmacro %}
+
+{% macro confirm_modal_template() %}
+	{{ modal_head('confirmModal') }}
+		<h4 class="align-center" cv-bind="title"></h4>
+		<p class="align-center confirm-text subtext" cv-bind="text"></p>
+		{{ button(text='Confirm', attrs='cv-mapped-event="confirm"') }}
+		{{ button(text='Cancel', event='closeModal') }}
+	{{ modal_foot() }}
+{% endmacro %}

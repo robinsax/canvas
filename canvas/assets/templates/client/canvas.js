@@ -74,6 +74,9 @@ function CanvasCore(){
 	this.validator = function(fn, name){
 		return stored(validators, fn, name);
 	}
+	this.mappedEvent = function(fn, name){
+		return stored(tk.config.globalTemplateFunctions, fn, name);
+	}
 	
 	//	Primary plugin interface
 	this.plugin = function(PluginClass){
@@ -88,7 +91,7 @@ function CanvasCore(){
 	//	deferred
 	this.loadPlugins = function(){
 		tk.iter(unloadedPlugins, function(packed){
-			var PluginClass = packed[0], cond = packed[1],
+			var plugin = packed[0], cond = packed[1],
 				condT = packed[2];
 			switch (condT){
 				case 0:
@@ -102,7 +105,13 @@ function CanvasCore(){
 			}
 			if (cond){
 				//	Create the instance
-				var inst = new PluginClass();
+				var inst;
+				if (typeof plugin == 'function'){
+					inst = new plugin();
+				}
+				else {
+					inst = plugin;
+				}
 				tk.debug('Loading plugin:', inst);
 				//	Grab relevent methods
 				var prop = tk.prop.on(inst);
@@ -163,6 +172,18 @@ function CanvasCore(){
 			.children('.button')
 			.classify('hidden', function(e){ return !e.is('.protected'); });
 	}, '__cancel__');
+	this.event(function(e, evt){
+		evt.stopPropagation();
+	}, 'stopPropagation');
+
+	this.openModal = function(template, data, functions){
+		//	TODO: Hold page-content-wrap
+		tk.map(data, template, tk('.page-content-wrap'), functions);
+	}
+
+	this.closeModal = this.event(function(e){
+		e.extend(e.parents('.modal')).reduce('.modal').remove();
+	}, 'closeModal');
 
 	//	Core action definitions
 	this.action(function(data){
@@ -223,7 +244,7 @@ function CanvasCore(){
 		//	Find form
 		var form = src.reduce('form', 1);
 		if (form.empty){
-			throw 'No form here!';
+			throw 'No form here';
 		}
 
 		//	Get action
@@ -272,10 +293,17 @@ function CanvasCore(){
 
 	//	Flash messages
 	var flashArea = null;
-	function flash(msg){
+	this.flash = function(msg){
 		flashArea.text(msg).classify('hidden', false, 5000);
 	}
-	this.flash = this.event(flash);
+	//	Event binding
+	this.event(function(e){
+		self.flash(e.attr('cv-message'));
+	}, 'flashMessage');
+	//	Action binding
+	this.action(function(data){
+		self.flash(data.message);
+	}, 'flash_message');
 
 	function flashError(){
 		self.flash(tk.varg(arguments, 0, 'An error occurred'));
@@ -362,10 +390,10 @@ function CanvasCore(){
 					}
 				}
 				else {
-					return function(){
+					return function(g, evt){
 						var event = tk.prop(events, e.attr('cv-event'), null);
 						if (event != null){
-							event(e);
+							event(e, evt);
 						}
 						else {
 							throw 'No event ' + e.attr('cv-event');
@@ -389,6 +417,14 @@ function CanvasCore(){
 					e.parents('form').children('.error-summary')
 						.classify('hidden');
 					self.validateField(e);
+				},
+				'change': function(h, event){
+					//	TODO: Race cond.
+					tk.defer(function(){
+						e.parents('form').children('.error-summary')
+							.classify('hidden');
+						self.validateField(e);
+					}, 100)
 				},
 				'keydown': function(h, event){
 					if (submits && event.keyCode == 13){

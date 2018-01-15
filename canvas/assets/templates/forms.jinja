@@ -164,7 +164,13 @@
 				{% endfor %}
 			</select>
 		{% else %}
+			{% if type == 'checkbox' %}
+				<div class="checkbox-wrap">
+			{% endif %}
 			<input type="{{ type }}" {{ common_attrs }}{% if attrs is not none %} {{ attrs }}{% endif %} placeholder="{{ placeholder }}"/>
+			{% if type == 'checkbox' %}
+				</div>
+			{% endif %}
 		{% endif %}
 		<div class="error-desc"></div>
 	</div>

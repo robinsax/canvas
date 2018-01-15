@@ -115,22 +115,23 @@ function createToolkit(){
 		:func The function to call at each iteration
 	*/
 	function iter(t, fn){
-		switch (typeCheck(t, [Array, 'object', 'number'])){
+		switch (typeCheck(t, [MappedArray, Array, 'object', 'number'])){
 			case 0:
+			case 1:
 				for (var i = 0; i < t.length; i++){
 					if (fn(t[i], i) === false){
 						break;
 					}
 				}
 				return;
-			case 1:
+			case 2:
 				for (var k in t){
 					if (fn(k, t[k]) === false){
 						break;
 					}
 				}
 				return;
-			case 2:
+			case 3:
 				for (var i = 0; i < t; i++){
 					if (fn(i) === false){
 						break;
@@ -719,6 +720,9 @@ function createToolkit(){
 				return this;
 			}
 			else {
+				if (this.set[0].type == 'checkbox'){
+					return this.set[0].checked;
+				}
 				return this.set[0].value;
 			}
 		}
@@ -1322,6 +1326,12 @@ function createToolkit(){
 				d[n] = v;
 			});
 			return d;
+		}
+
+		this.remap = function(d){
+			parent.remap([d]);
+			//	TODO: This is a hotfix; the object should be mutable
+			return parent[0];
 		}
 
 		var bindings = {};
