@@ -170,10 +170,15 @@ function CanvasCore(){
 		evt.stopPropagation();
 	}, 'stopPropagation');
 
+	this.openModal = function(data, template, functions){
+		//	TODO: Hold page-content-wrap
+		tk.map(data, template, tk('.page-content-wrap'), functions);
+	}
+
 	this.closeModal = this.event(function(e){
 		e.extend(e.parents('.modal')).reduce('.modal').remove();
 	}, 'closeModal');
-	
+
 	//	Core action definitions
 	this.action(function(data){
 		window.location.href = data.url;
