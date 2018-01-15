@@ -129,6 +129,6 @@
 	{{ modal_head('confirmModal') }}
 		<h4 cv-bind="title"></h4>
 		{{ button(text='Confirm', event=confirmEvent) }}
-		{{ button(text='Cancel', attrs='cv-bind="confirmEvent" cv-onto="attr:cv-event"') }}
+		{{ button(text='Cancel', attrs='cv-mapped-event="confirm"') }}
 	{{ modal_foot() }}
 {% endmacro %}
