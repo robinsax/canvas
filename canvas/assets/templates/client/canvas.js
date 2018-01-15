@@ -166,6 +166,9 @@ function CanvasCore(){
 			.children('.button')
 			.classify('hidden', function(e){ return !e.is('.protected'); });
 	}, '__cancel__');
+	this.event(function(e, evt){
+		evt.stopPropagation();
+	}, 'stopPropagation');
 
 	//	Core action definitions
 	this.action(function(data){
@@ -275,12 +278,17 @@ function CanvasCore(){
 
 	//	Flash messages
 	var flashArea = null;
-	function flash(msg){
+	this.flash = function(msg){
 		flashArea.text(msg).classify('hidden', false, 5000);
 	}
-	this.flash = this.event(flash, 'flashMessage');
-	//	Also bind as action
-	this.action(flash, 'flash_message');
+	//	Event binding
+	this.event(function(e){
+		self.flash(e.attr('cv-message'));
+	}, 'flashMessage');
+	//	Action binding
+	this.action(function(data){
+		self.flash(data.message);
+	}, 'flash_message');
 
 	function flashError(){
 		self.flash(tk.varg(arguments, 0, 'An error occurred'));
@@ -367,10 +375,10 @@ function CanvasCore(){
 					}
 				}
 				else {
-					return function(){
+					return function(g, evt){
 						var event = tk.prop(events, e.attr('cv-event'), null);
 						if (event != null){
-							event(e);
+							event(e, evt);
 						}
 						else {
 							throw 'No event ' + e.attr('cv-event');
