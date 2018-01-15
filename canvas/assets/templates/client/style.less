@@ -43,6 +43,10 @@ body {
 		font-family: default-serif;
 		background-color: @base_background1;
 
+		[cv-event] {
+			cursor: pointer;
+		}
+
 		.subtext {
 			color: @text_subtext;
 			font-size: 11pt;
@@ -214,6 +218,39 @@ body {
 				.field_variant_error('labeled.error:not(.iconed)', 134);
 				.field_variant('iconed.labeled', 180);
 				.field_variant_error('labeled.iconed.error', 184);
+			}
+		}
+
+		.modal {
+			cursor: default !important;
+			position: fixed;
+			top: 0px;
+			background-color: rgba(0, 0, 0, 0.5);
+			width: 100%;
+			height: 100%;
+
+			.panel {
+				cursor: default;
+				background-color: @base_background2;
+				position: relative;
+				top: 50%;
+				left: 50%;
+				//min-width: 500px;
+				transform: translate(-50%, -50%);
+				display: inline-block;
+				padding: 10px;
+
+				h4 {
+					text-align: center;
+				}
+
+				.closer {
+					float: right;
+				}
+			}
+
+			.error .error-desc {
+				display: block !important;
 			}
 		}
 

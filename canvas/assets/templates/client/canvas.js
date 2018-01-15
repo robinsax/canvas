@@ -170,6 +170,10 @@ function CanvasCore(){
 		evt.stopPropagation();
 	}, 'stopPropagation');
 
+	this.closeModal = this.event(function(e){
+		e.extend(e.parents('.modal')).reduce('.modal').remove();
+	}, 'closeModal');
+	
 	//	Core action definitions
 	this.action(function(data){
 		window.location.href = data.url;
