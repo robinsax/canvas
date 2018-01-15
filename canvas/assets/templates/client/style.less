@@ -43,7 +43,7 @@ body {
 		font-family: default-serif;
 		background-color: @base_background1;
 
-		[cv-event] {
+		[cv-event], [cv-mapped-event] {
 			cursor: pointer;
 		}
 
@@ -240,12 +240,12 @@ body {
 				display: inline-block;
 				padding: 10px;
 
-				h4 {
-					text-align: center;
-				}
-
 				.closer {
 					float: right;
+				}
+
+				.confirm-text {
+					margin-bottom: 20px;
 				}
 			}
 

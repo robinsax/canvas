@@ -128,6 +128,9 @@ def dictize(model_obj, omit=[]):
 	return {
 		name: getattr(model_obj, name, None) for name in model_obj.__class__.__columns__ if name not in omit
 	}
+
+def dictize_all(model_list, omit=[]):
+	return [dictize(model, omit) for model in model_list]
 	
 def create_session():
 	return Session()
