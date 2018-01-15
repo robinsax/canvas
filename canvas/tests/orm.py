@@ -43,7 +43,7 @@ def test_orm():
 		def __on_load__(self):
 			j.append('called')
 
-	model.create_tables()
+	model.create_everything()
 
 	check((
 		len(session.query(X)) == 0
@@ -105,17 +105,17 @@ def test_orm():
 
 	@model.schema(TEST_TABLE, {
 		'a': model.Column('serial', primary_key=True),
-		'b': model.Column('text', unique=False, constraints=[
+		'b': model.Column('text', constraints=[
 			model.RegexConstraint('my_constraint', 'Something happened', '^\w{5,}$')
 		]),
-		'c': model.Column('json', unique=False, nullable=True)
+		'c': model.Column('json')
 	}, accessors=['a'])
 	class Y:
 		
 		def __init__(self, b, c=None):
 			self.b, self.c = (b, c)
 		
-	model.create_tables()
+	model.create_everything()
 
 	x = Y('foobar')
 	session.save(x)
@@ -128,7 +128,7 @@ def test_orm():
 	session.commit()
 
 	session = model.create_session()
-	x = Y.get(session, x_ser)
+	x = Y.get(x_ser, session)
 
 	check((
 		x is not None and
@@ -167,7 +167,7 @@ def test_orm():
 		len(session.query(Y, Y.b == 'foobar2')) == 0
 	), 'Deletion')
 
-	y = Y.get(session, x.a)
+	y = Y.get(x.a, session)
 	check((
 		y is x
 	), 'Class accessor get yields already-mapped model')

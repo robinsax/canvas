@@ -160,3 +160,6 @@ class TemplateOverlayError(Exception):
 
 class UnsupportedEnformentMethod(Exception):
 	pass
+
+class MappedTypeError(Exception):
+	pass

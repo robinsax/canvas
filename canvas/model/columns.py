@@ -8,7 +8,7 @@ import json
 import uuid
 import datetime as dt
 
-from ..exceptions import ColumnDefinitionError
+from ..exceptions import ColumnDefinitionError, MappedTypeError
 
 #	TODO: Greasy
 from . import _all_enum
@@ -98,8 +98,7 @@ _column_types = {
 	'bool(?:ean)*':	ColumnType('BOOLEAN', 'checkbox'),
 	'uuid': ColumnType('CHAR(32)', default=lambda: uuid.uuid4().hex),
 	'pw|pass(?:word)*': ColumnType('TEXT', 'password'),
-	'dt|datetime': ColumnType('TEXT', serialize=lambda v: v.strftime(INTERNAL_DT_FMT), 
-			deserialize=lambda v: dt.datetime.strptime(v, INTERNAL_DT_FMT))
+	'dt|datetime': ColumnType('timestamp')
 }
 
 class Column:
@@ -109,7 +108,7 @@ class Column:
 	other column parameters. Generates a `ColumnComparator` when
 	compared to allow `session.query()` syntax.
 	'''
-
+	
 	def __init__(self, type_str, constraints=[], default=None, 
 			primary_key=False):
 		'''
@@ -197,16 +196,17 @@ class Column:
 			return None
 		if pre is _sentinel:
 			return _sentinel
-		return self.type.serialize(pre)
+		try:
+			return self.type.serialize(pre)
+		except TypeError:
+			raise MappedTypeError(f'{self.model.__table__}.{self.name} committed containing {pre}')
 
 	def deserialize_onto(self, model_obj, value):
 		'''
 		Deserialize the given value of this column
 		onto the given model object
 		'''
-		if value is None:
-			return None
-		self.set_value_for(model_obj, self.type.deserialize(value))
+		self.set_value_for(model_obj, None if value is None else self.type.deserialize(value))
 
 	#	Comparison yields a `ColumnComparator`
 	def __eq__(self, other):
