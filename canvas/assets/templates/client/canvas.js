@@ -170,7 +170,7 @@ function CanvasCore(){
 		evt.stopPropagation();
 	}, 'stopPropagation');
 
-	this.openModal = function(data, template, functions){
+	this.openModal = function(template, data, functions){
 		//	TODO: Hold page-content-wrap
 		tk.map(data, template, tk('.page-content-wrap'), functions);
 	}
