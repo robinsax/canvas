@@ -125,9 +125,9 @@
 	</div>
 {% endmacro %}
 
-{% macro confirm_modal(template_name, title, confirmEvent) %}
+{% macro confirm_modal_template(template_name, confirmEvent) %}
 	{{ modal_head(template_name) }}
-		<h4>{{ title }}</h4>
+		<h4 cv-bind="title"></h4>
 		{{ button(text='Confirm', event=confirmEvent) }}
 		{{ button(text='Cancel', event='closeModal') }}
 	{{ modal_foot() }}
