@@ -1327,6 +1327,10 @@ function createToolkit(){
 			return d;
 		}
 
+		this.remap = function(d){
+			parent.remap([d]);
+		}
+
 		var bindings = {};
 		//	Binds each properties onto all template
 		//	nodes binding to it
