@@ -192,7 +192,7 @@ def handle_controller_request(req, cookie):
 			#	Return a normal redirect
 			return '', e.code, {
 				'Location': e.target
-			}
+			}, ''
 	except ValidationErrors as e:
 		log_error(req, e, ctx)
 		return make_json('failure', {

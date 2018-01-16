@@ -303,16 +303,16 @@ body {
 		[cv-tooltip]:hover {
 			cursor: help;
 		}
-		[cv-event]:hover {
+		[cv-event]:hover, [cv-mapped-event]:hover {
 			cursor: pointer;
 		}
 
 		//	Buttons
 		.button {
-			height: 50px;
+			height: 40px;
 			display: inline-block;
 			margin-right: 10px;
-			line-height: 50px;
+			line-height: 40px;
 			font-size: 15pt;
 			padding: 0px 15px;
 			vertical-align: middle;
@@ -348,31 +348,6 @@ body {
 				color: @base_background1;
 				background-color: @base_theme1;
 			}
-
-			//	Call to action variant
-			&.cta {
-				display: inline-block;
-				height: 50px;
-				line-height: 50px;
-				font-size: 20pt;
-				padding: 0px 10px;
-				border-radius: 5px;
-				float: none;
-				margin: 5px 15px;
-				transition: 0.3s background-color;
-				padding: 0px 10px;
-				color: @base_background1;
-				background-color: @base_theme1;
-
-				&:hover {
-					text-shadow: 0 0 4px rgba(0,0,0,.14), 0 4px 8px rgba(0,0,0,.28);
-					background-color: @base_theme2;
-				}
-
-				&.push:hover {
-					background-color: @error_level_success;
-				}
-			}
 			
 			//	Components
 			.icon {
@@ -392,15 +367,6 @@ body {
 				margin-left: 0px;
 				margin-right: 10px;
 			}
-		}
-
-		.button.short,
-		.control-group .button,
-		.control-group-left .button,
-		.control-group-right .button {
-			height: 35px;
-			line-height: 35px;
-			font-size: 11pt;
 		}
 
 		//	Button variants
