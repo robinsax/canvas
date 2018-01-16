@@ -34,7 +34,7 @@
 	:protected Whether this button should be protected by a 'Confirm'/'Cancel' 
 		layer. Doesn't work on links
 #}
-{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, event=None, bind=None, mapped_event=None, href=None, attrs='', protected=False) %}
+{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, event=None, bind=None, mapped_event=None, view_fn=None, onto=None, href=None, attrs='', protected=False) %}
 	{% set text_span = '' %}
 	{% set icon_span = '' %}
 	
@@ -84,7 +84,13 @@
 		{% set map_attrs = '%s cv-bind="%s"'%(map_attrs, bind) %}
 	{% endif %}
 	{% if mapped_event is not None %}
-		{% set mapped_event = '%s cv-mapped-event="%s"'%(map_attrs, mapped_event) %}
+		{% set map_attrs = '%s cv-mapped-event="%s"'%(map_attrs, mapped_event) %}
+	{% endif %}
+	{% if view_fn is not None %}
+		{% set map_attrs = '%s cv-view-fn="%s"'%(map_attrs, view_fn) %}
+	{% endif %}
+	{% if onto is not None %}
+		{% set map_attrs = '%s cv-onto="%s"'%(map_attrs, onto) %}
 	{% endif %}
 	
 	{#
