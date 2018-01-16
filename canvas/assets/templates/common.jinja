@@ -34,39 +34,66 @@
 	:protected Whether this button should be protected by a 'Confirm'/'Cancel' 
 		layer. Doesn't work on links
 #}
-{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, event=None, href=None, attrs='', protected=False) %}
+{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, event=None, bind=None, mapped_event=None, href=None, attrs='', protected=False) %}
 	{% set text_span = '' %}
 	{% set icon_span = '' %}
+	
+	{# Get tag #}
 	{% set tag = 'a' if href is not none else 'div' %}
+	
+	{# Assert valid parameters #}
 	{% if text is none and icon is none %}
 		{{ parameter_error('Cannot create button without text or icon') }}
 	{% endif %}
 	{% if event is not none and href is not none %}
 		{{ parameter_error('Cannot create button with both event and href') }}
 	{% endif %}
+	
+	{# Handle text #}
 	{% if text is not none %}
 		{% set text_span = '<span class="text">%s</span>'%text %}
 		{% set cls = 'texted %s'%cls %}
 	{% endif %}
+	
+	{# Handle icon #}
 	{% if icon is not none %}
 		{% set icon_span = '<span class="fa fa-%s icon"></span>'%icon %}
 		{% set cls = 'iconed %s'%cls %}
 	{% endif %}
+	
+	{# Handle protection #}
 	{% if protected %}
 		{% set cls = 'protected %s'%cls %}
 	{% endif %}
+	
+	{# Handle alignment #}
 	{% if icon_right %}
 		{% set cls = 'icon-right %s'%cls %}
 	{% endif %}
+	
+	{# Handle tooltip #}
 	{% if tooltip is not none %}
 		{% set tooltip_str = ' %s="%s"'%('cv-tooltip' if fancy_tooltip else 'title', tooltip) %}
 	{% else %}
 		{% set tooltip_str = '' %}
 	{% endif %}
+
+	{# Handle mapping attributes #}
+	{% set map_attrs = '' %}
+	{% if bind is not None %}
+		{% set map_attrs = '%s cv-bind="%s"'%(map_attrs, bind) %}
+	{% endif %}
+	{% if mapped_event is not None %}
+		{% set mapped_event = '%s cv-mapped-event="%s"'%(map_attrs, mapped_event) %}
+	{% endif %}
+	
+	{#
+		Build
+	#}
 	{% if protected %}
 		<span class="condom">
 	{% endif %}
-	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %} {{ attrs }}>
+	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{{ map_attrs }}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %} {{ attrs }}>
 		{% if icon_right %}
 			{{ text_span }}{{ icon_span }}
 		{% else %}
