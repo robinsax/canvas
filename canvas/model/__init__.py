@@ -78,8 +78,10 @@ def schema(table_name, schema, accessors=[]):
 		#	Gives us a fixed order for column names, with primary key first
 		cls.__columns__ = sorted(schema.keys(), key=lambda n: schema[n].primary_key, reverse=True)
 		cls.__primary_key__ = pk
+		cls.__dirty__ = False
 
-		#	Create accessors TODO: Use to make indicies
+		#	Create accessors
+		#	TODO: Use to make indicies
 		accessors_objs = [schema[name] for name in accessors]
 		cls.__accessors__ = accessors_objs
 
@@ -92,12 +94,22 @@ def schema(table_name, schema, accessors=[]):
 		cls.get = classmethod(get)
 
 		#	Override init. to populate fields
-		inner = cls.__init__
+		inner_init = cls.__init__
 		def init(self, *args, **kwargs):
 			for name, column in cls.__schema__.items():
 				setattr(self, name, column.get_default())
-			inner(self, *args, **kwargs)
+			inner_init(self, *args, **kwargs)
 		cls.__init__ = init
+
+		#	Create a setattr override for simple dirty-checking
+		inner_set = cls.__setattr__
+		def set_with_check(self, attr, val):
+			if attr in self.__columns__:
+				#	This is a mapped attribute; in-memory
+				#	version is now dirty
+				inner_set(self, '__dirty__', True)
+			inner_set(self, attr, val)
+		cls.__setattr__ = set_with_check
 
 		#	Create a ordered column iterator
 		def schema_iter(cls, i=False):

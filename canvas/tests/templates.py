@@ -16,7 +16,7 @@ def test_canvas_jinja_env():
 
 	base_paths = []
 	for i in range(1, 4):
-		base_paths.append(os.path.join(CANVAS_HOME, 'canvas', 'tests', 'extras', 'templates', str(i)))
+		base_paths.append(os.path.join(CANVAS_HOME, 'canvas', 'tests', 'extras', 'rendering', str(i), 'templates'))
 
 	env = CanvasJinjaEnvironment(base_paths)
 	

@@ -193,14 +193,19 @@ class Session:
 	def commit(self):
 		'''
 		Write the actively mapped models into their 
-		rows and commit the transation.
+		rows and commit the transaction.
 		'''
 		#	Update active models
 		#	TODO: Check if nessesary for each
-		for ref, model in self.active_mappings.items():
-			self._precheck_constraints(model)
-			self.execute(*row_update(model))
-			self._update_reference(model)
+		to_commit = list(self.active_mappings.items())
+		for ref, model in to_commit:
+			if model.__dirty__:
+				self._precheck_constraints(model)
+				self.execute(*row_update(model))
+				self._update_reference(model)
+				#	All changes are now persistant, clear 
+				#	dirty flag
+				model.__dirty__ = False
 		
 		#	Commit transaction
 		self.conn.commit()
