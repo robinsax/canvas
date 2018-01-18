@@ -6,6 +6,8 @@ ORM
 #	TODO: Required by .columns but shouldn't live here
 _all_enum = {}
 
+from . import psycopg2_extensions
+
 from ..exceptions import ColumnDefinitionError
 from ..utils import register
 from .columns import Column, ColumnType, ForeignKeyColumnType, EnumColumnType

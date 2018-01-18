@@ -8,9 +8,31 @@ import sys
 import logging
 
 from ..exceptions import PluginInitError
+from ..utils import logger
 from .. import CANVAS_HOME, config
 
-log = logging.getLogger(__name__)
+log = logger()
+
+class CanvasPluginLoader:
+
+	def __init__(self, module):
+		self.module = module
+
+	def load_module(self, module_name):
+		return self.module
+
+class CanvasPluginImporter:
+
+	def __init__(self, modules):
+		self.modules = modules
+	
+	def load_module(self, module_name):
+		return self
+
+	def find_module(self, module_name, package_path):
+		if module_name == 'canvas.plugins':
+			return self
+		return CanvasPluginLoader(self.modules[module_name])
 
 def plugin_base_path(name):
 	return os.path.join(config['plugins']['directory'], f'canvas-pl-{name}')
@@ -19,13 +41,19 @@ def load_all():
 	'''
 	Load all activated plugins
 	'''
+	loaded = {}
 	for plugin in config['plugins']['active']:
 		sys.path.insert(0, plugin_base_path(plugin))
 		log.debug(f'Importing plugin {plugin}')
 		try:
 			__import__(plugin)
+			loaded[plugin] = sys.modules[plugin]
 		except BaseException as e:
 			raise PluginInitError(plugin)
+	
+	#	Create an alternate import loader
+	#	that allows canvas.plugins.X imports
+	sys.meta_path.append(CanvasPluginImporter(loaded))
 
 def get_path_occurrences(target, include_base=True, filter=os.path.exists):
 	'''

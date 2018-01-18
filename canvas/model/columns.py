@@ -20,34 +20,24 @@ INTERNAL_DT_FMT = '%Y-%m-%dT%H:%M:%S'
 #	creation
 _sentinel = object()
 
-#	The identity transform, used for most
-#	column value serializations and
-#	deserializations
-_ident = lambda v: v
-
 class ColumnType:
 	'''
 	Template for the majority of column types.
 	'''
 
-	def __init__(self, sql_type, input_type='text',
-			default=_sentinel, serialize=_ident, 
-			deserialize=_ident):
+	def __init__(self, sql_type, input_type='text', default=_sentinel):
 		'''
 		Create a new column type
 		:sql_type The name of this type in PostgreSQL
+		:input_type The type of input to use for this attribute
+			TODO: Could extend this to be an InputMarkupGenerator
+			or something similar.
 		:default The default value with which to populate
 			attributes in this column
-		:serialize A Python value to SQL serialization
-			transform
-		:deserialize A SQL serialization to Python value
-			transform
 		'''
 		self.sql_type = sql_type
 		self.input_type = input_type
 		self.default = default
-		self.serialize = serialize
-		self.deserialize = deserialize
 
 	def __repr__(self):
 		return f'<{self.__class__.__name__}: sql_type={self.sql_type}>'
@@ -80,25 +70,21 @@ class EnumColumnType(ColumnType):
 		registered as `enum_name`
 		'''
 		#	TODO: Sub-par practice
+		#	TODO: Type adaption!!!
 		enum_cls = _all_enum[enum_name]
+		super().__init__(enum_name)
 
-		super().__init__(enum_name, **{
-			'serialize': lambda v: v.name,
-			'deserialize': lambda v: enum_cls[v]
-		})
-
-#	Define the basic column types
-#	TODO: Improve some of these
+#	Define the basic column type mapping
 _column_types = {
 	'int(?:eger)*': ColumnType('INTEGER', 'number'),
 	'real|float': ColumnType('REAL'),
 	'serial': ColumnType('SERIAL'),
 	'(?:long)*text': ColumnType('TEXT'),
-	'json': ColumnType('TEXT', serialize=json.dumps, deserialize=json.loads),
+	'json': ColumnType('JSON'),
 	'bool(?:ean)*':	ColumnType('BOOLEAN', 'checkbox'),
-	'uuid': ColumnType('CHAR(32)', default=lambda: uuid.uuid4().hex),
+	'uuid': ColumnType('CHAR(32)', default=lambda: uuid.uuid4()),
 	'pw|pass(?:word)*': ColumnType('TEXT', 'password'),
-	'dt|datetime': ColumnType('timestamp')
+	'dt|datetime': ColumnType('TIMESTAMP')
 }
 
 class Column:
@@ -185,28 +171,6 @@ class Column:
 		given model object
 		'''
 		setattr(model_obj, self.name, value)
-
-	def serialized_for(self, model_obj):
-		'''
-		Return the serialized value of this column
-		on the given model object
-		'''
-		pre = self.value_for(model_obj)
-		if pre is None:
-			return None
-		if pre is _sentinel:
-			return _sentinel
-		try:
-			return self.type.serialize(pre)
-		except TypeError:
-			raise MappedTypeError(f'{self.model.__table__}.{self.name} committed containing {pre}')
-
-	def deserialize_onto(self, model_obj, value):
-		'''
-		Deserialize the given value of this column
-		onto the given model object
-		'''
-		self.set_value_for(model_obj, None if value is None else self.type.deserialize(value))
 
 	#	Comparison yields a `ColumnComparator`
 	def __eq__(self, other):
