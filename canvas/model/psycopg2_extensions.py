@@ -4,6 +4,7 @@ Psycogpg2 type casting configuration
 '''
 
 #	TODO: Package these beside columns?
+#	TODO: XML support should be a plugin
 
 import json
 import uuid
