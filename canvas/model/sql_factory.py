@@ -23,9 +23,8 @@ __all__ = [
 
 def _column_ordering(model_cls):
 	'''
-	Column retrieval order is decided
-	arbitrarily by `schema()`; serialize
-	that order as SQL
+	Column retrieval order is decided arbitrarily by 
+	`schema()`; serialize that order as SQL
 	'''
 	return ', '.join(model_cls.__columns__)
 
@@ -161,7 +160,7 @@ def row_update(model):
 	#	Create assignment statement
 	assignments, values = [], []
 	for name, column in model_cls.schema_iter():
-		value = column.serialized_for(model)
+		value = column.value_for(model)
 		if value is _sentinel:
 			continue
 		values.append(value)
@@ -192,7 +191,7 @@ def row_creation(model):
 		if column.value_for(model) == _sentinel:
 			continue
 		order.append(name)
-		values.append(column.serialized_for(model))
+		values.append(column.value_for(model))
 	
 	#	Comma seperate assignments and order
 	assignments = ', '.join(['%s' for x in order])

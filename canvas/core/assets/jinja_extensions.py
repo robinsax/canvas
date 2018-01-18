@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-Canvas Jinja extensions
+Template-depth-enabling Jinja extensions
 '''
 
 import os

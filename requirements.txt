@@ -1,7 +1,9 @@
 #	Core
 werkzeug
 psycopg2
-#	Rendering
+#	Typecasting
+lxml
+#	Asset rendering
 jinja2
 htmlmin
 markdown

@@ -80,16 +80,16 @@
 
 	{# Handle mapping attributes #}
 	{% set map_attrs = '' %}
-	{% if bind is not None %}
+	{% if bind is not none %}
 		{% set map_attrs = '%s cv-bind="%s"'%(map_attrs, bind) %}
 	{% endif %}
-	{% if mapped_event is not None %}
+	{% if mapped_event is not none %}
 		{% set map_attrs = '%s cv-mapped-event="%s"'%(map_attrs, mapped_event) %}
 	{% endif %}
-	{% if view_fn is not None %}
+	{% if view_fn is not none %}
 		{% set map_attrs = '%s cv-view-fn="%s"'%(map_attrs, view_fn) %}
 	{% endif %}
-	{% if onto is not None %}
+	{% if onto is not none %}
 		{% set map_attrs = '%s cv-onto="%s"'%(map_attrs, onto) %}
 	{% endif %}
 	

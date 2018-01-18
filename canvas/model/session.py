@@ -40,7 +40,7 @@ class Session:
 		'''
 		model_cls = model.__class__
 		for name, column, i in model_cls.schema_iter(i=True):
-			column.deserialize_onto(model, row[i])
+			column.set_value_for(model, row[i])
 		self._update_reference(model)
 
 	def _update_reference(self, model):
