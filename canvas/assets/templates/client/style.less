@@ -256,7 +256,7 @@ body {
 
 		//	Visiblity modifiers
 		.invisible {
-			visiblity: hidden !important
+			visibility: hidden !important
 		}
 		.hidden {
 			display: none !important;
@@ -328,15 +328,11 @@ body {
 				background-color: @error_level_error;
 			}
 
-			&.wide {
-				padding: 0px 35px;
-			}
-
-			&.iconed:not(.icon-right) .text {
-				margin-left: 10px;
-			}
-			&.iconed.icon-right .text {
+			&.texted:not(.icon-right) .icon {
 				margin-right: 10px;
+			}
+			&.texted.icon-right .icon {
+				margin-left: 10px;
 			}
 
 			&.open {
@@ -349,9 +345,7 @@ body {
 				background-color: @base_theme1;
 			}
 			
-			//	Components
 			.icon {
-				font-size: 17pt;
 				vertical-align: middle;
 			}
 		}
@@ -390,6 +384,7 @@ body {
 			position: fixed;
 			top: 0px;
 			left: 0px;
+			padding: 0px 20px;
 			width: 100%;
 			transition: 0.5s top;
 			font-family: default-sans;
@@ -503,6 +498,11 @@ body {
 			max-width: 1200px;
 			text-align: center;
 			margin: 0px auto;
+
+			.loading-placeholder {
+				margin: 10px auto;
+				color: @base_theme1;
+			}
 
 			.row {
 				position: relative;

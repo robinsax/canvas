@@ -6,12 +6,12 @@
 {#
 	Create an icon that triggers an event TODO: Doc and attrs as dict
 #}
-{% macro icon(icon=None, event=None, href=None, cls='', tooltip=None, attrs='') %}
+{% macro icon(icon=None, event=None, mapped_event=None, href=None, cls='', tooltip=None, attrs='') %}
 	{% if event is not none and href is not none %}
 		{{ parameter_error('Cannot create event icon with both event and href') }}
 	{% endif %}
-	{% set tag = 'a' if href is not none else 'div' %}
-	<{{ tag }} class="fa fa-{{ icon }} event-icon {{ cls }}"{% if tooltip is not none %} cv-tooltip="{{ tooltip }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %}{% if event is not none %} cv-event="{{ event }}"{% endif %} {{ attrs }}></{{ tag }}>
+	{% set tag = 'a' if href is not none else 'i' %}
+	<{{ tag }} class="fa fa-{{ icon }} {{ cls }}"{% if tooltip is not none %} cv-tooltip="{{ tooltip }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if mapped_event is not none %} cv-mapped-event="{{ mapped_event }}"{% endif %} {{ attrs }}></{{ tag }}>
 {% endmacro %}
 
 {#
@@ -35,30 +35,26 @@
 		layer. Doesn't work on links
 #}
 {% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, event=None, bind=None, mapped_event=None, view_fn=None, onto=None, href=None, attrs='', protected=False) %}
-	{% set text_span = '' %}
 	{% set icon_span = '' %}
 	
 	{# Get tag #}
 	{% set tag = 'a' if href is not none else 'div' %}
 	
 	{# Assert valid parameters #}
-	{% if text is none and icon is none %}
-		{{ parameter_error('Cannot create button without text or icon') }}
-	{% endif %}
 	{% if event is not none and href is not none %}
 		{{ parameter_error('Cannot create button with both event and href') }}
 	{% endif %}
 	
-	{# Handle text #}
-	{% if text is not none %}
-		{% set text_span = '<span class="text">%s</span>'%text %}
-		{% set cls = 'texted %s'%cls %}
+	{# Handle no text #}
+	{% if text is none %}
+		{% set text = '' %}
+	{% else %}
+		{% set cls = '%s texted'%cls %}
 	{% endif %}
 	
 	{# Handle icon #}
 	{% if icon is not none %}
-		{% set icon_span = '<span class="fa fa-%s icon"></span>'%icon %}
-		{% set cls = 'iconed %s'%cls %}
+		{% set icon_span = '<i class="fa fa-%s icon"></i>'%icon %}
 	{% endif %}
 	
 	{# Handle protection #}
@@ -80,16 +76,16 @@
 
 	{# Handle mapping attributes #}
 	{% set map_attrs = '' %}
-	{% if bind is not None %}
+	{% if bind is not none %}
 		{% set map_attrs = '%s cv-bind="%s"'%(map_attrs, bind) %}
 	{% endif %}
-	{% if mapped_event is not None %}
+	{% if mapped_event is not none %}
 		{% set map_attrs = '%s cv-mapped-event="%s"'%(map_attrs, mapped_event) %}
 	{% endif %}
-	{% if view_fn is not None %}
+	{% if view_fn is not none %}
 		{% set map_attrs = '%s cv-view-fn="%s"'%(map_attrs, view_fn) %}
 	{% endif %}
-	{% if onto is not None %}
+	{% if onto is not none %}
 		{% set map_attrs = '%s cv-onto="%s"'%(map_attrs, onto) %}
 	{% endif %}
 	
@@ -99,13 +95,8 @@
 	{% if protected %}
 		<span class="condom">
 	{% endif %}
-	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{{ map_attrs }}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %} {{ attrs }}>
-		{% if icon_right %}
-			{{ text_span }}{{ icon_span }}
-		{% else %}
-			{{ icon_span }}{{ text_span }}
-		{% endif %}
-	</{{ tag }}>
+	{# TODO: .... #}
+	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{{ map_attrs }}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %} {{ attrs }}>{% if icon_right %}{{ text }}{{ icon_span }}{% else %}{{ icon_span }}{{ text }}{% endif %}</{{ tag }}>
 	{% if protected %}
 			{{ button(text='Cancel', icon='ban', event='__cancel__', cls='cancel hidden') }}
 			{{ button(text='Confirm', icon='check', event='__confirm__', cls='confirm hidden') }}
@@ -116,8 +107,8 @@
 {#
 	Helper macro for toolkit binding
 #}
-{% macro data_bind(target, onto=None, view_fn=None, event=None) %}
-	cv-bind="{{ target }}"{% if onto is not none %} cv-onto="{{ onto }}"{% endif %}{% if view_fn is not none %} cv-view-fn="{{ view_fn }}"{% endif %}{% if event is not none %} cv-event="{{ event }}"{% endif %}
+{% macro bind(target, onto=None, view_fn=None, event=None, mapped_event=None) %}
+	cv-bind="{{ target }}"{% if onto is not none %} cv-onto="{{ onto }}"{% endif %}{% if view_fn is not none %} cv-view-fn="{{ view_fn }}"{% endif %}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if mapped_event is not none %} cv-mapped-event="{{ mapped_event }}{% endif %}
 {% endmacro %}
 
 {#
@@ -127,7 +118,7 @@
 #}
 {% macro loading_placeholder(size=40, cls='') %}
 	{% set c = '%spx'%size %}
-	<div class="loading-pl-wrap hover-highlight {{ cls }}" cv-tooltip="Getting it ready..." style="width: {{ c }}; height: {{ c }}; line-height: {{ c }};">
+	<div class="loading-placeholder {{ cls }}" cv-tooltip="Getting it ready..." style="width: {{ c }}; height: {{ c }}; line-height: {{ c }};">
 		<div class="fa fa-gear fa-spin" style="font-size: {{ c }};"></div>
 	</div>
 {% endmacro %}

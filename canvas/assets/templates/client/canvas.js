@@ -1,8 +1,15 @@
-//	Create canvas toolkit object
+//	Create the canvas toolkit object
 var tk = createToolkit({
 		debug: '{{ config.debug }}' == 'True',
 		templateContainer: '.cv-templates',
-		dataPrefix: 'cv'
+		dataPrefix: 'cv',
+		globalTemplateFunctions: {
+			//	Common template functions
+			'hiddenIf': function(v){ return v ? 'hidden' : ''; },
+			'hiddenIfNot': function(v){ return v ? '' : 'hidden'; },
+			'hiddenIfNull': function(v){ return v == null ? 'hidden' : ''; },
+			'hiddenIfNotNull': function(v){ return v == null ? '' : 'hidden'; }
+		}
 	})
 	.request.processor(function(r){
 		r.setRequestHeader('X-Canvas-View-Request', '1');
@@ -481,8 +488,9 @@ function CanvasCore(){
 
 		//	Create header highlighter
 		//	TODO: packaging
+		//	TODO: Bring .common to core
 		var highlighter = self.header.children('.button-highlight');
-		self.header.children('.button').on({
+		self.header.children('.button:not(.common)').on({
 			'mouseover': self.headerHighlight,
 			'mouseleave': function(e){
 				highlighter.css('opacity', 0);
