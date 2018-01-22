@@ -261,7 +261,7 @@ class Column:
 	def __lt__(self, other):
 		return _ColumnComparator(self, other, '<')
 
-	def __lt__(self, other):
+	def __le__(self, other):
 		return _ColumnComparator(self, other, '<=')
 
 	def __gt__(self, other):

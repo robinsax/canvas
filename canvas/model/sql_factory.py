@@ -3,6 +3,8 @@
 SQL serialization.
 '''
 
+from datetime import datetime
+
 from ..exceptions import UnsupportedEnformentMethod
 from .columns import (
 	Column, 
@@ -76,7 +78,8 @@ def comparator_expression(expr, _values=None):
 	elif isinstance(expr, bool):
 		#	This node is a boolean.
 		ret = 'TRUE' if expr else 'FALSE'
-	elif isinstance(expr, (int, float, str)):
+	elif isinstance(expr, (int, float, str, datetime)):
+		#	TODO: JSON types too?
 		#	This node is a prepared value, serialize
 		#	it as a format and append value to _values list
 		_values.append(expr)
