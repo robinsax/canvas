@@ -1,13 +1,15 @@
 #	coding utf-8
 '''
-Unit tests on canvas.utils
+Unit tests on the canvas utilities package.
 '''
 
 import sys
 
 from . import *
 
-@test('registration')
+utils_test = TestSuite('utils')
+
+@utils_test('registration')
 def test_registration():
 	from ..utils.registration import (
 		register,
@@ -19,7 +21,7 @@ def test_registration():
 	@register('test')
 	def test1(): pass
 
-	@register('test')
+	@register.test
 	def test2(): pass
 
 	l = get_registered('test')
@@ -43,7 +45,7 @@ def test_registration():
 		getattr(here, 'test2', None) == test2
 	), 'Placement')
 
-@test('WrappedDict')
+@utils_test('WrappedDict')
 def test_wrapped_dict():
 	from ..utils import WrappedDict
 

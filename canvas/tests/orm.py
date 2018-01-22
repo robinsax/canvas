@@ -1,33 +1,39 @@
 #	coding utf-8
 '''
-Unit tests on model ORM
+Unit tests on model ORM.
+
+::incomplete
 '''
 
+from ..exceptions import ValidationErrors
+from .. import model
 from . import *
 
-TEST_TABLE = 'canvas_unit_test'
+#	Create the ORM test suite registrar.
+orm_test = TestSuite('orm')
 
-#	TODO: Fuckin cleeean
+#	A table name to use for the contained
+#	unit tests.
+TEST_TABLE = '__canvas_orm_unit_test__'
+def drop_table(session):
+	'''
+	Drop the test table if it exists.
+	'''
+	try:
+		session.execute(f'DROP TABLE {TEST_TABLE};')
+		session.commit()
+	except:
+		session.rollback()
 
-@test('ORM')
-def test_orm():
-	from ..exceptions import ValidationErrors
-	#	Also testing importability
-	from .. import model
-
+@orm_test('Basic functionality')
+def basics():
 	session = model.create_session()
-	
-	def drop_table():
-		try:
-			session.execute(f'DROP TABLE {TEST_TABLE};')
-			session.conn.commit()
-		except:
-			session.rollback()
-	drop_table()
+	drop_table(session)
 
-	case('Basic functionality')
-	j, k = ([], []) # Callback trackers
+	#	Create callback trackers.
+	load_called, create_called = [False], [False]
 
+	#	Create test model.
 	@model.schema(TEST_TABLE, {
 		'a': model.Column('uuid', primary_key=True),
 		'b': model.Column('text')
@@ -38,21 +44,24 @@ def test_orm():
 			self.b = b
 
 		def __on_create__(self):
-			k.append('called')
+			create_called[0] = True
 
 		def __on_load__(self):
-			j.append('called')
+			load_called[0] = True
 
+	#	Issue the creation SQL.
 	model.create_everything()
 
 	check((
 		len(session.query(X)) == 0
 	), 'Empty query')
 
+	#	Create an instance.
 	x = X('Hello!')
 	session.save(x)
 	session.commit()
 	
+	#	Retrieve instance with new session.
 	session = model.create_session()
 	all_x = session.query(X)
 	check((
@@ -62,8 +71,8 @@ def test_orm():
 	), 'Reconstruction works for non-empty * query')
 	
 	check((
-		'called' in j and
-		'called' in k
+		True in load_called and
+		True in create_called
 	), 'Creation and reconstruction callbacks invoked')
 
 	y = session.query(X, X.a == x.a, one=True)
@@ -97,12 +106,13 @@ def test_orm():
 		y.b == x.b and
 		y.a == x.a
 	), 'Primary key updates flushed to disk')
-	#	TODO: Prevent double activation!
-	
-	case('Constraints, accessors, and complex columns')
-	drop_table()
-	session = model.create_session()
 
+@orm_test('Constraints, accessors, and complex columns')
+def test_orm():
+	session = model.create_session()
+	drop_table(session)
+	
+	#	Create test table.
 	@model.schema(TEST_TABLE, {
 		'a': model.Column('serial', primary_key=True),
 		'b': model.Column('text', constraints=[
@@ -183,7 +193,6 @@ def test_orm():
 	session.save(y)
 	session.commit()
 
-	session = model.create_session()
-	y = session.query(Y, Y.b == 'foobar', one=True)
-	print(y.c)
+	drop_table(session)
 
+	#	TODO: ETC...

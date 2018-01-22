@@ -10,7 +10,9 @@ import re
 from .. import CANVAS_HOME
 from . import *
 
-@test('CanvasJinjaEnvironment')
+templating_test = TestSuite('templates')
+
+@templating_test('CanvasJinjaEnvironment')
 def test_canvas_jinja_env():
 	from ..core.assets.jinja_extensions import CanvasJinjaEnvironment
 

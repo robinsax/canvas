@@ -78,9 +78,9 @@ class UnitTestMode(LaunchMode):
 	'''
 
 	def __init__(self):
-		super().__init__('run_tests')
+		super().__init__('run_tests', 'SUITE_1 ... SUITE_N')
 
 	def handle(self, args):
-		if not run_tests():
+		if not run_tests(args):
 			sys.exit(1)
 		return True

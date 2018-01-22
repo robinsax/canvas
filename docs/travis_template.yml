@@ -1,0 +1,16 @@
+#	A template Travis CI configuration file for 
+#	plugin repositories.
+
+sudo: required
+
+language: python
+
+before_install:
+  - git clone https://github.com/robinsax/canvas.git
+  - cd canvas
+  - sudo ./scripts/ubuntu_trusty_setup.sh
+  - python3.6 ./scripts/configure_plugin_test.py $your_plugin_name
+	#	Other dependencies here.
+
+script:
+  - python3.6 canvas --run_tests $your_test_suite_name
