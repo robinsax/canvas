@@ -61,10 +61,10 @@ def run_tests():
 	failed_cnt = len(failed_names)
 	if failed_cnt == 0:
 		log.info(f'Done, build passing ({passed_cnt} passed)')
-		return 0
+		return True
 	else:
 		log.critical(f'Done, build failing ({passed_cnt} passed, {failed_cnt} failed)')
 		log.info('Failed tests:')
 		for name in failed_names:
 			log.info(f'\t{name}')
-		return 1
+		return False
