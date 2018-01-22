@@ -19,6 +19,7 @@ if [ ! -f ./settings.json ]; then
 	cp -f ./default_settings.json ./settings.json
 fi
 
-echo "Configuring Postgres"
+echo "Configuring Postgres."
 python3.6 ./scripts/write_setup_sql.py | sudo -u postgres psql
 
+echo "Done."

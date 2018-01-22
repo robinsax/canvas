@@ -10,7 +10,7 @@
 		],
 		"library_dependencies": [
 			"line-awesome.min.css",
-			"toolkit.js"
+			"toolkit.min.js"
 		]
 	},
 	"plugins": {

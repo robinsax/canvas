@@ -1,11 +1,11 @@
 #	coding utf-8
 '''
-Canonically should be a .wsgi file, but I've noticed
-wfastcgi.py is picky about file extension, and Apache
-doesn't seem to care, so I've used .py to support IIS
-'''
+The WSGI application to be passed to the WSGI
+server.
 
-import os
-from sys import path
+Canonically should be a .wsgi file, but wfastcgi.py 
+is picky about file extension, and Apache doesn't 
+seem to care, so `.py` is used to support IIS.
+'''
 
 from canvas import application
