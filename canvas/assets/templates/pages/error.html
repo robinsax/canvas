@@ -1,8 +1,13 @@
+{#
+	The error page, displayed when any error
+	occures during the handling of a non-API
+	GET request.
+#}
 {% page %}
 
 {% block content %}
 	<div class="component col-8">
-		<h2>{{ '%d %s'%(error.code, error.description) }}</h2>
+		<h2>{{ error.code }} {{ error.description }}</h2>
 		{% if config.debug %}
 			<h4 class="align-left">Traceback</h4>
 			<pre><code>{{ debug_info.traceback }}</code></pre>

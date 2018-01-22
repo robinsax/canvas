@@ -13,7 +13,7 @@ from lesscpy.exceptions import CompilationError
 from lesscpy import compile as lessc
 
 from ...exceptions import TemplateNotFound
-from ...utils.registration import logger
+from ...utils import logger
 from ..plugins import get_path_occurrences
 from .templates import render_template
 from ... import config

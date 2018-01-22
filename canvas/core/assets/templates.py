@@ -7,6 +7,7 @@ import os
 
 from htmlmin import minify as minify_html
 
+from ...utils.registration import callback
 from ..plugins import get_path_occurrences
 from .jinja_extensions import CanvasJinjaEnvironment
 

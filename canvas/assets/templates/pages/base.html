@@ -1,3 +1,7 @@
+{#
+	The base page template handles common fields, 
+	renders dependencies and creates the core body DOM.
+#}
 {% import 'common.jinja' as c with context %}
 {% import 'forms.jinja' as f with context %}
 
@@ -11,30 +15,39 @@
 
 			<title>{{ config.name }} - {{ page_name }}</title>
 			<meta name="description" content="{{ __page__.description}}">
-			<link rel="icon" type="image/png" href="{{ asset_url('media/site_icon.png') }}"/>
+			<link rel="icon" type="image/png" href="{{ h.asset_url('media/site_icon.png') }}"/>
 			
 			{# TODO: Open-graphing #}
 			
-			{% set dependencies = __page__.collect_dependencies(__ctx__) %}
+			{#
+				Render dependencies.
+			#}
+			{% set dependencies = __page__.collect_dependencies() %}
 			{% for file in dependencies[1] %}
 				{% if file.endswith('.css') %}
-					<link rel="stylesheet" type="text/css" href="{{ asset_url('lib/%s'%file) }}">
+					<link rel="stylesheet" type="text/css" href="{{ h.asset_url('lib/%s'%file) }}">
 				{% elif file.endswith('.js') %}
-					<script type="text/javascript" src="{{ asset_url('lib/%s'%file) }}"></script>
+					<script type="text/javascript" src="{{ h.asset_url('lib/%s'%file) }}"></script>
 				{% endif %}
 			{% endfor %}
 			
+			{#
+				Render library dependencies.	
+			#}
 			{% for file in dependencies[0] %}
 				{% if file.endswith('.css') %}
-					<link rel="stylesheet" type="text/css" href="{{ asset_url(file) }}">
+					<link rel="stylesheet" type="text/css" href="{{ h.asset_url(file) }}">
 				{% elif file.endswith('.js') %}
-					<script type="text/javascript" src="{{ asset_url(file) }}"></script>
+					<script type="text/javascript" src="{{ h.asset_url(file) }}"></script>
 				{% endif %}
 			{% endfor %}
 		{% endblock %}
 	</head>
 	<body cv-route="{{ __page__.route }}" {% block body_attributes %}{% endblock %}>
 		<div class="page">
+			{#
+				The visible page contents.
+			#}
 			{% block header %}
 				<header class="main-header">
 					{% block pre_header_left %}{% endblock %}
@@ -58,11 +71,14 @@
 			</div>
 		</div>
 		<div class="meta-page">
+			{#
+				The meta-DOM including Toolkit templates.
+			#}
 			<div class="cv-templates">
 				{% block templates %}{% endblock %}
 			</div>
 			{% block meta %}{% endblock %}
-			{% set flash_message = get_flash_message() %}
+			{% set flash_message = h.get_flash_message() %}
 			{% if flash_message is not none %}
 				<div class='init-message'>{{ flash_message }}</div>
 			{% endif %}

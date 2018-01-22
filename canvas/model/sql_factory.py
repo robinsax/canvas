@@ -6,8 +6,8 @@ SQL serialization.
 from ..exceptions import UnsupportedEnformentMethod
 from .columns import (
 	Column, 
-	ColumnComparator, 
 	ForeignKeyColumnType,
+	_ColumnComparator, 
 	_sentinel
 )
 
@@ -45,7 +45,7 @@ def comparator_expression(expr, _values=None):
 		_values = []
 	
 	#	Parse this tree node.
-	if isinstance(expr, ColumnComparator):
+	if isinstance(expr, _ColumnComparator):
 		#	This node is a comparision; recurse on 
 		#	each child.
 		l_result = comparator_expression(expr.left, _values)

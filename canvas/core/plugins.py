@@ -8,7 +8,6 @@ import os
 import sys
 import logging
 
-from ..exceptions import PluginInitError
 from ..utils import logger
 from .. import CANVAS_HOME, config
 

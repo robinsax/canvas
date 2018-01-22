@@ -146,13 +146,13 @@ class _ColumnComparator:
 		'''
 		Return a conjunction of this expression and another.
 		'''
-		return ColumnComparator(self, other, 'AND')
+		return _ColumnComparator(self, other, 'AND')
 
 	def __or__(self, other):
 		'''
 		Return a disjunction of this expression and another.
 		'''
-		return ColumnComparator(self, other, 'OR')
+		return _ColumnComparator(self, other, 'OR')
 
 	def __repr__(self):
 		'''

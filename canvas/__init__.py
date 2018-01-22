@@ -6,6 +6,7 @@ canvas initialization and namespace generation.
 __version__ = '0.0.1'
 
 import os
+import pprint
 import logging
 import werkzeug as wz
 
@@ -37,8 +38,9 @@ log.info(f'Initializing...')
 #	which loaded plugins are accessed.
 from .core.plugins import load_all_plugins
 
-#	Allow plugins to update configuration.
-config = configuration.update_from_plugins(config)
+#	Allow plugins to update configuration and finalize.
+config = configuration.finalize(config)
+log.debug(f'Runtime configuration: {pprint.pformat(config)}')
 
 #	`canvas.core` and `canvas.launch` only export a subset
 #	of their contents through `__all__`, import those to

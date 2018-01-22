@@ -30,9 +30,6 @@ __all__ = [
 	'markdown',
 	'uri_encode',
 	'json',
-	'parameter_error',
-	'get_client_validator',
-	'describe_model_attr',
 	#	Classes.
 	'WrappedDict'
 ]

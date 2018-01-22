@@ -3,14 +3,16 @@
 Markdown rendering and output caching.
 '''
 
+#	TODO: Repackage in utils.
+
 import os
 
 from markdown import markdown as render_markdown
 
 from ...exceptions import MarkdownNotFound
 from ...utils import register
+from ...utils.template_utils import markup
 from ..plugins import get_path_occurrences
-from .templates import markup
 from ... import config
 
 @register.template_filter

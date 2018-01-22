@@ -62,7 +62,7 @@ class DevServeMode(LaunchMode):
 	def handle(self, args):
 		from canvas import application
 
-		#	Parse arguments
+		#	Parse arguments.
 		try:
 			port = int(args[0])
 		except:

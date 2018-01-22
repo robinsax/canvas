@@ -1,4 +1,4 @@
-#   config utf-8
+#   coding utf-8
 '''
 Utilities present in templates.
 '''
@@ -11,22 +11,17 @@ from urllib import parse
 from jinja2 import Markup
 from jinja2.exceptions import TemplateNotFound
 
-from ...exceptions import (
+from ..exceptions import (
 	MacroParameterError, 
 	UnsupportedEnformentMethod
 )
-from ..model import get_constraint
 from .registration import register, callback
-from ... import config
 
 __all__ = [
 	'markup',
 	'markdown',
 	'uri_encode',
-	'json',
-	'parameter_error',
-	'get_client_validator',
-	'describe_model_attr'
+	'json'
 ]
 
 @register.template_filter
@@ -90,6 +85,8 @@ def get_client_validator(name):
 	the constraint called `name`, and it's error
 	description.
 	'''
+	from ..model import get_constraint
+
 	#	Retrieve the constraint.
 	origin = get_constraint(name)
 

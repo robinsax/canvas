@@ -22,18 +22,19 @@ from ..exceptions import (
 	_Redirect
 )
 from ..utils import (
-	WrappedDict, 
-	create_json, 
+	WrappedDict,
 	register,
 	logger,
 	call_registered, 
 	format_traceback
 )
+
 from ..model import create_session
 from ..controllers import Page, get_controller
+from .. import __version__ as canvas_version, config
 from .thread_context import *
 from .assets import get_client_asset, render_template
-from .. import __version__ as canvas_version, config
+from . import create_json
 
 log = logger()
 
@@ -88,7 +89,7 @@ def handle_request(environ, start_response):
 	except BaseException as e:
 		#	We can't serve at all. A common cause is an
 		#	error in the base template.
-		_log_error(req, e, None, level=log.critical)
+		_log_error(req, e, dict(), level=log.critical)
 		response = ('Internal Server Error', 500, {}, 'text/plain')
 
 	#	Delete the thread-id to request context mapping.

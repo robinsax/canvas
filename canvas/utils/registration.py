@@ -34,31 +34,32 @@ class _RegistrationDecoratorGenerator:
 		:prefix A prefix to automatically add to all
 			registered types.
 		'''
+		self.prefix = prefix
 
-    def __call__(self, *types):
-		#	Define decorator.
-        def wrap(obj):
-            for typ in types:
+	def __call__(self, *types):
+		#	Define the decorator.
+		def wrap(obj):
+			for typ in types:
 				#	Add prefix.
-				typ = f'{prefix}{typ}'
+				typ = f'{self.prefix}{typ}'
 
 				#	Ensure list presence.
-                if typ not in _registrations:
+				if typ not in _registrations:
 					#	Initialize as empty.
-                    _registrations[typ] = []
+					_registrations[typ] = []
 
 				#	Add.
-                _registrations[typ].append(obj)
-            return obj
+				_registrations[typ].append(obj)
+			return obj
 
 		#	Return decorator.
-        return wrap
+		return wrap
 
-    def __getattr__(self, typ):
-        def psuedo():
-           return self(typ)
-
-        return psuedo
+	def __getattr__(self, typ):
+		def psuedo(cls):
+			return self(typ)(cls)
+		
+		return psuedo
 
 #	Create the two implementations.
 register = _RegistrationDecoratorGenerator()
@@ -87,7 +88,7 @@ def get_registered_by_name(*types):
 	'''
 	dct = {}
 	for typ in types:
-		dct.update(get_registered(typ))
+		dct.update({o.__name__: o for o in get_registered(typ)})
 
 	return dct
 

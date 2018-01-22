@@ -7,7 +7,6 @@ plugin management, and asset management.
 from ..exceptions import _Redirect
 from ..utils.registration import register
 
-from .request_handler import handle_request
 from .thread_context import get_thread_context
 
 __all__ = [
@@ -40,6 +39,10 @@ def create_json(status_str, *data, status=200, headers={}, default_serializer=No
 		return json.dumps({
 			'status': status_str
 		}, default=default_serializer), status, headers, 'application/json'
+
+#	`create_json()` is required by the 
+#	request handler.
+from .request_handler import handle_request
 
 @register.template_helper
 def asset_url(rel_path):

@@ -14,8 +14,7 @@ from .utils import WrappedDict
 
 __all__ = [
 	'load',
-	'update_from_plugins',
-	'configure_logging'
+	'finalize'
 ]
 
 #	The configuration file name.
@@ -63,7 +62,7 @@ def load():
 	#	object.
 	return config
 
-def update_from_plugins(config):
+def finalize(config):
 	'''
 	Update a configuration object with plugin-overridden 
 	values and wrap to replace `KeyError` with a more
