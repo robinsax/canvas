@@ -1,4 +1,5 @@
 #	Package install script for Ubuntu 14.04 LTS
+#	PLACEHOLD
 
 echo "Installing Python 3.6. and Pip"
 #   Add the Python 3.6 backport repository (Thanks Jon.).
@@ -21,3 +22,4 @@ fi
 
 echo "Configuring Postgres"
 python3.6 ./scripts/write_setup_sql.py | sudo -u postgres psql
+
