@@ -1,5 +1,4 @@
 #	Package install script for Ubuntu 14.04 LTS
-#	PLACEHOLD
 
 echo "Installing Python 3.6. and Pip"
 #   Add the Python 3.6 backport repository (Thanks Jon.).

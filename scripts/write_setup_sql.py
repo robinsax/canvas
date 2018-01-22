@@ -19,6 +19,6 @@ print(f'''
 	CREATE USER {user};
 	CREATE DATABASE {database};
 	ALTER USER {user} WITH PASSWORD '{password}';
-	GRANT * ON DATABASE {database} TO {user};
+	GRANT ALL ON DATABASE {database} TO {user};
 	\q
 ''')
