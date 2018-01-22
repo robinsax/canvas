@@ -3,7 +3,7 @@ sudo: required
 language: python
 
 before_install:
-  - ./scripts/ubuntu_trusty_setup.sh
+  - sudo ./scripts/ubuntu_trusty_setup.sh
 
 script:
   - python3.6 canvas --run_tests
