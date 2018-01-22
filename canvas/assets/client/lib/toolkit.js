@@ -141,6 +141,19 @@ function createToolkit(){
 		}
 	}
 
+	//	TODO: Doc
+	function comprehension(list, transformFn){
+		typeCheck(list, [Array, MappedArray]);
+		var compr = [];
+		for (var i = 0; i < list.length; i++){
+			var val = transformFn(list[i], i);
+			if (val !== undefined){
+				compr.push(val);
+			}
+		}
+		return compr;
+	}
+
 	/*
 		Return whether or not an object has the 
 		given property, or pass a third parameter, `default`
@@ -659,10 +672,10 @@ function createToolkit(){
 				instead of `Element`s.
 		*/
 		this.iter = function(fn){
-			var pgt = arguments.length > 1 ? arguments[1] : true;
+			var propogate = varg(arguments, 1, true);
 			for (var i = 0; i < this.set.length; i++){
 				var e = this.set[i];
-				if (pgt){
+				if (propogate){
 					e = new ToolkitInstance(e, this);
 				}
 				if (fn(e, i) === false){
@@ -670,6 +683,23 @@ function createToolkit(){
 				}
 			}
 			return this;
+		}
+
+		//	TODO: Doc
+		this.comprehension = function(fn){
+			var propogate = varg(arguments, 1, true);
+			var compr = [];
+			for (var i = 0; i < this.set.length; i++){
+				var e = this.set[i];
+				if (propogate){
+					e = new ToolkitInstance(e, this);
+				}
+				var val = fn(e, i);
+				if (val !== undefined){
+					compr.push(val);
+				}
+			}
+			return compr;
 		}
 
 		/*	
@@ -1773,6 +1803,7 @@ function createToolkit(){
 	tk.defer = defer;
 	tk.repeat = repeat;
 	tk.iter = iter;
+	tk.comprehension = comprehension;
 	tk.e = createElement;
 	tk.request = request;
 	tk.map = map;

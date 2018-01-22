@@ -18,7 +18,6 @@ __all__ = [
 	'ValidationErrors',
 	'ColumnDefinitionError',
 	'MacroParameterError',
-	'PluginInitError',
 	'MarkdownNotFound',
 	'ConfigKeyError'
 ]
@@ -101,12 +100,6 @@ class ValidationErrors(Exception):
 
 	def __init__(self, error_dict):
 		self.error_dict = error_dict
-
-class PluginInitError(Exception):
-	'''
-	Raised when a plugin can't be initialized
-	'''
-	pass
 
 class ColumnDefinitionError(Exception):
 	'''

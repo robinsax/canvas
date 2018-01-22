@@ -1,70 +1,127 @@
 #	coding utf-8
 '''
-The registration utility, used throughout canvas
+A utility that allows arbitrary functions and 
+classes to be managed by declared type.
 '''
 
 import sys
 
 __all__ = [
+	#	Registration.
 	'register',
+	'callback',
+	#	Registration access.
 	'get_registered',
 	'get_registered_by_name',
 	'call_registered',
 	'place_registered_on'
 ]
 
+#	The registration list mapping.
 _registrations = {}
-def register(*types):
+
+class _RegistrationDecoratorGenerator:
 	'''
-	A registration decorator for classes and
-	functions to allow canvas to identify plugin-generated
-	classes and functions.
-	:types The one or more types to register the class
-		or function as
+	A decorator generator that enables registration
+	by string parameter, or by attribute access
+	for reduced syntax.
 	'''
-	def wrap(obj):
-		for type in types:
-			if type not in _registrations:
-				_registrations[type] = []
-			_registrations[type].append(obj)
-		return obj
-	return wrap
+
+	def __init__(self, prefix=''):
+		'''
+		Create a registration decorator generator.
+
+		:prefix A prefix to automatically add to all
+			registered types.
+		'''
+
+    def __call__(self, *types):
+		#	Define decorator.
+        def wrap(obj):
+            for typ in types:
+				#	Add prefix.
+				typ = f'{prefix}{typ}'
+
+				#	Ensure list presence.
+                if typ not in _registrations:
+					#	Initialize as empty.
+                    _registrations[typ] = []
+
+				#	Add.
+                _registrations[typ].append(obj)
+            return obj
+
+		#	Return decorator.
+        return wrap
+
+    def __getattr__(self, typ):
+        def psuedo():
+           return self(typ)
+
+        return psuedo
+
+#	Create the two implementations.
+register = _RegistrationDecoratorGenerator()
+callback = _RegistrationDecoratorGenerator('callback:')
+
+#	Remove the reference.
+del _RegistrationDecoratorGenerator
 
 def get_registered(*types):
 	'''
-	Return all registered classes or functions of `type`, 
-	or an empty list if there are none.
+	Return all registered classes or functions 
+	registered as the given types or an empty list 
+	if there are none.
 	'''
-	l = []
-	for type in types:
-		l.extend(_registrations.get(type, []))
-	return l
+	lst = []
+	for typ in types:
+		lst.extend(_registrations.get(typ, []))
 
-def call_registered(type, *args, **kwargs):
-	to_call = get_registered(type)
-	for func in to_call:
+	return lst
+
+def get_registered_by_name(*types):
+	'''
+	Generate and return a dictionary containing all 
+	classes or functions registered as the given type, 
+	keyed by name.
+	'''
+	dct = {}
+	for typ in types:
+		dct.update(get_registered(typ))
+
+	return dct
+
+def call_registered(typ, *args, **kwargs):
+	'''
+	Invoke all functions registered as `typ`. The 
+	callback prefix is preppended if not present.
+	'''
+	if not typ.startswith('callback:'):
+		#	Add prefix.
+		typ = f'callback:{typ}'
+	
+	for func in get_registered(typ):
 		func(*args, **kwargs)
 
-def get_registered_by_name(type):
+def place_registered_on(name, typ):
 	'''
-	Return a dictionary containing all classes or
-	functions of `type`, mapped by name.
-	'''
-	as_dict = {}
-	for item in get_registered(type):
-		as_dict[item.__name__] = item
-	return as_dict
+	Add all registered classes or functions of the given 
+	typ to a module or package namespace.
 
-def place_registered_on(name, type):
+	TODO(BP): Side-effect: __all__ list modification
+	
+	:name The name of the module whose namespace is
+		the target.
+	:typ The registered type to place.
 	'''
-	Add all registered classes or functions
-	of the given type to a module's namespace.
-	:name The name of the module to add to
-	:type The type to add registered objects of
-	'''
+	#	Retrieve the module.
 	module = sys.modules[name]
+
+	#	Ensure `__all__` list existance
 	if getattr(module, '__all__', None) is None:
 		module.__all__ = []
-	for item in get_registered(type):
+	
+	#	Place all registered.
+	for item in get_registered(typ):
 		module.__all__.append(item.__name__)
 		setattr(module, item.__name__, item)

@@ -3,7 +3,7 @@
 	"description": "Fast, customizable websites and web applications",
 	"cookie_secret_key": "ivSILnPkJ4QvPtbB0X4d",
 	"debug": true,
-	"client_globals": {
+	"client_dependencies": {
 		"dependencies": [
 			"style.css",
 			"canvas.js"

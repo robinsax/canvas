@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-The canvas utilities package
+Utilities for the canvas core and plugins.
 '''
 
 import json
@@ -8,89 +8,113 @@ import inspect
 import logging
 import traceback as tb
 
+#	Import subpackage to namespace.
 from .registration import *
+from .template_utils import *
 
-#	Imported to package level
+#	Declare exports.
 __all__ = [
-	'make_json',
+	#	Functions.
 	'format_traceback',
 	'export_to_module',
-	'copy_dict',
 	'logger',
+	#	Subpackage functions - registration.
 	'register',
+	'callback',
 	'get_registered',
 	'get_registered_by_name',
 	'call_registered',
 	'place_registered_on',
+	#	Subpackage functions - template_utils.
+	'markup',
+	'markdown',
+	'uri_encode',
+	'json',
+	'parameter_error',
+	'get_client_validator',
+	'describe_model_attr',
+	#	Classes.
 	'WrappedDict'
 ]
 
 class WrappedDict(dict):
 	'''
-	A dictionary subclass for `KeyError` replacement.
+	A dictionary with a configurable key error.
 	'''
 
-	def __init__(self, content, ex_cls):
+	def __init__(self, source, exception_cls):
 		'''
-		:content The content to set
-		:ex_cls The exception class to raise instead
-			of `KeyError`
+		Copy the dictionary `source` into this dictionary
+		and define the exception class to replace `KeyError`.
+
+		:source The dictionary to copy into this
+			dictionary.
+		:exception_cls The exception class to raise when
+			a missing key is retrieve. Instances will have the
+			offending key passed to their constructor.
 		'''
-		self.ex_cls = ex_cls
-		for k, v in content.items():
+		#	Copy source into self.
+		for k, v in source.items():
 			self[k] = v
 
-	def __getitem__(self, key):
-		if key not in self:
-			raise self.ex_cls(key)
-		return super().__getitem__(key)
+		#	Save the exception class.
+		self.exception_cls = exception_cls
 
-# TODO: Bounce to core?
-def make_json(status_str, *data_dict, status=200, headers={}, default=None):
-	'''
-	:status The status as a string. Should be one
-		of: `'success'`, `'failure'`, or `'error'`
-	:data_dict (Optional) A data package
-	'''
-	if len(data_dict) > 0:
-		return json.dumps({
-			'status': status_str,
-			'data': data_dict[0]
-		}, default=default), status, headers, 'application/json'
-	else:
-		return json.dumps({
-			'status': status_str
-		}, default=default), status, headers, 'application/json'
+
+	def __getitem__(self, key):
+		'''
+		Retrieve the value for `key` or raise
+		an exception if it's not present.
+		'''
+		if key not in self:
+			#	Key error.
+			raise self.exception_cls(key)
+
+		#	Return the value.
+		return super().__getitem__(key)
 
 def format_traceback(error):
 	'''
-	Return a traceback in string format
-	:error An error that was at some point raised 
+	Return a formatted traceback string for `error` if it has
+	been raised.
+
+	:error The raised error.
 	'''
 	traceback = (''.join(tb.format_tb(error.__traceback__))).strip().replace('\n    ', '\n\t').replace('\n  ', '\n')
 	return f'{error.__class__.__name__}: {error}\n{traceback}'
 
-def logger():
+def logger(name=None):
 	'''
-	Alias for `logging.getLogger()`. Must be invoked 
-	at module level
-	'''
-	name = inspect.stack()[-1].frame.f_locals.get('__name__', '<local>')
-	return logging.getLogger(name)
+	Create and return a standard library `logging.Logger`.
+	When invoked at package level, the name parameter can
+	be safely omitted.
 
-def copy_dict(o_dict, *keys):
-	n_dict = {}
-	for key in keys:
-		n_dict[key] = o_dict[key]
-	return n_dict
+	:name The name of the logger to create.
+	'''
+	if name is None:
+		#	Guess name.
+		#	TODO: Not working in some places
+		name = inspect.stack()[-1].frame.f_locals.get('__name__', '<local>')
+	
+	#	Create and return logger.
+	return logging.getLogger(name)
 
 def export_to_module(module, *items, into_all=True):
 	'''
-	Export something onto a module.
+	Export one or more functions or classes onto a module.
+
+	:module The target module object
+	:items The functions or classes to place.
+	:into_all Whether to add the functions or objects
+		to the `__all__` list of the target module.
 	'''
 	if into_all:
+		#	Add to the `__all__` list of target.
 		if not hasattr(module, '__all__'):
+			#	Create the all object if it doesn't exist.
 			module.__all__ = []
 		module.__all__.extend(items)
+	
 	for item in items:
+		#	Place the object in the modules namespace.
 		setattr(module, item.__name__.split('.')[-1], item)

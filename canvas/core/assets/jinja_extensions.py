@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-Template-depth-enabling Jinja extensions
+Template-depth enabling Jinja extensions.
 '''
 
 import os
@@ -13,28 +13,40 @@ from jinja2.nodes import Const, Extends, Include
 from jinja2.loaders import BaseLoader
 
 from ...exceptions import TemplateNotFound, TemplateOverlayError
-from ...utils import get_registered, get_registered_by_name
+from ...utils import logger
+from ...utils.registration import (
+	get_registered, 
+	get_registered_by_name
+)
 from ... import config
 
-log = logging.getLogger(__name__)
+log = logger()
 
 class DeepFileSystemLoader(BaseLoader):
 	'''
-	A Jinja loader that allows the overlay
-	tag functionality.
+	A Jinja loader that tracks multiple template
+	occurances and their order.
 	'''
 
 	def __init__(self, base_paths):
+		'''
+		Create a new instance that searches for templates
+		in each of `base_paths`.
+		'''
 		self.base_paths = list(reversed(base_paths))
+		#	The cached path mapping
 		self.path_map = {}
 
 	def get_source(self, environ, template):
 		#	Check if depth was specified by `OverlayTag`
+		#	or set it to 0.
 		parts = template.split('?')
 		depth = int(parts[1]) if len(parts) > 1 else 0
+
+		#	Get the pure template path.
 		template = parts[0]
 		if template in self.path_map:
-			#	Occurrences already found
+			#	Read cached occurances.
 			occurrences = self.path_map[template]
 		else:
 			#	Find occurrences
@@ -43,23 +55,33 @@ class DeepFileSystemLoader(BaseLoader):
 				full = os.path.join(path, template)
 				if os.path.exists(full):
 					occurrences.append(full)
-			#	...and cache
+			#	...and cache.
 			self.path_map[template] = occurrences
+		
 		log.debug(f'{template} found at {occurrences} (depth {depth})')
-		#	Ensure the template exists and depth is
-		#	valid
+
+		#	Assert the template exists and depth is
+		#	valid.
 		count = len(occurrences)
 		if count == 0:
 			raise TemplateNotFound(template)
 		if depth >= count:
 			raise TemplateOverlayError(f'{template}: nothing to overlay (depth {depth})')
+		
 		path = occurrences[depth]
+		#	Get initial time.
 		mtime = os.path.getmtime(path)
+		#	Load file as utf-8.
 		with open(path, 'rb') as src_f:
 			source = src_f.read().decode('utf-8')
+		
+		#	Return with time delta.
 		return source, path, lambda: mtime == os.path.getmtime(path)
 
 class ExtendsAlias(Extension):
+	'''
+	An abstract alias for an `extends` tag.
+	'''
 	extension = None
 
 	def parse(self, parser):
@@ -68,18 +90,22 @@ class ExtendsAlias(Extension):
 		return node
 
 class PageTag(ExtendsAlias):
-	'''The `{% page %}` tag'''
+	'''
+	The `{% page %}` extends tag alias.
+	'''
 	tags = {'page'}
 	extension = os.path.join('pages', 'base.html')
 
 class ComponentTag(ExtendsAlias):
-	'''The `{% component %}` tag'''
+	'''
+	The `{% component %}` extends tag alias.
+	'''
 	tags = {'component'}
 	extension = os.path.join('components', 'base.html')
 
 class LessTag(Extension):
 	'''
-	The `{% less %}` tag
+	The `{% less %}` extends tag alias.
 	'''
 	tags = {'less'}
 	
@@ -89,25 +115,26 @@ class LessTag(Extension):
 
 class OverlayTag(Extension):
 	'''
-	The `{% overlays %}` tag
+	The `{% overlays %}` tag causes inheritance from
+	a template of the same name at a lower depth. 
 	'''
 	tags = {'overlays'}
 
 	def __init__(self, environ):
 		super().__init__(environ)
+		#	Get a reference to the `DeepFileSystemLoader`s
+		#	path map.
 		self.path_map = environ.loader.path_map
 
 	def parse(self, parser):
-		#	Get currently rendering file path
+		#	Get the name of the current template.
 		template_path = parser.filename
 
-		#	Create extends node to give our
-		#	overridden depth file path
+		#	Create an extends node.
 		node = Extends(next(parser.stream).lineno)
 
-		#	Find the next depth
+		#	Find the next depth.
 		overridden_template = None
-
 		#	TODO: Figure out why this works and comment it
 		rel_path = re.sub(f'.*?templates{re.escape(os.path.sep)}', '', template_path)
 		for i, abs_path in enumerate(self.path_map[rel_path]):
@@ -116,13 +143,18 @@ class OverlayTag(Extension):
 
 		if overridden_template is None:
 			raise TemplateOverlayError(f'{template_path}: nothing to overlay')
-
+		#	Assign path to node.
 		node.template = overridden_template
+
 		return node
 
 class CanvasJinjaEnvironment(Environment):
+	'''
+	The Jinja render environment used by canvas.
+	'''
 
 	def __init__(self, target_paths):
+		#	Collect extensions list.
 		extensions =  [
 			OverlayTag,
 			PageTag,
@@ -130,17 +162,23 @@ class CanvasJinjaEnvironment(Environment):
 			LessTag
 		]
 		extensions.extend(get_registered('jinja_extension'))
+
 		super().__init__(**{
 			'loader': DeepFileSystemLoader(target_paths),
 			'autoescape': select_autoescape(['html', 'xml']),
 			'extensions': extensions
 		})
 		
+		#	Add all registered template filters.
 		self.filters.update(get_registered_by_name('template_filter'))
+
+		#	Add all registered template globals and 
+		#	helpers, and the configuration storage object.
 		self.globals.update(**{
 			**get_registered_by_name('template_global'),
 			**{
-				'config': config
+				'config': config,
+				'h': get_registered_by_name('template_helper')
 			}
 		})
 

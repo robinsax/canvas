@@ -1,6 +1,7 @@
 #	coding utf-8
 '''
-Canvas plugin management
+Plugin management. Packaged within core to allow
+an empty `canvas.plugins` namespace for population.
 '''
 
 import os
@@ -13,47 +14,35 @@ from .. import CANVAS_HOME, config
 
 log = logger()
 
-class CanvasPluginLoader:
-
-	def __init__(self, module):
-		self.module = module
-
-	def load_module(self, module_name):
-		return self.module
-
-class CanvasPluginImporter:
-
-	def __init__(self, modules):
-		self.modules = modules
-	
-	def load_module(self, module_name):
-		return self
-
-	def find_module(self, module_name, package_path):
-		if module_name == 'canvas.plugins':
-			return self
-		return CanvasPluginLoader(self.modules[module_name])
-
 def plugin_base_path(name):
+	'''
+	Return the path to the root directory of the 
+	plugin named `name`.
+
+	:name The name of the plugin.
+	'''
 	return os.path.join(config['plugins']['directory'], f'canvas-pl-{name}')
 
-def load_all():
+def load_all_plugins():
 	'''
-	Load all activated plugins
+	Initialize all plugins activated in configuration
+	and populate the `canvas.plugins` namespace.
 	'''
-	loaded = {}
+	loaded = []
 	for plugin in config['plugins']['active']:
-		sys.path.insert(0, plugin_base_path(plugin))
+		path = plugin_base_path(plugin)
+
+		#	Add to path to allow import.
+		sys.path.insert(0, path)
+
+		#	Import.
 		log.debug(f'Importing plugin {plugin}')
-		try:
-			__import__(plugin)
-			loaded[plugin] = sys.modules[plugin]
-		except BaseException as e:
-			raise PluginInitError(plugin)
+		__import__(plugin)
+		loaded.append(path)
 	
-	#	Create an alternate import loader
-	#	that allows canvas.plugins.X imports
-	sys.meta_path.append(CanvasPluginImporter(loaded))
+	#	Populate the canvas.plugins namespace
+	from .. import plugins as plugins_namespace
+	plugins_namespace.__path__.extend(loaded)
 
 def get_path_occurrences(target, include_base=True, filter=os.path.exists):
 	'''
@@ -81,7 +70,8 @@ def get_path_occurrences(target, include_base=True, filter=os.path.exists):
 			occurrences.insert(0, path)
 
 	if include_base:
-		#	Check this base since it has lowest priority
+		#	Check this base instance last since it has 
+		#	lowest priority
 		base_instance_path = os.path.join(CANVAS_HOME, 'canvas', target)
 		if filter(base_instance_path):
 			occurrences.insert(0, base_instance_path)

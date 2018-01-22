@@ -1,7 +1,6 @@
 #	coding utf-8
 '''
-Loads the canvas configuration at `settings.json`,
-and later updates it with plugin-set values.
+Configuration management.
 '''
 
 import os
@@ -19,7 +18,10 @@ __all__ = [
 	'configure_logging'
 ]
 
+#	The configuration file name.
 CONFIG_FILE = 'settings.json'
+#	Allowed values of the `log_level` 
+#	configuration entry.
 LOG_LEVELS = [
 	'debug',
 	'info',
@@ -27,6 +29,9 @@ LOG_LEVELS = [
 	'error',
 	'critical'
 ]
+#	Root configuration entries which plugins
+#	are not allowed to modify (because they
+#	have already been read).
 ILLEGAL_OVERRIDES = [
 	'active', 
 	'logging',
@@ -36,57 +41,76 @@ ILLEGAL_OVERRIDES = [
 
 def load():
 	'''
-	Load the initial configuration file
+	Load and return the initial configuration.
 	'''
+	#	Read the configuration file.
 	config_path = os.path.join(CANVAS_HOME, CONFIG_FILE)
 	with open(config_path, 'r') as f:
 		config = json.load(f)
 	
+	#	Configure the logging module.
 	log_config = config['logging']
 	for_logger = {
 		'level': (1 + LOG_LEVELS.index(log_config['level']))*10,
 		'format': '%(asctime)s %(name)-30s %(levelname)-10s %(message)s'
 	}
 	if log_config['create_custom']:
+		#	Enable logging to a custom log file.
 		for_logger['filename'] = log_config['custom_path']
 	logging.basicConfig(**for_logger)
 
-	#	TODO: Bad
-	if int(os.environ.get('CANVAS_PRINT_LOG', '0')) > 1:
-		logging.addHandler(logging.StreamHandler(sys.stdout))
-
+	#	Return the loaded configuration storage 
+	#	object.
 	return config
 
 def update_from_plugins(config):
 	'''
-	Update the base config object with plugin-set values and
-	wrap to replace `KeyError` with `ConfigKeyError`.
+	Update a configuration object with plugin-overridden 
+	values and wrap to replace `KeyError` with a more
+	specific error.
 	'''
-
+	#	This import is only safe after the core has
+	#	been initialized, which happens after this module
+	#	is imported.
 	from .core.plugins import get_path_occurrences
 
 	def careful_updates(target, source):
+		'''
+		Update the dictionary `target` with the contents
+		of `source`, recursing on sub-dictionaries to allow
+		intutative override behavior.
+		'''
 		for key, val in source.items():
-			#	TODO: Not triggering properly
 			if target is config and key in ILLEGAL_OVERRIDES:
+				#	Illegal override performed.
 				raise PluginConfigError(f'{key} cannot be set by a plugin')
-			if key == 'client_globals':
-				#	TODO: Reword
-				config['client_globals']['dependencies'] += val['dependencies']
-				config['client_globals']['library_dependencies'] += val['library_dependencies']
+			if key == 'client_dependencies':
+				#	Plugins need to register their client dependencies 
+				#	without considering other loaded plugins (or the 
+				#	core). Therefore the global dependency lists are
+				#	configured additively.
+				config['client_dependencies']['dependencies'] += val['dependencies']
+				config['client_dependencies']['library_dependencies'] += val['library_dependencies']
 				continue
 			if not key in target:
+				#	Not overriding, update normally.
 				target[key] = val
 				continue
+			
+			#	Recurse if the target contains a dictionary under
+			#	this key.
 			to_update = target[key]
 			if isinstance(to_update, dict):
 				careful_updates(to_update, val)
 			else:
+				#	Override the value normally.
 				target[key] = val
 
+	#	Read all plugin configuration file instances, updating
+	#	the configuration with their contents.
 	for config_path in get_path_occurrences(CONFIG_FILE, include_base=False, filter=os.path.isfile):
 		with open(config_path, 'r') as f:
 			careful_updates(config, json.load(f))
 	
-	#	TODO: Log end state here
+	#	Wrap and return the resulting configuration object.
 	return WrappedDict(config, ConfigKeyError)

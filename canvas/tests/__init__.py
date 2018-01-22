@@ -43,7 +43,7 @@ def check_throw(trigger, ex_cls, message='Generic throw check'):
 
 from . import utils, templates, orm
 
-def run():
+def run_tests():
 	passed_cnt = 0
 	failed_names = []
 	for name, test_fn, fail_fn in _tests:

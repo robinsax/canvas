@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-Asset management namespace
+Asset management namespace.
 '''
 
 from .client import *

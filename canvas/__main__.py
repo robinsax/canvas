@@ -1,29 +1,45 @@
+#	coding utf-8
+'''
+The intended command line invocation entry point.
+'''
+
 import os
 import sys
 
+#	Register the current working directory to
+#	allow the canvas package to be imported.
 sys.path.insert(0, '.')
 
-def usage():
-	print('Usage: python3.6 canvas [ --serve PORT | --run_tests ]')
+from canvas.utils.registration import get_registered
+
+#	Instantiate launch mode handlers.
+launch_modes = [cls() for cls in get_registered('launch_mode')]
+
+def usage_failure():
+	'''
+	Display usage information and exit as failed.
+	'''
+	#	Create string representation of usage options.
+	modes_str = '\n\t'.join([f'--{m.mode} {m.arg_fmt}' for m in launch_modes])
+
+	#	Present.
+	print(f'Usage: python3.6 canvas [\n\t{modes_str}\n]')
+
+	#	Failure; unable to perform an operation.
 	sys.exit(1)
 
-if len(sys.argv) < 2:
-	usage()
+try:
+	mode = sys.argv[1][2:]
+except:
+	#	Invalid mode argument; unable to perform an operation.
+	usage_failure()
 
-mode = sys.argv[1][2:]
-if mode == 'serve':
-	try:
-		port = int(sys.argv[2])
-	except:
-		usage()
+#	Iterate launch mode handlers.
+for mode_obj in launch_modes:
+	if mode_obj.mode == mode:
+		#	Applicable handler found, invoke and exit 
+		#	appropriately.
+		sys.exit(0 if mode_obj.handle(sys.argv[1:]) else 1)
 
-	from werkzeug.serving import run_simple
-	from canvas import application
-
-	run_simple('localhost', port, application)
-elif mode == 'run_tests':
-	from canvas import tests
-
-	sys.exit(tests.run())
-else:
-	usage()
+#	Unknown mode; unable to perform an operation.
+usage_failure()
