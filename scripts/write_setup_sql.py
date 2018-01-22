@@ -9,7 +9,7 @@ Must be invoked from root directory.
 import json
 
 with open('./settings.json') as f:
-	config = json.load(f)
+	config = json.load(f)['database']
 
 user = config['user']
 database = config['database']
