@@ -3,13 +3,7 @@ sudo: required
 language: python
 
 before_install:
-  - ./scripts/basic_setup.sh
-
-install:
-  - docker run -d --name db postgresql
-  - docker run -d --name solr solr
-  - docker run -d --name redis redis:latest
-  - docker run -d --name ckan -p 5000:5000 --link db:db --link redis:redis --link solr:solr ckan
+  - ./scripts/ubuntu_trusty_setup.sh
 
 script:
   - python3.6 canvas --run_tests
