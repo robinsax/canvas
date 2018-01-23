@@ -29,7 +29,7 @@ def get_doc_str(obj):
 def class_doc(cls):
 	#	Get doc. string.
 	doc_str = get_doc_str(cls)
-	if doc_str is None or re.match(r'_[a-z]', cls.__name__):
+	if doc_str is None or re.match(r'_[A-Z]', cls.__name__):
 		return None
 
 	mthd_docs = []
