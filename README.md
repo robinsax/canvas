@@ -53,11 +53,11 @@ configuration.
 
 Some existing plugins are:
 * [users](https://github.com/robinsax/canvas-pl-users) - Extensible skeleton user model with authorization integration. 
-  [![Build status](https://travis-ci.org/robinsax/canvas-pl-users.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-users)
+  <br>[![Build status](https://travis-ci.org/robinsax/canvas-pl-users.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-users)
 * [deferral](https://github.com/robinsax/canvas-pl-deferral) - Scheduled and asynchronous code execution.
-  [![Build status](https://travis-ci.org/robinsax/canvas-pl-deferral.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-deferral)
+  <br>[![Build status](https://travis-ci.org/robinsax/canvas-pl-deferral.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-deferral)
 * [email](https://github.com/robinsax/canvas-pl-email) - SMTP-based email templating and dispatch.
-  [![Build status](https://travis-ci.org/robinsax/canvas-pl-email.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-email)
+  <br>[![Build status](https://travis-ci.org/robinsax/canvas-pl-email.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-email)
 
 To create a plugin in the configured plugin directory, run:
 ```bash
