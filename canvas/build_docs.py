@@ -59,7 +59,7 @@ def function_doc(func, small=False):
 
 	func_name = func.__name__
 	if func_name.startswith('__'):
-		func_name = f'\\{func_name}'
+		func_name = f'\\_\\_{func_name[2:]}'
 
 	return f'{prefix}{func_name}({arg_fmt})\n{doc_str}\n'
 
