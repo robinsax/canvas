@@ -6,7 +6,10 @@ A full-stack web application framework written in Python and JavaScript.
 
 ### Setup 
 
-First install Postgres and Python 3.6. On Linux this looks something like:
+The following setup instructions are intended for Ubuntu, however Windows and MacOSX
+are also supported. All WSIG-compliant servers are supported.
+
+First install Postgres and Python 3.6:
 ```bash
 apt-get update
 apt-get install postgresql python3.6
@@ -16,7 +19,9 @@ Then download and set up canvas:
 ```bash
 #	Download this repository.
 git clone https://github.com/robinsax/canvas.git
+
 cd canvas
+
 #	Install the Python package requirements.
 python3.6 -m pip install -r requirements.txt
 ```
@@ -47,12 +52,12 @@ in a shared plugin folder (by default `../canvas_plugins`) and activated in
 configuration.
 
 Some existing plugins are:
-* [users](https://github.com/robinsax/canvas-pl-users) - User model and authentication.
+* [users](https://github.com/robinsax/canvas-pl-users) - Extensible skeleton user model with authorization integration.
 * [deferred_work](https://github.com/robinsax/canvas-pl-deferred_work) - Asynchronous and scheduled code execution.
 
-To create a plugin, run:
+To create a plugin in the configured plugin directory, run:
 ```bash
-python3.6 ./scripts/create_plugin_template.py <target_dir> <plugin_name>
+python3.6 ./scripts/create_plugin_template.py <plugin_name>
 ```
 
 *To be continued...*

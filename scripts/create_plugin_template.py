@@ -7,11 +7,19 @@ Must be invoked from the root directory.
 
 import os
 import sys
+import json
 import shutil
 
-USAGE = 'Usage: python3.6 ./scripts/create_plugin_template.py target_dir plugin_name'
+USAGE = 'Usage: python3.6 ./scripts/create_plugin_template.py plugin_name'
 
-def create_plugin_template(target_dir, plugin_name):
+def create_plugin_template(plugin_name):
+	#	Load target directory from config or fail.
+	if not os.path.isfile('settings.json'):
+		print('No settings.json')
+		sys.exit(1)
+	with open('settings.json') as f:
+		target_dir = json.load(f)['plugins']['directory']
+
 	def detemplate(string, variables):
 		'''
 		Detemplate all variables in `variables` within
@@ -64,8 +72,13 @@ def create_plugin_template(target_dir, plugin_name):
 	#	Copy .gitignore template.
 	shutil.copyfile('./docs/templates/plugin.gitignore', f'{root}/.gitignore')
 
+	#	Create assets folder.
+	os.mkdir(f'{root}/assets')
+
+	print('Done')
+
 if __name__ == '__main__':
-	if len(sys.argv) < 3:
+	if len(sys.argv) < 2:
 		print(USAGE)
 		sys.exit(1)
-	create_plugin_template(*sys.argv[1:4])
+	create_plugin_template(sys.argv[2])
