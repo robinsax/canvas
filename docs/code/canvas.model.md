@@ -374,20 +374,6 @@ fails. Will raise an `UnsupportedEnforcementMethod` if
 Note a `ValidationErrors` will cause a canonical failure 
 response to be sent to the client.
 
-### _ColumnIterator(object)
-An ordered iterator on the columns of a model class.
-
-The nature of this object is not exposed outside of 
-this package.
-#### Methods
-#### \_\_init__(self, model_cls, yield_i)
-+ *model_cls*:  The mapped model class. 
-+ *yield_i*:  Whether the current index should be included in the yielded tuple as a third argument.
-
-Create a column iterator.
-
-
-
 
 ## Functions
 ### create_everything()
