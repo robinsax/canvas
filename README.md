@@ -6,7 +6,7 @@ A full-stack web application framework written in Python and JavaScript.
 
 ### Setup 
 
-First install Postgres and Python3.6. On Linux this looks something like:
+First install Postgres and Python 3.6. On Linux this looks something like:
 ```bash
 apt-get update
 apt-get install postgresql python3.6
@@ -42,7 +42,7 @@ An empty canvas instance will then be served at http://localhost.
 
 ### Basic use
 
-canvas web application are implemented as one or more plugins. Plugins are stored
+canvas web applications are implemented as one or more plugins. Plugins are stored
 in a shared plugin folder (by default `../canvas_plugins`) and activated in
 configuration.
 
