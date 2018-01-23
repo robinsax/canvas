@@ -37,7 +37,15 @@ def class_doc(cls):
 	return f'### {cls.__name__}({cls.__bases__[0].__name__})\n{doc_str}\n#### Methods\n{mthd_doc_str}\n'
 
 def function_doc(func, small=False):
+	#	Get and process parameters from doc
+	#	string.
 	doc_str = get_doc_str(func)
+	arg_descs = []
+	for match in re.finditer(r':(\w+)(\s[^:]+)', doc_str):
+		doc_str = doc_str.replace(match.group(0), '')
+		cleaned = re.sub(r'\s+', ' ', match.group(2))
+		arg_descs.append(f'+ *{match.group(1)}*: {cleaned}')
+	arg_descs = '\n'.join(arg_descs)
 
 	arg_spec = inspect.getfullargspec(func)
 	arg_fmt = ''
@@ -61,7 +69,7 @@ def function_doc(func, small=False):
 	if func_name.startswith('__'):
 		func_name = f'\\_\\_{func_name[2:]}'
 
-	return f'{prefix}{func_name}({arg_fmt})\n{doc_str}\n'
+	return f'{prefix}{func_name}({arg_fmt})\n{arg_descs}\n{doc_str}\n'
 
 def build_docs():
 	'''
