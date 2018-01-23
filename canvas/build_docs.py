@@ -23,20 +23,40 @@ PACKAGES = [
 	canvas.controllers
 ]
 
+def get_doc_str(obj):
+	return '*No documentation*' if obj.__doc__ is None else inspect.cleandoc(obj.__doc__)
+
 def class_doc(cls):
 	#	Get doc. string.
-	doc_str = cls.__doc__
-	if doc_str is None:
-		doc_str = '*No documentation*'
+	doc_str = get_doc_str(cls)
 
 	mthd_doc_str = ''
 	for name, mthd in inspect.getmembers(cls, predicate=inspect.isfunction):
 		mthd_doc_str += f'{function_doc(mthd)}\n'
 	
-	return f'### {cls.__name__}({cls.__bases__[0].__name__})\n{inspect.cleandoc(doc_str)}\n#### Methods\n{mthd_doc_str}\n'
+	return f'### {cls.__name__}({cls.__bases__[0].__name__})\n{doc_str}\n#### Methods\n{mthd_doc_str}\n'
 
 def function_doc(func):
-	return f'### {func.__name__}\n'
+	doc_str = get_doc_str(func)
+
+	arg_spec = inspect.getfullargspec(func)
+	arg_fmt = ''
+
+	if arg_spec.args is not None:
+		arg_fmt += ', '.join(arg_spec.args)
+
+	if arg_spec.varkw is not None:
+		kwargs_strs = []
+		for i, kwarg in enumerate(arg_spec.kwonlyargs):
+			print(func, kwarg)
+			kwargs_strs.append(f'{kwarg}={arg_spec.kwonlydefaults[i]}')
+		kwargs_str = ', '.join(kwargs_strs)
+		if len(arg_fmt) > 0:
+			arg_fmt += f', {kwargs_str}'
+		else:
+			arg_fmt = kwargs_str
+
+	return f'### {func.__name__}({arg_fmt})\n{doc_str}\n'
 
 def build_docs():
 	'''
