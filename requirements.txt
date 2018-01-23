@@ -1,8 +1,6 @@
 #	Core
 werkzeug
 psycopg2
-#	Typecasting
-lxml
 #	Asset rendering
 jinja2
 htmlmin
