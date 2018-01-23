@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-Configures canvas for a plugin Travis build.
+Configure canvas for a plugin Travis build.
 
 Must be invoked from root directory.
 '''
