@@ -23,7 +23,23 @@ The mode is prefixed with `--` in the command line.
 Implementations' constructors must take no
 parameters.
 #### Methods
-{mthd_doc_str}
+#### \_\_init__(self, mode, arg_fmt)
++ *mode*:  The mode string (e.g. `serve` to be triggered by `--serve`). 
++ *arg_fmt*:  The usage format (i.e. argument specification), as a string
+Create a new launch handler. Must be
+registered as `launch_mode` for actuation.
+
+
+#### launch(self, args)
++ *args*:  The command line arguments
+Handle a command line invocation. Return `True` if the
+command line input was valid and `False` otherwise.
+
+If `False` is returned, the argument specification is
+presented.
+
+
+
 ### MacroParameterError(Exception)
 Raised by Jinja macros when they are supplied an invalid
 set of parameters
@@ -53,7 +69,19 @@ by input.
 ### WrappedDict(dict)
 A dictionary with a configurable key error.
 #### Methods
-{mthd_doc_str}
+#### \_\_getitem__(self, key)
+
+Retrieve the value for `key` or raise
+an exception if it's not present.
+
+#### \_\_init__(self, source, exception_cls)
++ *source*:  The dictionary to copy into this dictionary. 
++ *exception_cls*:  The exception class to raise when a missing key is retrieve. Instances will have the offending key passed to their constructor.
+Copy the dictionary `source` into this dictionary
+and define the exception class to replace `KeyError`.
+
+
+
 
 ## Functions
 ### handle_request(environ, start_response)

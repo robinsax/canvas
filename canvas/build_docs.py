@@ -42,7 +42,7 @@ def class_doc(cls):
 	
 	doc = f'### {cls.__name__}({cls.__bases__[0].__name__})\n{doc_str}\n'
 	if len(mthd_docs) > 0:
-		doc += '#### Methods\n{mthd_doc_str}\n'
+		doc += f'#### Methods\n{mthd_docs}\n'
 	return doc
 
 def function_doc(func, small=False):
