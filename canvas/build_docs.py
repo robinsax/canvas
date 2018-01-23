@@ -24,13 +24,15 @@ PACKAGES = [
 ]
 
 def get_doc_str(obj):
-	return None if obj.__doc__ is None else inspect.cleandoc(obj.__doc__)
+	return None if obj.__doc__ is None else inspect.cleandoc(obj.__doc__.replace('TODO', '__TODO__'))
 
 def class_doc(cls):
 	#	Get doc. string.
 	doc_str = get_doc_str(cls)
+	if doc_str is None or re.match(r'_[a-z]', cls.__name__):
+		return None
 
-	mthd_docs = ''
+	mthd_docs = []
 	for name, mthd in inspect.getmembers(cls, predicate=inspect.isfunction):
 		f_doc = function_doc(mthd, small=True)
 		if f_doc is None:
@@ -102,7 +104,10 @@ def build_docs():
 		#	Document.
 		markdown += f'\n## Classes\n'
 		for cls in classes:
-			markdown += class_doc(cls)
+			c_doc = class_doc(cls)
+			if c_doc is None:
+				continue
+			markdown += c_doc
 		markdown += f'\n## Functions\n'
 		for func in functions:
 			f_doc = function_doc(func)

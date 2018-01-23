@@ -3,30 +3,18 @@
 ## Classes
 ### BuildDocsMode(LaunchMode)
 The code documentation generation mode, invoked with '--build_docs'.
-#### Methods
-
 ### ColumnDefinitionError(Exception)
 Raised when an invalid column type is specified
-#### Methods
-
 ### ComponentNotFound(HTTPException)
 Indicates the component to which the request
 was addressed doesn't exist
-#### Methods
-
 ### ConfigKeyError(KeyError)
 Raised as the `KeyError` for `config`.
-#### Methods
-
 ### DevServeMode(LaunchMode)
 The development serving mode, invoked with `--serve`.
-#### Methods
-
 ### HTTPException(Exception)
 Represents errors with specific HTTP codes
 (e.g. `500`, `404`, etc.)
-#### Methods
-
 ### LaunchMode(object)
 `LaunchMode`s handle command-line
 invocation of canvas for a specific mode.
@@ -35,91 +23,37 @@ The mode is prefixed with `--` in the command line.
 Implementations' constructors must take no
 parameters.
 #### Methods
-#### \_\_init__(self, mode, arg_fmt)
-+ *mode*:  The mode string (e.g. `serve` to be triggered by `--serve`). 
-+ *arg_fmt*:  The usage format (i.e. argument specification), as a string
-Create a new launch handler. Must be
-registered as `launch_mode` for actuation.
-
-
-#### launch(self, args)
-+ *args*:  The command line arguments
-Handle a command line invocation. Return `True` if the
-command line input was valid and `False` otherwise.
-
-If `False` is returned, the argument specification is
-presented.
-
-
-
-
+{mthd_doc_str}
 ### MacroParameterError(Exception)
 Raised by Jinja macros when they are supplied an invalid
 set of parameters
-#### Methods
-
 ### MarkdownNotFound(Exception)
 Raised when a markdown file isn't found
-#### Methods
-
 ### NotFound(HTTPException)
 Indicates the requested route is unmapped.
 Canonically, should never be raised unless
 you're abstracting routes
-#### Methods
-
 ### RequestParamError(HTTPException)
 Indicates missing request parameters.
 Automatically returned as the `KeyError`
 replacement for `request` in `vars`
-#### Methods
-
-### TemplateNotFound(Exception)
-None
-#### Methods
-
 ### UnitTestMode(LaunchMode)
 The unit test execution mode, invoked with `--run_tests`.
-#### Methods
-
 ### UnknownAction(HTTPException)
 Indicated the action specified by the
 client is unknown to the dispatched
 controller
-#### Methods
-
 ### UnsupportedMethod(HTTPException)
 Indicates the requested route does not support
 the request method. Should not be raised unless
 you're abstracting routes
-#### Methods
-
 ### ValidationErrors(Exception)
 Raised when model constraints are violated
 by input.
-#### Methods
-
 ### WrappedDict(dict)
 A dictionary with a configurable key error.
 #### Methods
-#### \_\_getitem__(self, key)
-
-Retrieve the value for `key` or raise
-an exception if it's not present.
-
-#### \_\_init__(self, source, exception_cls)
-+ *source*:  The dictionary to copy into this dictionary. 
-+ *exception_cls*:  The exception class to raise when a missing key is retrieve. Instances will have the offending key passed to their constructor.
-Copy the dictionary `source` into this dictionary
-and define the exception class to replace `KeyError`.
-
-
-
-
-### _Redirect(Exception)
-None
-#### Methods
-
+{mthd_doc_str}
 
 ## Functions
 ### handle_request(environ, start_response)
@@ -217,7 +151,7 @@ __Note__: Beware of XSS vulerabilities when using.
 Add all registered classes or functions of the given 
 typ to a module or package namespace.
 
-TODO(BP): Side-effect: __all__ list modification
+__TODO__(BP): Side-effect: __all__ list modification
 
 
 ### redirect_to(target, code)
