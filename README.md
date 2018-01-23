@@ -6,7 +6,7 @@ A full-stack web application framework written in Python and JavaScript.
 
 ### Setup 
 
-The following setup instructions are intended for Ubuntu, however Windows and MacOSX
+The following setup instructions are intended for Ubuntu, however Windows and OSX
 are also supported. All WSIG-compliant servers are supported.
 
 First install Postgres and Python 3.6:
