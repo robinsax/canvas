@@ -10,11 +10,13 @@ to allow intuative endpoint presentation.
 + *route*:  The route for this controller, relative to domain root. Must begin with `'/api/'`. 
 + *description*:  A human readable description of the endpoint in markdown. 
 + *super_kwargs*:  The `Controller` class constructors keyword arguments.
+
 Configure the overriding controller class.
 
 
 
 #### get(self, ctx)
+
 
 The GET request method handler.
 
@@ -24,11 +26,13 @@ client.
 
 #### get_components(self, ctx)
 
+
 Return all components that that didnt raise an 
 exception when their `check()` method was called 
 with the current request context.
 
 #### post(self, ctx)
+
 
 The POST request method handler.
 
@@ -46,11 +50,13 @@ controller list presence.
 #### \_\_init__(self, name, controllers)
 + *name*:  A unique name for the component used for its identification. 
 + *controllers*:  A list of controller routes to which this component should be added.
+
 Configure the overriding component.
 
 
 
 #### check(self, ctx)
+
 
 Check a request context and raise a subclass of `HTTPException` 
 if this component does not want to be available for the 
@@ -64,9 +70,11 @@ By default will never raise an exception.
 
 #### handle_get(self, ctx)
 
+
 Handle a GET request addressed to this component.
 
 #### handle_post(self, ctx)
+
 
 Handle a POST request addressed to this component.
 
@@ -81,11 +89,13 @@ and component management.
 + *route*:  The route for this controller, relative to domain root. 
 + *grab_components*:  The list of components to add to this controller. Components that are targeting this controller do not need to be specified. 
 + *block_components*:  The list of components that are targeting this controller but should not be added to it.
+
 Configure the overriding controller class.
 
 
 
 #### get(self, ctx)
+
 
 The GET request method handler.
 
@@ -95,11 +105,13 @@ client.
 
 #### get_components(self, ctx)
 
+
 Return all components that that didnt raise an 
 exception when their `check()` method was called 
 with the current request context.
 
 #### post(self, ctx)
+
 
 The POST request method handler.
 
@@ -124,11 +136,13 @@ features.
 + *library_dependencies*:  A list of library client dependencies. 
 + *template_params*:  A dictionary of additional parameters for this pages template render context. Lambda values will be invoked at render time with a single parameter; the request context. 
 + *super_kwargs*:  The `Controller` class constructors keyword arguments.
+
 Configure the overriding controller class.
 
 
 
 #### collect_dependencies(self, ctx)
+
 
 Return a tuple containing respectively the non-library
 and library client dependencies of this page, given the 
@@ -136,16 +150,19 @@ current request context.
 
 #### get(self, ctx)
 
+
 Return a response tuple containing the rendered 
 template for this page.
 
 #### get_components(self, ctx)
+
 
 Return all components that that didnt raise an 
 exception when their `check()` method was called 
 with the current request context.
 
 #### post(self, ctx)
+
 
 The POST request method handler.
 
@@ -155,12 +172,14 @@ client.
 
 #### render_component(self, name)
 
+
 Render the component with name `name` and return its 
 rendered template as markup, or return `None` if the
 there is no component called `name` available to the
 current request context.
 
 #### render_components(self)
+
 
 Render each component available given the current 
 request context and return the sum of their rendered 
@@ -177,11 +196,13 @@ rendering and dependency management.
 + *dependencies*:  A list of non-library client dependencies. 
 + *library_dependencies*:  A list of library client dependencies. 
 + *super_kwargs*:  The `Component` class constructors keyword arguments.
+
 Configure the overriding component.
 
 
 
 #### check(self, ctx)
+
 
 Check a request context and raise a subclass of `HTTPException` 
 if this component does not want to be available for the 
@@ -195,13 +216,16 @@ By default will never raise an exception.
 
 #### handle_get(self, ctx)
 
+
 Handle a GET request addressed to this component.
 
 #### handle_post(self, ctx)
 
+
 Handle a POST request addressed to this component.
 
 #### render(self, ctx)
+
 
 Return the rendered template for this component.
 
@@ -214,12 +238,14 @@ A dictionary with a configurable key error.
 #### Methods
 #### \_\_getitem__(self, key)
 
+
 Retrieve the value for `key` or raise
 an exception if it's not present.
 
 #### \_\_init__(self, source, exception_cls)
 + *source*:  The dictionary to copy into this dictionary. 
 + *exception_cls*:  The exception class to raise when a missing key is retrieve. Instances will have the offending key passed to their constructor.
+
 Copy the dictionary `source` into this dictionary
 and define the exception class to replace `KeyError`.
 
@@ -229,34 +255,41 @@ and define the exception class to replace `KeyError`.
 ## Functions
 ### call_registered(typ)
 
+
 Invoke all functions registered as `typ`. The 
 callback prefix is preppended if not present.
 ### create_everything()
+
 
 Create the singleton instance of all controllers and 
 components, then add components to controllers.
 ### get_controller(route_or_controller)
 + *route_or_controller*:  A controller instance or existing route.
+
 Return the controller for the given route or
 the parameter if it's already a controller.
 
 
 ### get_controllers(filter)
 + *filter*:  A filter function on controller inclusion.
+
 Return the list of all controller instances.
 
 
 ### get_registered()
+
 
 Return all registered classes or functions 
 registered as the given types or an empty list 
 if there are none.
 ### get_thread_context()
 
+
 Retrieve the per-thread request context for 
 the current thread, or `None` if there
 isn't one.
 ### markup(text)
+
 
 Transform the string `text` into markup that is 
 not escaped when rendered in a template.
@@ -271,6 +304,7 @@ __Note__: Beware of XSS vulerabilities when using.
 + *response*:  Whether to return a response tuple. 
 + *status*:  The status code for the response, if `response` is true. 
 + *headers*:  The header dictionary for the response, if `response` is true.
+
 Render a Jinja2 template.
 
 

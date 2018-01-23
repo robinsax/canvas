@@ -26,12 +26,14 @@ parameters.
 #### \_\_init__(self, mode, arg_fmt)
 + *mode*:  The mode string (e.g. `serve` to be triggered by `--serve`). 
 + *arg_fmt*:  The usage format (i.e. argument specification), as a string
+
 Create a new launch handler. Must be
 registered as `launch_mode` for actuation.
 
 
 #### launch(self, args)
 + *args*:  The command line arguments
+
 Handle a command line invocation. Return `True` if the
 command line input was valid and `False` otherwise.
 
@@ -71,12 +73,14 @@ A dictionary with a configurable key error.
 #### Methods
 #### \_\_getitem__(self, key)
 
+
 Retrieve the value for `key` or raise
 an exception if it's not present.
 
 #### \_\_init__(self, source, exception_cls)
 + *source*:  The dictionary to copy into this dictionary. 
 + *exception_cls*:  The exception class to raise when a missing key is retrieve. Instances will have the offending key passed to their constructor.
+
 Copy the dictionary `source` into this dictionary
 and define the exception class to replace `KeyError`.
 
@@ -85,6 +89,7 @@ and define the exception class to replace `KeyError`.
 
 ## Functions
 ### handle_request(environ, start_response)
+
 
 The WSGI application, exported to the root package
 as `application`.
@@ -96,10 +101,12 @@ response, status, headers, mimetype
 ```
 ### asset_url(rel_path)
 
+
 Return the URL relative to domain root for an asset. 
 This message should always be called for asset 
 retrieval to allow for forwards-compatability.
 ### call_registered(typ)
+
 
 Invoke all functions registered as `typ`. The 
 callback prefix is preppended if not present.
@@ -109,6 +116,7 @@ callback prefix is preppended if not present.
 + *status*:  The HTTP status code for the response. 
 + *headers*:  A dictionary of headers for the response. 
 + *default_serializer*:  A fallback serialization function for complex objects.
+
 Create a JSON response tuple in the canonical format.
 
 : `'success'`, 
@@ -118,40 +126,48 @@ Create a JSON response tuple in the canonical format.
 + *module*:  The target module object 
 + *items*:  The functions or classes to place. 
 + *into_all*:  Whether to add the functions or objects to the `__all__` list of the target module.
+
 Export one or more functions or classes onto a module.
 
 
 ### format_traceback(error)
 + *error*:  The raised error.
+
 Return a formatted traceback string for `error` if it has
 been raised.
 
 
 ### get_registered()
 
+
 Return all registered classes or functions 
 registered as the given types or an empty list 
 if there are none.
 ### get_registered_by_name()
+
 
 Generate and return a dictionary containing all 
 classes or functions registered as the given type, 
 keyed by name.
 ### get_thread_context()
 
+
 Retrieve the per-thread request context for 
 the current thread, or `None` if there
 isn't one.
 ### json(o)
 
+
 Return the JSON representation of the
 JSON-serializable object `o`.
 ### load_all_plugins()
+
 
 Initialize all plugins activated in configuration
 and populate the `canvas.plugins` namespace.
 ### logger(name)
 + *name*:  The name of the logger to create.
+
 Create and return a standard library `logging.Logger`.
 When invoked at package level, the name parameter can
 be safely omitted.
@@ -160,12 +176,14 @@ be safely omitted.
 ### markdown(markdown, return_markup)
 + *markdown*:  The string to render as markdown. 
 + *return_markup*:  Whether or not to return a markup object that will not be escaped when rendered.
+
 Render a string as markdown.
 
 Available as a template filter.
 
 
 ### markup(text)
+
 
 Transform the string `text` into markup that is 
 not escaped when rendered in a template.
@@ -176,6 +194,7 @@ __Note__: Beware of XSS vulerabilities when using.
 ### place_registered_on(name, typ)
 + *name*:  The name of the module whose namespace is the target. 
 + *typ*:  The registered type to place.
+
 Add all registered classes or functions of the given 
 typ to a module or package namespace.
 
@@ -185,6 +204,7 @@ __TODO__(BP): Side-effect: __all__ list modification
 ### redirect_to(target, code)
 + *target*:  The URL to redirect to. 
 + *code*:  The HTTP redirect code. Must be 3xx.
+
 Redirect the view to `target`. Does not return
 a value. When called, flow control is halted.
 
@@ -194,5 +214,6 @@ as a view action (it wouldn't work otherwise).
 
 
 ### uri_encode(s)
+
 
 Return `s` encoded as a a URI component.
