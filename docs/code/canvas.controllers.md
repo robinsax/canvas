@@ -6,7 +6,7 @@ The canonical API endpoint controller base class enforces
 a `api/` route prefix and the presence of a description
 to allow intuative endpoint presentation.
 #### Methods
-#### \{__init__(self, route, description)
+#### \__init__(self, route, description)
 Configure the overriding controller class.
 
 :route The route for this controller, relative to 
@@ -45,7 +45,7 @@ isn't prefixed with `api/`
 The base component class enforces name and targeted 
 controller list presence.
 #### Methods
-#### \{__init__(self, name, controllers)
+#### \__init__(self, name, controllers)
 Configure the overriding component.
 
 :name A unique name for the component used for its
@@ -75,7 +75,7 @@ Handle a POST request addressed to this component.
 Indicates the component to which the request
 was addressed doesn't exist
 #### Methods
-#### \{__init__(self, component)
+#### \__init__(self, component)
 *No documentation*
 
 
@@ -83,7 +83,7 @@ was addressed doesn't exist
 The base controller class enforces route presence
 and component management.
 #### Methods
-#### \{__init__(self, route, grab_components, block_components)
+#### \__init__(self, route, grab_components, block_components)
 Configure the overriding controller class.
 
 :route The route for this controller, relative 
@@ -120,7 +120,7 @@ Indicates the requested route is unmapped.
 Canonically, should never be raised unless
 you're abstracting routes
 #### Methods
-#### \{__init__(self, key)
+#### \__init__(self, key)
 *No documentation*
 
 
@@ -129,7 +129,7 @@ The base page class implements template rendering
 for GET requests, dependency management, and supporting
 features.
 #### Methods
-#### \{__init__(self, route, name, dependencies, library_dependencies, template, template_params, description)
+#### \__init__(self, route, name, dependencies, library_dependencies, template, template_params, description)
 Configure the overriding controller class.
 
 :route The route for this controller, relative to 
@@ -184,7 +184,7 @@ templates as markup.
 The base page component class implements template 
 rendering and dependency management.
 #### Methods
-#### \{__init__(self, name, pages, template, dependencies, library_dependencies)
+#### \__init__(self, name, pages, template, dependencies, library_dependencies)
 Configure the overriding component.
 
 :name A unique name for the component used for its
@@ -224,18 +224,18 @@ Indicates the requested route does not support
 the request method. Should not be raised unless
 you're abstracting routes
 #### Methods
-#### \{__init__(self)
+#### \__init__(self)
 *No documentation*
 
 
 ### WrappedDict(dict)
 A dictionary with a configurable key error.
 #### Methods
-#### \{__getitem__(self, key)
+#### \__getitem__(self, key)
 Retrieve the value for `key` or raise
 an exception if it's not present.
 
-#### \{__init__(self, source, exception_cls)
+#### \__init__(self, source, exception_cls)
 Copy the dictionary `source` into this dictionary
 and define the exception class to replace `KeyError`.
 

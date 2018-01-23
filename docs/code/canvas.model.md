@@ -8,16 +8,16 @@ a class attribute by the `model.schema()` decorator.
 Stores type information and generates SQL-serializable 
 expression on comparison.
 #### Methods
-#### \{__eq__(self, other)
+#### \__eq__(self, other)
 *No documentation*
 
-#### \{__ge__(self, other)
+#### \__ge__(self, other)
 *No documentation*
 
-#### \{__gt__(self, other)
+#### \__gt__(self, other)
 *No documentation*
 
-#### \{__init__(self, type_str, constraints, default, primary_key)
+#### \__init__(self, type_str, constraints, default, primary_key)
 Create a new column.
 
 :type_str A string representation of the column type.
@@ -27,16 +27,16 @@ Create a new column.
 :primary_key Whether or not this column is the table's
         primary key.
 
-#### \{__le__(self, other)
+#### \__le__(self, other)
 *No documentation*
 
-#### \{__lt__(self, other)
+#### \__lt__(self, other)
 *No documentation*
 
-#### \{__ne__(self, other)
+#### \__ne__(self, other)
 *No documentation*
 
-#### \{__repr__(self)
+#### \__repr__(self)
 Return a debugging representation. 
 
 #### get_default(self)
@@ -63,7 +63,7 @@ form input type, and default value.
 Column types are transparent to plugins in the majority of
 use cases, but can be assumed stable.
 #### Methods
-#### \{__init__(self, sql_type, input_type, default)
+#### \__init__(self, sql_type, input_type, default)
 Define a new column type.
 
 TODO: Extend `input_type` capabilities.
@@ -74,7 +74,7 @@ TODO: Extend `input_type` capabilities.
 :default The default value with which to populate
         attributes in this column.
 
-#### \{__repr__(self)
+#### \__repr__(self)
 *No documentation*
 
 
@@ -82,7 +82,7 @@ TODO: Extend `input_type` capabilities.
 Base constraint class enforces a name, error message,
 and placeholder evaluation methods.
 #### Methods
-#### \{__init__(self, name, error_message)
+#### \__init__(self, name, error_message)
 Define a new constraint type.
 
 :name A unique name for this constraint.
@@ -126,25 +126,25 @@ An enumerable type column type.
 
 TODO: Form inputs for this type.
 #### Methods
-#### \{__init__(self, enum_name)
+#### \__init__(self, enum_name)
 Create a enum column type targeting the enum 
 registered as `enum_name`.
 
 :enum_name The name of an enumerable type
         decorated with `@model.enum`.
 
-#### \{__repr__(self)
+#### \__repr__(self)
 *No documentation*
 
 
 ### ForeignKeyColumnType(ColumnType)
 A foreign key column type with target column reference.
 #### Methods
-#### \{__init__(self, target_name)
+#### \__init__(self, target_name)
 Create a new foreign key column type referencing the
 table and column specified in `target_name`.
 
-#### \{__repr__(self)
+#### \__repr__(self)
 *No documentation*
 
 
@@ -152,7 +152,7 @@ table and column specified in `target_name`.
 A constraint that enforces non-null column
 value.
 #### Methods
-#### \{__init__(self, name, error_message)
+#### \__init__(self, name, error_message)
 Define a new constraint type.
 
 :name A unique name for this constraint.
@@ -197,7 +197,7 @@ A range constraint on numerical columns.
 TODO: Support all permutation of above and below
         constraint presence on the client side.
 #### Methods
-#### \{__init__(self, name, error_message, max_value, min_value)
+#### \__init__(self, name, error_message, max_value, min_value)
 Create a new regular expression constraint.
 
 :name A unique name for this constraint.
@@ -236,7 +236,7 @@ response to be sent to the client.
 ### RegexConstraint(Constraint)
 A regular expression constraint on textual columns.
 #### Methods
-#### \{__init__(self, name, error_message, regex, ignore_case, negative)
+#### \__init__(self, name, error_message, regex, ignore_case, negative)
 Create a new regular expression constraint.
 
 :name A unique name for this constraint.
@@ -274,11 +274,11 @@ response to be sent to the client.
 The `Session` object maintains a consecutive set 
 of database transactions.
 #### Methods
-#### \{__del__(self)
+#### \__del__(self)
 A deconstructor to ensure no database connections
 are orphaned.
 
-#### \{__init__(self)
+#### \__init__(self)
 *No documentation*
 
 #### _load_model(self, model_cls, row)
@@ -350,7 +350,7 @@ object.
 A constraint that enforces column value 
 uniqueness.
 #### Methods
-#### \{__init__(self, name, error_message)
+#### \__init__(self, name, error_message)
 Define a new constraint type.
 
 :name A unique name for this constraint.
@@ -395,17 +395,17 @@ An ordered iterator on the columns of a model class.
 The nature of this object is not exposed outside of 
 this package.
 #### Methods
-#### \{__init__(self, model_cls, yield_i)
+#### \__init__(self, model_cls, yield_i)
 Create a column iterator.
 
 :model_cls The mapped model class.
 :yield_i Whether the current index should be included 
         in the yielded tuple as a third argument.
 
-#### \{__iter__(self)
+#### \__iter__(self)
 *No documentation*
 
-#### \{__next__(self)
+#### \__next__(self)
 *No documentation*
 
 

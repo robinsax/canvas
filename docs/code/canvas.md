@@ -4,7 +4,7 @@
 ### BuildDocsMode(LaunchMode)
 The code documentation generation mode, invoked with '--build_docs'.
 #### Methods
-#### \{__init__(self)
+#### \__init__(self)
 *No documentation*
 
 #### launch(self, args)
@@ -19,7 +19,7 @@ Raised when an invalid column type is specified
 Indicates the component to which the request
 was addressed doesn't exist
 #### Methods
-#### \{__init__(self, component)
+#### \__init__(self, component)
 *No documentation*
 
 
@@ -30,7 +30,7 @@ Raised as the `KeyError` for `config`.
 ### DevServeMode(LaunchMode)
 The development serving mode, invoked with `--serve`.
 #### Methods
-#### \{__init__(self)
+#### \__init__(self)
 *No documentation*
 
 #### launch(self, args)
@@ -41,7 +41,7 @@ The development serving mode, invoked with `--serve`.
 Represents errors with specific HTTP codes
 (e.g. `500`, `404`, etc.)
 #### Methods
-#### \{__init__(self, msg, code, desc)
+#### \__init__(self, msg, code, desc)
 *No documentation*
 
 
@@ -53,7 +53,7 @@ The mode is prefixed with `--` in the command line.
 Implementations' constructors must take no
 parameters.
 #### Methods
-#### \{__init__(self, mode, arg_fmt)
+#### \__init__(self, mode, arg_fmt)
 Create a new launch handler. Must be
 registered as `launch_mode` for actuation.
 :mode The mode string (e.g. `serve` to be triggered
@@ -85,7 +85,7 @@ Indicates the requested route is unmapped.
 Canonically, should never be raised unless
 you're abstracting routes
 #### Methods
-#### \{__init__(self, key)
+#### \__init__(self, key)
 *No documentation*
 
 
@@ -94,7 +94,7 @@ Indicates missing request parameters.
 Automatically returned as the `KeyError`
 replacement for `request` in `vars`
 #### Methods
-#### \{__init__(self, param)
+#### \__init__(self, param)
 *No documentation*
 
 
@@ -105,7 +105,7 @@ replacement for `request` in `vars`
 ### UnitTestMode(LaunchMode)
 The unit test execution mode, invoked with `--run_tests`.
 #### Methods
-#### \{__init__(self)
+#### \__init__(self)
 *No documentation*
 
 #### launch(self, args)
@@ -117,7 +117,7 @@ Indicated the action specified by the
 client is unknown to the dispatched
 controller
 #### Methods
-#### \{__init__(self, action)
+#### \__init__(self, action)
 *No documentation*
 
 
@@ -126,7 +126,7 @@ Indicates the requested route does not support
 the request method. Should not be raised unless
 you're abstracting routes
 #### Methods
-#### \{__init__(self)
+#### \__init__(self)
 *No documentation*
 
 
@@ -134,18 +134,18 @@ you're abstracting routes
 Raised when model constraints are violated
 by input.
 #### Methods
-#### \{__init__(self, error_dict)
+#### \__init__(self, error_dict)
 *No documentation*
 
 
 ### WrappedDict(dict)
 A dictionary with a configurable key error.
 #### Methods
-#### \{__getitem__(self, key)
+#### \__getitem__(self, key)
 Retrieve the value for `key` or raise
 an exception if it's not present.
 
-#### \{__init__(self, source, exception_cls)
+#### \__init__(self, source, exception_cls)
 Copy the dictionary `source` into this dictionary
 and define the exception class to replace `KeyError`.
 
@@ -159,7 +159,7 @@ and define the exception class to replace `KeyError`.
 ### _Redirect(Exception)
 *No documentation*
 #### Methods
-#### \{__init__(self, target, code)
+#### \__init__(self, target, code)
 *No documentation*
 
 
