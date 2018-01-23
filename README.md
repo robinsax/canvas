@@ -46,6 +46,10 @@ canvas web applications are implemented as one or more plugins. Plugins are stor
 in a shared plugin folder (by default `../canvas_plugins`) and activated in
 configuration.
 
+Some existing plugins are:
+* [users](https://github.com/robinsax/canvas-pl-users) - User model and authentication.
+* [deferred_work](https://github.com/robinsax/canvas-pl-deferred_work) - Asynchronous and scheduled code execution.
+
 To create a plugin, run:
 ```bash
 python3.6 ./scripts/create_plugin_template.py <target_dir> <plugin_name>
