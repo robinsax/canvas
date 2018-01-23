@@ -53,7 +53,8 @@ configuration.
 
 Some existing plugins are:
 * [users](https://github.com/robinsax/canvas-pl-users) - Extensible skeleton user model with authorization integration.
-* [deferred_work](https://github.com/robinsax/canvas-pl-deferred_work) - Asynchronous and scheduled code execution.
+* [deferral](https://github.com/robinsax/canvas-pl-deferral) - Scheduled and asynchronous code execution.
+* [email](https://github.com/robinsax/canvas-pl-email) - SMTP-based email templating and dispatch.
 
 To create a plugin in the configured plugin directory, run:
 ```bash

@@ -7,6 +7,10 @@ import os
 import re
 import inspect
 
+#	TODO: Create plugin interface.
+#	TODO: Only document things in the module in which
+#		they were defined.
+
 #	Import the root package for reference.
 import canvas
 

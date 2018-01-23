@@ -11,6 +11,10 @@ from ...utils.registration import callback
 from ..plugins import get_path_occurrences
 from .jinja_extensions import CanvasJinjaEnvironment
 
+__all__ = [
+	'render_template'
+]
+
 _render_environ = None
 @callback.pre_init
 def create_environment():

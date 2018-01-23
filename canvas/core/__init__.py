@@ -8,12 +8,16 @@ from ..exceptions import _Redirect
 from ..utils.registration import register
 
 from .thread_context import get_thread_context
+from .assets import *
 
 __all__ = [
 	'asset_url',
 	'create_json',
 	'redirect_to',
-	'get_thread_context'
+	'get_thread_context',
+	#	Assets subpackage
+	#	TODO: Populate
+	'render_template'
 ]
 
 def create_json(status_str, *data, status=200, headers={}, default_serializer=None):

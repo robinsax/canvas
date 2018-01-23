@@ -20,6 +20,8 @@ from ... import config
 
 log = logger()
 
+#	TODO: Refactor to have a get_asset function too.
+
 #	The asset cache for storing rendered assets.
 _asset_cache = {}
 def get_client_asset(path, _recall=False):

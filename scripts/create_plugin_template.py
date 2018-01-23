@@ -81,4 +81,4 @@ if __name__ == '__main__':
 	if len(sys.argv) < 2:
 		print(USAGE)
 		sys.exit(1)
-	create_plugin_template(sys.argv[2])
+	create_plugin_template(sys.argv[1])
