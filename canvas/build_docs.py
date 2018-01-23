@@ -57,7 +57,7 @@ def function_doc(func, small=False):
 		doc_str = doc_str.replace(match.group(0), '')
 		cleaned = re.sub(r'\s+', ' ', match.group(2))
 		arg_descs.append(f'+ *{match.group(1)}*: {cleaned}')
-	arg_descs = '\n'.join(arg_descs)
+	arg_descs = '\n'.join(arg_descs) + '\n'
 
 	arg_spec = inspect.getfullargspec(func)
 	arg_fmt = ''
