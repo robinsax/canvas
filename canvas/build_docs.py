@@ -24,22 +24,32 @@ PACKAGES = [
 ]
 
 def get_doc_str(obj):
-	return '*No documentation*' if obj.__doc__ is None else inspect.cleandoc(obj.__doc__)
+	return None if obj.__doc__ is None else inspect.cleandoc(obj.__doc__)
 
 def class_doc(cls):
 	#	Get doc. string.
 	doc_str = get_doc_str(cls)
 
-	mthd_doc_str = ''
+	mthd_docs = ''
 	for name, mthd in inspect.getmembers(cls, predicate=inspect.isfunction):
-		mthd_doc_str += f'{function_doc(mthd, small=True)}\n'
+		f_doc = function_doc(mthd, small=True)
+		if f_doc is None:
+			continue
+		mthd_docs.append(f_doc)
+	mthd_docs = '\n'.join(mthd_docs)
 	
-	return f'### {cls.__name__}({cls.__bases__[0].__name__})\n{doc_str}\n#### Methods\n{mthd_doc_str}\n'
+	doc = f'### {cls.__name__}({cls.__bases__[0].__name__})\n{doc_str}\n'
+	if len(mthd_docs) > 0:
+		doc += '#### Methods\n{mthd_doc_str}\n'
+	return doc
 
 def function_doc(func, small=False):
 	#	Get and process parameters from doc
 	#	string.
 	doc_str = get_doc_str(func)
+	if doc_str is None or re.match(r'_[a-z]', func.__name__):
+		return None
+
 	arg_descs = []
 	for match in re.finditer(r':(\w+)(\s[^:]+)', doc_str):
 		doc_str = doc_str.replace(match.group(0), '')
@@ -95,7 +105,10 @@ def build_docs():
 			markdown += class_doc(cls)
 		markdown += f'\n## Functions\n'
 		for func in functions:
-			markdown += function_doc(func)
+			f_doc = function_doc(func)
+			if f_doc is None:
+				continue
+			markdown += f_doc
 
 		#	Save.
 		with open(f'./docs/code/{package.__name__}.md', 'w') as f:

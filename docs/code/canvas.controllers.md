@@ -78,10 +78,6 @@ Handle a POST request addressed to this component.
 Indicates the component to which the request
 was addressed doesn't exist
 #### Methods
-#### \_\_init__(self, component)
-
-*No documentation*
-
 
 ### Controller(object)
 The base controller class enforces route presence
@@ -123,10 +119,6 @@ Indicates the requested route is unmapped.
 Canonically, should never be raised unless
 you're abstracting routes
 #### Methods
-#### \_\_init__(self, key)
-
-*No documentation*
-
 
 ### Page(Controller)
 The base page class implements template rendering
@@ -229,10 +221,6 @@ Indicates the requested route does not support
 the request method. Should not be raised unless
 you're abstracting routes
 #### Methods
-#### \_\_init__(self)
-
-*No documentation*
-
 
 ### WrappedDict(dict)
 A dictionary with a configurable key error.

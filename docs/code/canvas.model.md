@@ -8,18 +8,6 @@ a class attribute by the `model.schema()` decorator.
 Stores type information and generates SQL-serializable 
 expression on comparison.
 #### Methods
-#### \_\_eq__(self, other)
-
-*No documentation*
-
-#### \_\_ge__(self, other)
-
-*No documentation*
-
-#### \_\_gt__(self, other)
-
-*No documentation*
-
 #### \_\_init__(self, type_str, constraints, default, primary_key)
 + *type_str*:  A string representation of the column type. 
 + *default*:  The default value to populate this column with. Default values are populated after row insertion since they may be resolved within Postgres. 
@@ -27,18 +15,6 @@ expression on comparison.
 Create a new column.
 
 
-
-#### \_\_le__(self, other)
-
-*No documentation*
-
-#### \_\_lt__(self, other)
-
-*No documentation*
-
-#### \_\_ne__(self, other)
-
-*No documentation*
 
 #### \_\_repr__(self)
 
@@ -80,10 +56,6 @@ Define a new column type.
 TODO: Extend `input_type` capabilities.
 
 
-
-#### \_\_repr__(self)
-
-*No documentation*
 
 
 ### Constraint(object)
@@ -145,10 +117,6 @@ registered as `enum_name`.
 
 
 
-#### \_\_repr__(self)
-
-*No documentation*
-
 
 ### ForeignKeyColumnType(ColumnType)
 A foreign key column type with target column reference.
@@ -157,10 +125,6 @@ A foreign key column type with target column reference.
 
 Create a new foreign key column type referencing the
 table and column specified in `target_name`.
-
-#### \_\_repr__(self)
-
-*No documentation*
 
 
 ### NotNullConstraint(Constraint)
@@ -184,10 +148,6 @@ The representation should be of the format
 
 A front-end validation method must then exist for 
 `type_name`.
-
-#### as_sql(self)
-
-*No documentation*
 
 #### check(self, model, value)
 + *model*:  The model object to which the check applies. 
@@ -303,42 +263,6 @@ of database transactions.
 A deconstructor to ensure no database connections
 are orphaned.
 
-#### \_\_init__(self)
-
-*No documentation*
-
-#### _load_model(self, model_cls, row)
-
-Map a row to a model. If the row is already mapped
-by this session, update the mapping and return the
-existing object. Otherwise, create a new instance
-and map it.
-
-#### _map_model(self, model, row)
-+ *model*:  The model object to populate with the row values. 
-+ *row*:  The row values.
-Set values on a model object from a row in the 
-corresponding table.
-
-
-
-#### _precheck_constraints(self, model)
-
-Check for cumulative constraint violations on a 
-model object preceeding a commit, raising a
-`ValidationErrors` if any exist and doing nothing
-otherwise.
-
-#### _row_reference(self, model)
-
-The canonical row reference format for the 
-row reference to model instance mapping.
-
-#### _update_reference(self, model)
-
-Update the stored reference to the row mapped to
-`model`.
-
 #### close(self)
 
 Close the underlying database connection for this
@@ -402,10 +326,6 @@ The representation should be of the format
 A front-end validation method must then exist for 
 `type_name`.
 
-#### as_sql(self)
-
-*No documentation*
-
 #### check(self, model, value)
 + *model*:  The model object to which the check applies. 
 + *value*:  The value to check, for convience.
@@ -439,14 +359,6 @@ this package.
 Create a column iterator.
 
 
-
-#### \_\_iter__(self)
-
-*No documentation*
-
-#### \_\_next__(self)
-
-*No documentation*
 
 
 

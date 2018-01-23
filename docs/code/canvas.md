@@ -4,14 +4,6 @@
 ### BuildDocsMode(LaunchMode)
 The code documentation generation mode, invoked with '--build_docs'.
 #### Methods
-#### \_\_init__(self)
-
-*No documentation*
-
-#### launch(self, args)
-
-*No documentation*
-
 
 ### ColumnDefinitionError(Exception)
 Raised when an invalid column type is specified
@@ -21,10 +13,6 @@ Raised when an invalid column type is specified
 Indicates the component to which the request
 was addressed doesn't exist
 #### Methods
-#### \_\_init__(self, component)
-
-*No documentation*
-
 
 ### ConfigKeyError(KeyError)
 Raised as the `KeyError` for `config`.
@@ -33,23 +21,11 @@ Raised as the `KeyError` for `config`.
 ### DevServeMode(LaunchMode)
 The development serving mode, invoked with `--serve`.
 #### Methods
-#### \_\_init__(self)
-
-*No documentation*
-
-#### launch(self, args)
-
-*No documentation*
-
 
 ### HTTPException(Exception)
 Represents errors with specific HTTP codes
 (e.g. `500`, `404`, etc.)
 #### Methods
-#### \_\_init__(self, msg, code, desc)
-
-*No documentation*
-
 
 ### LaunchMode(object)
 `LaunchMode`s handle command-line
@@ -91,65 +67,37 @@ Indicates the requested route is unmapped.
 Canonically, should never be raised unless
 you're abstracting routes
 #### Methods
-#### \_\_init__(self, key)
-
-*No documentation*
-
 
 ### RequestParamError(HTTPException)
 Indicates missing request parameters.
 Automatically returned as the `KeyError`
 replacement for `request` in `vars`
 #### Methods
-#### \_\_init__(self, param)
-
-*No documentation*
-
 
 ### TemplateNotFound(Exception)
-*No documentation*
+None
 #### Methods
 
 ### UnitTestMode(LaunchMode)
 The unit test execution mode, invoked with `--run_tests`.
 #### Methods
-#### \_\_init__(self)
-
-*No documentation*
-
-#### launch(self, args)
-
-*No documentation*
-
 
 ### UnknownAction(HTTPException)
 Indicated the action specified by the
 client is unknown to the dispatched
 controller
 #### Methods
-#### \_\_init__(self, action)
-
-*No documentation*
-
 
 ### UnsupportedMethod(HTTPException)
 Indicates the requested route does not support
 the request method. Should not be raised unless
 you're abstracting routes
 #### Methods
-#### \_\_init__(self)
-
-*No documentation*
-
 
 ### ValidationErrors(Exception)
 Raised when model constraints are violated
 by input.
 #### Methods
-#### \_\_init__(self, error_dict)
-
-*No documentation*
-
 
 ### WrappedDict(dict)
 A dictionary with a configurable key error.
@@ -169,12 +117,8 @@ and define the exception class to replace `KeyError`.
 
 
 ### _Redirect(Exception)
-*No documentation*
+None
 #### Methods
-#### \_\_init__(self, target, code)
-
-*No documentation*
-
 
 
 ## Functions
