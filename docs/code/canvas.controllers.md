@@ -6,7 +6,7 @@ The canonical API endpoint controller base class enforces
 a `api/` route prefix and the presence of a description
 to allow intuative endpoint presentation.
 #### Methods
-### __init__(self, route, description, )
+#### \{__init__(self, route, description)
 Configure the overriding controller class.
 
 :route The route for this controller, relative to 
@@ -16,19 +16,19 @@ Configure the overriding controller class.
 :super_kwargs The `Controller` class constructors 
         keyword arguments.
 
-### get(self, ctx)
+#### get(self, ctx)
 The GET request method handler.
 
 By default raises an exception that causes
 a 405 response code to be returned to the 
 client.
 
-### get_components(self, ctx)
+#### get_components(self, ctx)
 Return all components that that didnt raise an 
 exception when their `check()` method was called 
 with the current request context.
 
-### post(self, ctx)
+#### post(self, ctx)
 The POST request method handler.
 
 By default raises an exception that causes
@@ -45,7 +45,7 @@ isn't prefixed with `api/`
 The base component class enforces name and targeted 
 controller list presence.
 #### Methods
-### __init__(self, name, controllers)
+#### \{__init__(self, name, controllers)
 Configure the overriding component.
 
 :name A unique name for the component used for its
@@ -53,7 +53,7 @@ Configure the overriding component.
 :controllers A list of controller routes to which
         this component should be added.
 
-### check(self, ctx)
+#### check(self, ctx)
 Check a request context and raise a subclass of `HTTPException` 
 if this component does not want to be available for the 
 handling of that request.
@@ -64,10 +64,10 @@ addressed.
 
 By default will never raise an exception.
 
-### handle_get(self, ctx)
+#### handle_get(self, ctx)
 Handle a GET request addressed to this component.
 
-### handle_post(self, ctx)
+#### handle_post(self, ctx)
 Handle a POST request addressed to this component.
 
 
@@ -75,7 +75,7 @@ Handle a POST request addressed to this component.
 Indicates the component to which the request
 was addressed doesn't exist
 #### Methods
-### __init__(self, component)
+#### \{__init__(self, component)
 *No documentation*
 
 
@@ -83,7 +83,7 @@ was addressed doesn't exist
 The base controller class enforces route presence
 and component management.
 #### Methods
-### __init__(self, route, grab_components, block_components)
+#### \{__init__(self, route, grab_components, block_components)
 Configure the overriding controller class.
 
 :route The route for this controller, relative 
@@ -95,19 +95,19 @@ Configure the overriding controller class.
         targeting this controller but should not be
         added to it.
 
-### get(self, ctx)
+#### get(self, ctx)
 The GET request method handler.
 
 By default raises an exception that causes
 a 405 response code to be returned to the 
 client.
 
-### get_components(self, ctx)
+#### get_components(self, ctx)
 Return all components that that didnt raise an 
 exception when their `check()` method was called 
 with the current request context.
 
-### post(self, ctx)
+#### post(self, ctx)
 The POST request method handler.
 
 By default raises an exception that causes
@@ -120,7 +120,7 @@ Indicates the requested route is unmapped.
 Canonically, should never be raised unless
 you're abstracting routes
 #### Methods
-### __init__(self, key)
+#### \{__init__(self, key)
 *No documentation*
 
 
@@ -129,7 +129,7 @@ The base page class implements template rendering
 for GET requests, dependency management, and supporting
 features.
 #### Methods
-### __init__(self, route, name, dependencies, library_dependencies, template, template_params, description, )
+#### \{__init__(self, route, name, dependencies, library_dependencies, template, template_params, description)
 Configure the overriding controller class.
 
 :route The route for this controller, relative to 
@@ -147,34 +147,34 @@ Configure the overriding controller class.
 :super_kwargs The `Controller` class constructors 
         keyword arguments.
 
-### collect_dependencies(self, ctx)
+#### collect_dependencies(self, ctx)
 Return a tuple containing respectively the non-library
 and library client dependencies of this page, given the 
 current request context.
 
-### get(self, ctx)
+#### get(self, ctx)
 Return a response tuple containing the rendered 
 template for this page.
 
-### get_components(self, ctx)
+#### get_components(self, ctx)
 Return all components that that didnt raise an 
 exception when their `check()` method was called 
 with the current request context.
 
-### post(self, ctx)
+#### post(self, ctx)
 The POST request method handler.
 
 By default raises an exception that causes
 a 405 response code to be returned to the 
 client.
 
-### render_component(self, name)
+#### render_component(self, name)
 Render the component with name `name` and return its 
 rendered template as markup, or return `None` if the
 there is no component called `name` available to the
 current request context.
 
-### render_components(self)
+#### render_components(self)
 Render each component available given the current 
 request context and return the sum of their rendered 
 templates as markup.
@@ -184,7 +184,7 @@ templates as markup.
 The base page component class implements template 
 rendering and dependency management.
 #### Methods
-### __init__(self, name, pages, template, dependencies, library_dependencies, )
+#### \{__init__(self, name, pages, template, dependencies, library_dependencies)
 Configure the overriding component.
 
 :name A unique name for the component used for its
@@ -198,7 +198,7 @@ Configure the overriding component.
 :super_kwargs The `Component` class constructors 
         keyword arguments.
 
-### check(self, ctx)
+#### check(self, ctx)
 Check a request context and raise a subclass of `HTTPException` 
 if this component does not want to be available for the 
 handling of that request.
@@ -209,13 +209,13 @@ addressed.
 
 By default will never raise an exception.
 
-### handle_get(self, ctx)
+#### handle_get(self, ctx)
 Handle a GET request addressed to this component.
 
-### handle_post(self, ctx)
+#### handle_post(self, ctx)
 Handle a POST request addressed to this component.
 
-### render(self, ctx)
+#### render(self, ctx)
 Return the rendered template for this component.
 
 
@@ -224,18 +224,18 @@ Indicates the requested route does not support
 the request method. Should not be raised unless
 you're abstracting routes
 #### Methods
-### __init__(self)
+#### \{__init__(self)
 *No documentation*
 
 
 ### WrappedDict(dict)
 A dictionary with a configurable key error.
 #### Methods
-### __getitem__(self, key)
+#### \{__getitem__(self, key)
 Retrieve the value for `key` or raise
 an exception if it's not present.
 
-### __init__(self, source, exception_cls)
+#### \{__init__(self, source, exception_cls)
 Copy the dictionary `source` into this dictionary
 and define the exception class to replace `KeyError`.
 
@@ -248,7 +248,7 @@ and define the exception class to replace `KeyError`.
 
 
 ## Functions
-### call_registered(typ, )
+### call_registered(typ)
 Invoke all functions registered as `typ`. The 
 callback prefix is preppended if not present.
 ### create_everything()

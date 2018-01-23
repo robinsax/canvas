@@ -32,11 +32,11 @@ def class_doc(cls):
 
 	mthd_doc_str = ''
 	for name, mthd in inspect.getmembers(cls, predicate=inspect.isfunction):
-		mthd_doc_str += f'{function_doc(mthd)}\n'
+		mthd_doc_str += f'{function_doc(mthd, small=True)}\n'
 	
 	return f'### {cls.__name__}({cls.__bases__[0].__name__})\n{doc_str}\n#### Methods\n{mthd_doc_str}\n'
 
-def function_doc(func):
+def function_doc(func, small=False):
 	doc_str = get_doc_str(func)
 
 	arg_spec = inspect.getfullargspec(func)
@@ -45,18 +45,23 @@ def function_doc(func):
 	if arg_spec.args is not None:
 		arg_fmt += ', '.join(arg_spec.args)
 
-	if arg_spec.varkw is not None:
+	if len(arg_spec.kwonlyargs) > 0:
 		kwargs_strs = []
-		for i, kwarg in enumerate(arg_spec.kwonlyargs):
-			print(func, kwarg)
-			kwargs_strs.append(f'{kwarg}={arg_spec.kwonlydefaults[i]}')
+		for kwarg in arg_spec.kwonlyargs:
+			kwargs_strs.append(f'{kwarg}={arg_spec.kwonlydefaults[kwarg]}')
 		kwargs_str = ', '.join(kwargs_strs)
 		if len(arg_fmt) > 0:
 			arg_fmt += f', {kwargs_str}'
 		else:
 			arg_fmt = kwargs_str
 
-	return f'### {func.__name__}({arg_fmt})\n{doc_str}\n'
+	prefix = '#### ' if small else '### '
+
+	func_name = func.__name__
+	if func_name.startswith('__'):
+		func_name = f'\{func_name}'
+
+	return f'{prefix}{func_name}({arg_fmt})\n{doc_str}\n'
 
 def build_docs():
 	'''
