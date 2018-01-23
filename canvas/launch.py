@@ -6,15 +6,13 @@ default implementations.
 
 import sys
 
-from werkzeug.serving import run_simple
-
 from .utils.registration import register
-from .tests import run_tests
 
 __all__ = [
 	'LaunchMode',
 	'DevServeMode',
-	'UnitTestMode'
+	'UnitTestMode',
+	'BuildDocsMode'
 ]
 
 class LaunchMode:
@@ -38,7 +36,7 @@ class LaunchMode:
 		'''
 		self.mode, self.arg_fmt = (mode, arg_fmt)
 	
-	def handle(self, args):
+	def launch(self, args):
 		'''
 		Handle a command line invocation. Return `True` if the
 		command line input was valid and `False` otherwise.
@@ -50,16 +48,17 @@ class LaunchMode:
 		'''
 		raise NotImplemented()
 
-@register('launch_mode')
+@register.launch_mode
 class DevServeMode(LaunchMode):
 	'''
-	The development serving mode, triggered by `--serve`.
+	The development serving mode, invoked with `--serve`.
 	'''
 
 	def __init__(self):
 		super().__init__('serve', 'PORT')
 
-	def handle(self, args):
+	def launch(self, args):
+		from werkzeug.serving import run_simple
 		from canvas import application
 
 		#	Parse arguments.
@@ -71,16 +70,33 @@ class DevServeMode(LaunchMode):
 		run_simple('localhost', port, application)
 		return True
 
-@register('launch_mode')
+@register.launch_mode
 class UnitTestMode(LaunchMode):
 	'''
-	The unit test execution mode, triggered by `--run_tests`.
+	The unit test execution mode, invoked with `--run_tests`.
 	'''
 
 	def __init__(self):
 		super().__init__('run_tests', 'SUITE_1 ... SUITE_N')
 
-	def handle(self, args):
+	def launch(self, args):
+		from .test import run_tests
+
 		if not run_tests(args):
+			sys.exit(1)
+		return True
+
+@register.launch_mode
+class BuildDocsMode(LaunchMode):
+	'''
+	The code documentation generation mode, invoked with '--build_docs'.
+	'''
+	def __init__(self):
+		super().__init__('build_docs')
+
+	def launch(self, args):
+		from .build_docs import build_docs
+
+		if not build_docs():
 			sys.exit(1)
 		return True

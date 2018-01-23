@@ -39,7 +39,7 @@ for mode_obj in launch_modes:
 	if mode_obj.mode == mode:
 		#	Applicable handler found, invoke and exit 
 		#	appropriately.
-		if not mode_obj.handle(sys.argv[2:]):
+		if not mode_obj.launch(sys.argv[2:]):
 			usage_failure()
 		#	Success.
 		sys.exit(0)
