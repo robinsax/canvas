@@ -80,7 +80,7 @@ class UnitTestMode(LaunchMode):
 		super().__init__('run_tests', 'SUITE_1 ... SUITE_N')
 
 	def launch(self, args):
-		from .test import run_tests
+		from .tests import run_tests
 
 		if not run_tests(args):
 			sys.exit(1)
