@@ -18,44 +18,65 @@ __all__ = [
 	'build_docs'
 ]
 
-#	The list of package paths to document. Due
-#	to namespace management, the majority of relevant
-#	code is imported these packages.
-PACKAGES = [
+#	The list of package paths to document. Due to namespace management, the 
+#	majority of relevant code is imported these packages.
+DEFAULT_PACKAGES = [
 	canvas,
 	canvas.model,
 	canvas.controllers
 ]
 
 def get_doc_str(obj):
+	'''
+	Return a cleaned and formatted documentation string for `obj`, or `None` 
+	if `obj` doesn't have one.
+	'''
 	return None if obj.__doc__ is None else inspect.cleandoc(obj.__doc__.replace('TODO', '__TODO__'))
 
 def class_doc(cls):
-	#	Get doc. string.
+	'''
+	Create markdown documentation for a class, including its methods or
+	return `None` if the class is not a valid documentation target.
+
+	:cls The class to document.
+	'''
+	#	Get the documentation string.
 	doc_str = get_doc_str(cls)
+	#	Assert the target is valid.
 	if doc_str is None or re.match(r'_[A-Z]', cls.__name__):
 		return None
 
-	mthd_docs = []
-	for name, mthd in inspect.getmembers(cls, predicate=inspect.isfunction):
-		f_doc = function_doc(mthd, small=True)
-		if f_doc is None:
+	#	Collect method documentation.
+	method_docs = []
+	for name, method in inspect.getmembers(cls, predicate=inspect.isfunction):
+		doc = function_doc(method, small=True)
+		if doc is None:
+			#	Invalid target.
 			continue
-		mthd_docs.append(f_doc)
-	mthd_docs = '\n'.join(mthd_docs)
+		method_docs.append(doc)
+	method_docs = '\n'.join(method_docs)
 	
+	#	Collect and return documentation markdown.
 	doc = f'### {cls.__name__}({cls.__bases__[0].__name__})\n{doc_str}\n'
-	if len(mthd_docs) > 0:
-		doc += f'#### Methods\n{mthd_docs}\n'
+	if len(method_docs) > 0:
+		doc += f'#### Methods\n{method_docs}\n'
 	return doc
 
 def function_doc(func, small=False):
-	#	Get and process parameters from doc
-	#	string.
+	'''
+	Create markdown documentation for a function or return `None` if the class
+	is not a valid documentation target.
+
+	:func The function to document.
+	:small Whether the function title should be smaller than normal.
+	'''
+	#	Get the documentation string.
 	doc_str = get_doc_str(func)
+	#	Assert the target is valid.
 	if doc_str is None or re.match(r'_[a-z]', func.__name__):
 		return None
 
+	#	Create the argument documentation.
 	arg_descs = []
 	for match in re.finditer(r':(\w+)(\s[^:]+)', doc_str):
 		doc_str = doc_str.replace(match.group(0), '')
@@ -63,42 +84,51 @@ def function_doc(func, small=False):
 		arg_descs.append(f'+ *{match.group(1)}*: {cleaned}')
 	arg_descs = '\n'.join(arg_descs) + '\n'
 
+	#	Get the argument specification.
 	arg_spec = inspect.getfullargspec(func)
 
+	#	Handle the keyword-only versus optional positional argument cases.
 	if arg_spec.defaults is None:
+		#	Keyword only arguments.
 		arg_fmts = arg_spec.args
 		kw_args = arg_spec.kwonlyargs
 		kw_defaults = arg_spec.kwonlydefaults
 	else:
+		#	Optional positional arguments.
 		arg_fmts = arg_spec.args[0:-len(arg_spec.defaults)]
 		kw_args = arg_spec.args[len(arg_fmts):]
 		kw_defaults = {}
 		for i, arg in enumerate(kw_args):
 			kw_defaults[arg] = arg_spec.defaults[i]
 
+	#	Add the optional variable arguments argument if present.
 	if arg_spec.varargs is not None:
 		arg_fmts.append(f'*{arg_spec.varargs}')
 	
-	#	Keywords
+	#	Add keywords.
 	for arg in kw_args:
 		arg_fmts.append(f'{arg}={kw_defaults[arg]}')
 
+	#	Join the arguments and create the prefix.
 	arg_fmt = ', '.join(arg_fmts)
-
 	prefix = '#### ' if small else '### '
 
+	#	Get the function name, and escape it if it is protected.
 	func_name = func.__name__
 	if func_name.startswith('__'):
 		func_name = f'\\_\\_{func_name[2:]}'
 
+	#	Normalize triple+ newlines and return.
 	return re.sub('\n\n+', '\n\n', f'{prefix}{func_name}({arg_fmt})\n{arg_descs}\n{doc_str}\n')
 
-def build_docs():
+#	TODO: Provide plugin interface
+
+def build_docs(packages=DEFAULT_PACKAGES):
 	'''
-	Generate a Markdown file for each package in
-	`PACKAGES` within the `./docs/code` directory.
+	Generate a Markdown file for each package in `packages` within the 
+	`./docs/code` directory.
 	'''
-	for package in PACKAGES:
+	for package in packages:
 		markdown = f'# {package.__name__}\n{package.__doc__}\n'
 
 		#	Sort contents.
@@ -128,4 +158,3 @@ def build_docs():
 		#	Save.
 		with open(f'./docs/code/{package.__name__}.md', 'w') as f:
 			f.write(markdown)
-	
