@@ -4,6 +4,68 @@
 
 A full-stack web application framework written in Python and JavaScript.
 
+## What's it like?
+
+canvas is designed for minimalism and extensibility. Its most basic features are 
+summarized below.
+
+### Controllers
+
+Controllers are singleton objects responsible for accepting requests and dispatching 
+responses. The following sample defines an API endpoint controller.
+
+```
+import canvas as cv
+
+from canvas import controllers
+
+@cv.register.controller
+class BreakfastEndpoint(controllers.APIEndpoint):
+
+	def __init__(self):
+		super().__init__('/api/breakfast')
+
+	def get(self, ctx):
+		return cv.create_json('success', {
+			'breakfast': 'Bacon and eggs'
+		})
+```
+
+### Model
+
+The canvas model leverages object relational mapping. The following sample creates a
+model class, and subsequently database table.
+
+```
+from canvas import model
+
+@model.schema('breakfasts', {
+	'id': model.Column('uuid', primary_key=True),
+	'name': model.Column('text'),
+	'manifest': model.Column('json')
+})
+class Breakfast:
+
+	def __init__(self, name, manifest):
+		self.name, self.manifest = name, manifest
+```
+
+This model could then be used as follows:
+```
+session = model.create_session()
+
+breakfast = Breakfast('Bacon and eggs', {
+	'bacon': {
+		'type': 'crispy'
+	},
+	'eggs': {
+		'style': 'sunny side up'
+	}
+})
+session.save(breakfast)
+session.commit()
+```
+
 ## Setup 
 
 The following setup instructions are intended for Ubuntu, however Windows and OSX
@@ -65,35 +127,37 @@ To create a plugin in the configured plugin directory, run:
 python3.6 ./scripts/create_plugin_template.py <plugin_name>
 ```
 
-Plugins are organized as follows (directories prefixed with * do not exist by default):
+Plugins are organized as follows. Directories prefixed with * are not automatically generated 
+as they may not be required.
 ```
 canvas-pl-<plugin_name>/
-    assets/
-        # The assets directory contains all non-Python plugin assets.
-        *markdown/
-            # The root directory searched for markdown files.
-        *client/
-            # The root directory searched for client-side assets including 
-            # Javascript, CSS, LESS, media, ect.
-            *lib/
-            *media/
-        *templates/
-            # The root directory searched for Jinja templates.
-            *client/
-                # Client-side assets can also be templated with Jinja.
-            *components/
-                # Component HTML templates.
-            *pages/
-                # Page HTML templates.
-    <plugin_name>/
-        # The Python package containing the plugin logic.
-        __init__.py
-        *model/
-        *controllers/
-    tests/
-        # The Python package containing plugin unit tests.
-        __init__.py
-    # The settings JSON file.
-    settings.json
-    .travis.yml
+	assets/
+		# The assets directory contains all non-Python plugin assets.
+		*markdown/
+			# The root directory searched for markdown files.
+		*client/
+			# The root directory searched for client-side assets including 
+			# Javascript, CSS, LESS, and media.
+			*lib/
+			*media/
+		*templates/
+			# The root directory searched for Jinja templates.
+			*client/
+				# Client-side assets can also be templated with Jinja.
+			*components/
+				# Component HTML templates.
+			*pages/
+				# Page HTML templates.
+	<plugin_name>/
+		# The Python package containing the plugin logic.
+		__init__.py
+		*model/
+		*controllers/
+	tests/
+	# The Python package containing plugin unit tests.
+	__init__.py
+	# The settings JSON file.
+	settings.json
+	# A preconfigured Travis CI build configuration.
+	.travis.yml
 ```
