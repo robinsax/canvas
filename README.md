@@ -14,7 +14,7 @@ summarized below.
 Controllers are singleton objects responsible for accepting requests and dispatching 
 responses. The following sample defines an API endpoint controller.
 
-```
+```python
 import canvas as cv
 
 from canvas import controllers
@@ -36,7 +36,7 @@ class BreakfastEndpoint(controllers.APIEndpoint):
 The canvas model leverages object relational mapping. The following sample creates a
 model class, and subsequently database table.
 
-```
+```python
 from canvas import model
 
 @model.schema('breakfasts', {
@@ -50,19 +50,25 @@ class Breakfast:
 		self.name, self.manifest = name, manifest
 ```
 
-This model could then be used as follows:
-```
+An instance of this model could then be inserted into the database (as a row of the 
+`breakfasts` table)
+```python
 session = model.create_session()
 
 breakfast = Breakfast('Bacon and eggs', {
-	'bacon': {
-		'type': 'crispy'
-	},
-	'eggs': {
-		'style': 'sunny side up'
-	}
+	'bacon': {'type': 'crispy'},
+	'eggs': {'style': 'sunny side up'}
 })
 session.save(breakfast)
+session.commit()
+```
+
+...and later retrieved and modified.
+```python
+session = model.create_session()
+
+breakfast = session.query(Breakfast, Breakfast.name='Bacon and eggs', one=True)
+breakfast.manifest['bacon']['eaten'] = True
 session.commit()
 ```
 
