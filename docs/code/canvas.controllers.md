@@ -94,6 +94,41 @@ Render each component available given the current
 request context and return the sum of their rendered 
 templates as markup.
 
+### APIEndpoint(Controller)
+The canonical API endpoint controller base class enforces
+a `api/` route prefix and the presence of a description
+to allow intuative endpoint presentation.
+#### Methods
+#### \_\_init__(self, route, description=No description available)
++ *route*:  The route for this controller, relative to domain root. Must begin with `'/api/'`. 
++ *description*:  A human readable description of the endpoint in markdown. 
++ *super_kwargs*:  The `Controller` class constructors keyword arguments.
+
+Configure the overriding controller class.
+
+
+#### get(self, ctx)
+
+The GET request method handler.
+
+By default raises an exception that causes
+a 405 response code to be returned to the 
+client.
+
+#### get_components(self, ctx)
+
+Return all components that that didnt raise an 
+exception when their `check()` method was called 
+with the current request context.
+
+#### post(self, ctx)
+
+The POST request method handler.
+
+By default raises an exception that causes
+a 405 response code to be returned to the 
+client.
+
 ### Component(object)
 The base component class enforces name and targeted 
 controller list presence.

@@ -27,6 +27,7 @@ from .. import config
 __all__ = [
 	'Controller',
 	'Page',
+	'APIEndpoint',
 	#	Submodule classes.
 	'Component',
 	'PageComponent'
@@ -40,6 +41,7 @@ __doc_items__ = [
 	#	Classes.
 	'Controller',
 	'Page',
+	'APIEndpoint',
 	'Component',
 	'PageComponent',
 	#	Functions.
