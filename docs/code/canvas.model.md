@@ -8,7 +8,7 @@ a class attribute by the `model.schema()` decorator.
 Stores type information and generates SQL-serializable 
 expression on comparison.
 #### Methods
-#### \_\_init__(self, type_str, constraints, default, primary_key)
+#### \_\_init__(self, type_str, constraints=[], default=None, primary_key=False)
 + *type_str*:  A string representation of the column type. 
 + *default*:  The default value to populate this column with. Default values are populated after row insertion since they may be resolved within Postgres. 
 + *primary_key*:  Whether or not this column is the table's primary key.
@@ -49,7 +49,7 @@ form input type, and default value.
 Column types are transparent to plugins in the majority of
 use cases, but can be assumed stable.
 #### Methods
-#### \_\_init__(self, sql_type, input_type, default)
+#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x00000242993495A0>)
 + *sql_type*:  The name of this type in PostgreSQL. 
 + *input_type*:  The type of input to use for this column type if HTML forms. 
 + *default*:  The default value with which to populate attributes in this column.
@@ -185,7 +185,7 @@ A range constraint on numerical columns.
 __TODO__: Support all permutation of above and below
         constraint presence on the client side.
 #### Methods
-#### \_\_init__(self, name, error_message, max_value, min_value)
+#### \_\_init__(self, name, error_message, max_value=None, min_value=None)
 + *name*:  A unique name for this constraint. 
 + *error_message*:  A human-readable error message to provide when this constraint is violated. 
 + *max_value*:  The maximum value enforced by this constraint. 
@@ -232,7 +232,7 @@ response to be sent to the client.
 ### RegexConstraint(Constraint)
 A regular expression constraint on textual columns.
 #### Methods
-#### \_\_init__(self, name, error_message, regex, ignore_case, negative)
+#### \_\_init__(self, name, error_message, regex, ignore_case=False, negative=False)
 + *name*:  A unique name for this constraint. 
 + *error_message*:  A human-readable error message to provide when this constraint is violated. 
 + *regex*:  The regular expression which the column values must match. 
@@ -298,13 +298,13 @@ rows and commit the transaction.
 
 Delete the row mapped to a loaded model.
 
-#### execute(self, sql, values)
+#### execute(self, sql, values=())
 
 
 Execute SQL with debug logging, throwing a `ValidationError` 
 when an integrity check fails.
 
-#### query(self, model_cls, conditions, one)
+#### query(self, model_cls, conditions=True, one=False)
 + *model_cls*:  The model class (must have been decorated with `model.schema()`). 
 + *conditions*:  A primitive type or comparison on class-level column attributes. 
 + *one*:  Whether to return the first result only, or `None` if there are not results.
@@ -387,7 +387,7 @@ and enumarable type creation SQL.
 Create a database session. `Session` generation should
 always use this function to allow future modifications
 to the `Session` constructor.
-### dictize(model_obj, omit)
+### dictize(model_obj, omit=[])
 + *model_obj*:  The model class instance to dictize. 
 + *omit*:  A list of columns not to include in the returned dictionary.
 
@@ -395,7 +395,7 @@ Return a dictionary containing a column name, column
 value mapping for `model_obj`.
 
 
-### dictize_all(model_list, omit)
+### dictize_all(model_list, omit=[])
 + *model_list*:  A list of model class instances to dictize. 
 + *omit*:  A list of columns not to include in the returned dictionaries.
 
@@ -422,7 +422,7 @@ lack of an IF NOT EXISTS option.
 
 Return the constraint object with name `name`, or 
 `None` if there isn't one.
-### schema(table_name, schema, accessors)
+### schema(table_name, schema, accessors=[])
 + *table_name*:  The name of the SQL table for this model class. 
 + *schema*:  A column name to column definition mapping. 
 + *accessors*:  A list of column names which are checked for equality by the `get(reference, session)` classmethod.

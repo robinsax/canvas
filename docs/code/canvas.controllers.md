@@ -6,7 +6,7 @@ The canonical API endpoint controller base class enforces
 a `api/` route prefix and the presence of a description
 to allow intuative endpoint presentation.
 #### Methods
-#### \_\_init__(self, route, description)
+#### \_\_init__(self, route, description=No description available)
 + *route*:  The route for this controller, relative to domain root. Must begin with `'/api/'`. 
 + *description*:  A human readable description of the endpoint in markdown. 
 + *super_kwargs*:  The `Controller` class constructors keyword arguments.
@@ -85,7 +85,7 @@ was addressed doesn't exist
 The base controller class enforces route presence
 and component management.
 #### Methods
-#### \_\_init__(self, route, grab_components, block_components)
+#### \_\_init__(self, route, grab_components=[], block_components=[])
 + *route*:  The route for this controller, relative to domain root. 
 + *grab_components*:  The list of components to add to this controller. Components that are targeting this controller do not need to be specified. 
 + *block_components*:  The list of components that are targeting this controller but should not be added to it.
@@ -128,7 +128,7 @@ The base page class implements template rendering
 for GET requests, dependency management, and supporting
 features.
 #### Methods
-#### \_\_init__(self, route, name, dependencies, library_dependencies, template, template_params, description)
+#### \_\_init__(self, route, name, dependencies=[], library_dependencies=[], template=None, template_params={}, description=Fast, customizable websites and web applications)
 + *route*:  The route for this controller, relative to domain root. 
 + *name*:  The name of the page with which to populate the title tag. 
 + *template*:  The name of this pages template file, without the `pages/` prefix and `html` file extension. 
@@ -141,7 +141,7 @@ Configure the overriding controller class.
 
 
 
-#### collect_dependencies(self, ctx)
+#### collect_dependencies(self)
 
 
 Return a tuple containing respectively the non-library
@@ -189,7 +189,7 @@ templates as markup.
 The base page component class implements template 
 rendering and dependency management.
 #### Methods
-#### \_\_init__(self, name, pages, template, dependencies, library_dependencies)
+#### \_\_init__(self, name, pages, template=None, dependencies=[], library_dependencies=[])
 + *name*:  A unique name for the component used for its identification. 
 + *controllers*:  A list of controller routes to which this component should be added. 
 + *template*:  The name of this component's template file, without the `components/` prefix and `html` file extension. 
@@ -253,7 +253,7 @@ and define the exception class to replace `KeyError`.
 
 
 ## Functions
-### call_registered(typ)
+### call_registered(typ, *args)
 
 
 Invoke all functions registered as `typ`. The 
@@ -270,13 +270,13 @@ Return the controller for the given route or
 the parameter if it's already a controller.
 
 
-### get_controllers(filter)
+### get_controllers(filter=<function <lambda> at 0x000002429A7D77B8>)
 + *filter*:  A filter function on controller inclusion.
 
 Return the list of all controller instances.
 
 
-### get_registered()
+### get_registered(*types)
 
 
 Return all registered classes or functions 
@@ -297,7 +297,7 @@ not escaped when rendered in a template.
 Available as a template filter.
 
 __Note__: Beware of XSS vulerabilities when using.
-### render_template(template_path, minify, template_params, response, status, headers)
+### render_template(template_path, minify=None, template_params={}, response=False, status=200, headers={})
 + *template_path*:  The path of the template to render, below `/templates`. 
 + *minify*:  Whether or not to minify the template as HTML. By default will only minify .html files. 
 + *template_params*:  An optional dictionary of global variables for the render context. 

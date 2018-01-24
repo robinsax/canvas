@@ -64,20 +64,26 @@ def function_doc(func, small=False):
 	arg_descs = '\n'.join(arg_descs) + '\n'
 
 	arg_spec = inspect.getfullargspec(func)
-	arg_fmt = ''
 
-	if arg_spec.args is not None:
-		arg_fmt += ', '.join(arg_spec.args)
+	if arg_spec.defaults is None:
+		arg_fmts = arg_spec.args
+		kw_args = arg_spec.kwonlyargs
+		kw_defaults = arg_spec.kwonlydefaults
+	else:
+		arg_fmts = arg_spec.args[0:-len(arg_spec.defaults)]
+		kw_args = arg_spec.args[len(arg_fmts):]
+		kw_defaults = {}
+		for i, arg in enumerate(kw_args):
+			kw_defaults[arg] = arg_spec.defaults[i]
 
-	if len(arg_spec.kwonlyargs) > 0:
-		kwargs_strs = []
-		for kwarg in arg_spec.kwonlyargs:
-			kwargs_strs.append(f'{kwarg}={arg_spec.kwonlydefaults[kwarg]}')
-		kwargs_str = ', '.join(kwargs_strs)
-		if len(arg_fmt) > 0:
-			arg_fmt += f', {kwargs_str}'
-		else:
-			arg_fmt = kwargs_str
+	if arg_spec.varargs is not None:
+		arg_fmts.append(f'*{arg_spec.varargs}')
+	
+	#	Keywords
+	for arg in kw_args:
+		arg_fmts.append(f'{arg}={kw_defaults[arg]}')
+
+	arg_fmt = ', '.join(arg_fmts)
 
 	prefix = '#### ' if small else '### '
 

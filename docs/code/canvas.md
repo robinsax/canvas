@@ -23,7 +23,7 @@ The mode is prefixed with `--` in the command line.
 Implementations' constructors must take no
 parameters.
 #### Methods
-#### \_\_init__(self, mode, arg_fmt)
+#### \_\_init__(self, mode, arg_fmt=)
 + *mode*:  The mode string (e.g. `serve` to be triggered by `--serve`). 
 + *arg_fmt*:  The usage format (i.e. argument specification), as a string
 
@@ -105,12 +105,12 @@ response, status, headers, mimetype
 Return the URL relative to domain root for an asset. 
 This message should always be called for asset 
 retrieval to allow for forwards-compatability.
-### call_registered(typ)
+### call_registered(typ, *args)
 
 
 Invoke all functions registered as `typ`. The 
 callback prefix is preppended if not present.
-### create_json(status_str, status=200, headers={}, default_serializer=None)
+### create_json(status_str, *data, status=200, headers={}, default_serializer=None)
 + *status_str*:  The status string. Should be one of
 + *data*:  (Optional) A data package. 
 + *status*:  The HTTP status code for the response. 
@@ -122,7 +122,7 @@ Create a JSON response tuple in the canonical format.
 : `'success'`, 
         `'failure'`, or `'error'`.
 
-### export_to_module(module, into_all=True)
+### export_to_module(module, *items, into_all=True)
 + *module*:  The target module object 
 + *items*:  The functions or classes to place. 
 + *into_all*:  Whether to add the functions or objects to the `__all__` list of the target module.
@@ -137,13 +137,13 @@ Return a formatted traceback string for `error` if it has
 been raised.
 
 
-### get_registered()
+### get_registered(*types)
 
 
 Return all registered classes or functions 
 registered as the given types or an empty list 
 if there are none.
-### get_registered_by_name()
+### get_registered_by_name(*types)
 
 
 Generate and return a dictionary containing all 
@@ -165,7 +165,7 @@ JSON-serializable object `o`.
 
 Initialize all plugins activated in configuration
 and populate the `canvas.plugins` namespace.
-### logger(name)
+### logger(name=None)
 + *name*:  The name of the logger to create.
 
 Create and return a standard library `logging.Logger`.
@@ -173,7 +173,7 @@ When invoked at package level, the name parameter can
 be safely omitted.
 
 
-### markdown(markdown, return_markup)
+### markdown(markdown, return_markup=True)
 + *markdown*:  The string to render as markdown. 
 + *return_markup*:  Whether or not to return a markup object that will not be escaped when rendered.
 
@@ -201,7 +201,7 @@ typ to a module or package namespace.
 __TODO__(BP): Side-effect: __all__ list modification
 
 
-### redirect_to(target, code)
+### redirect_to(target, code=302)
 + *target*:  The URL to redirect to. 
 + *code*:  The HTTP redirect code. Must be 3xx.
 
@@ -211,6 +211,17 @@ a value. When called, flow control is halted.
 `code` will be ignored if an AJAX POST request
 is being handled; The redirection will be formulated
 as a view action (it wouldn't work otherwise).
+
+
+### render_template(template_path, minify=None, template_params={}, response=False, status=200, headers={})
++ *template_path*:  The path of the template to render, below `/templates`. 
++ *minify*:  Whether or not to minify the template as HTML. By default will only minify .html files. 
++ *template_params*:  An optional dictionary of global variables for the render context. 
++ *response*:  Whether to return a response tuple. 
++ *status*:  The status code for the response, if `response` is true. 
++ *headers*:  The header dictionary for the response, if `response` is true.
+
+Render a Jinja2 template.
 
 
 ### uri_encode(s)
