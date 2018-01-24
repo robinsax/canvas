@@ -317,6 +317,6 @@ def _handle_controller_request(req, cookie):
 					),
 					'description': config['description']
 				},
-				'page_name': error_code
+				'page_title': error_code
 			}
 		}, status=error_code)

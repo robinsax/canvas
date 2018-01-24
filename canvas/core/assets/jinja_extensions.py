@@ -103,16 +103,6 @@ class ComponentTag(ExtendsAlias):
 	tags = {'component'}
 	extension = os.path.join('components', 'base.html')
 
-class LessTag(Extension):
-	'''
-	The `{% less %}` extends tag alias.
-	'''
-	tags = {'less'}
-	
-	def parse(self, parser):
-		node = Include(Const(os.path.join('snippets', 'less_common.less')), True, False, lineno=next(parser.stream).lineno)
-		return node
-
 class OverlayTag(Extension):
 	'''
 	The `{% overlays %}` tag causes inheritance from
@@ -158,8 +148,7 @@ class CanvasJinjaEnvironment(Environment):
 		extensions =  [
 			OverlayTag,
 			PageTag,
-			ComponentTag,
-			LessTag
+			ComponentTag
 		]
 		extensions.extend(get_registered('jinja_extension'))
 

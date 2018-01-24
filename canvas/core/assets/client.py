@@ -4,18 +4,12 @@ Client asset rendering and retrieval.
 '''
 
 import os
-import re
-import logging
-
-from io import StringIO
-
-from lesscpy.exceptions import CompilationError
-from lesscpy import compile as lessc
 
 from ...exceptions import TemplateNotFound
 from ...utils import logger
 from ..plugins import get_path_occurrences
 from .templates import render_template
+from . import compile_less
 from ... import config
 
 log = logger()
@@ -63,24 +57,10 @@ def get_client_asset(path, _recall=False):
 			asset = f.read()
 
 	if path.endswith('.less') and _recall:
-		#	Compile the `.less` asset since it was 
-		#	requested as css.
-		try:
-			if not isinstance(asset, str):
-				asset = asset.decode()
-			asset = lessc(StringIO(asset), minify=not config['debug'])
-		except CompilationError as e:
-			#	Try to get the error line since templating makes
-			#	line number meaningless.
-			try:
-				line_match = re.search('line: ([0-9]+)', str(e))
-				line = asset.split('\n')[int(line_match.group(1))]
-				#	TODO: Insert into traceback
-				log.error(f'Less compilation failed on: {line}')
-			except:
-				#	Fuck.
-				pass
-			raise e
+		#	Compile the `.less` asset since it was requested as css.
+		if not isinstance(asset, str):
+			asset = asset.decode()
+		asset = compile_less(asset)
 
 	if not config['debug']:
 		#	Don't cache assets in debug mode so changes

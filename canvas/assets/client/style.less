@@ -1,16 +1,3 @@
-{% less %}
-{% import 'common.jinja' as c with context %}
-
-@font-face {
-	font-family: "default-sans";
-	src: url("{{ h.asset_url('fonts/%s'%config.styling.font_set.sans_serif) }}");
-}
-
-@font-face {
-	font-family: "default-serif";
-	src: url("{{ h.asset_url('fonts/%s'%config.styling.font_set.serif) }}");
-}
-
 * {
 	margin: 0px;
 	padding: 0px;
@@ -543,7 +530,7 @@ body {
 					width: e('calc(25% - 30px)');
 				}
 			
-				{{ c.breakpoint_1() }}{ // TODO: This is obviously a syntax error in less
+				@media screen and (max-width: @breakpoint_1){
 					&.col-12,
 					&.col-9 {
 						width: e('calc(100% - 30px)');
@@ -562,7 +549,7 @@ body {
 					}
 				}
 			
-				{{ c.breakpoint_2() }} {
+				@media screen and (max-width: @breakpoint_2) {
 					&.col-6 {
 						width: e('calc(100% - 30px)');
 					}
@@ -572,7 +559,7 @@ body {
 					}
 				}
 			
-				{{ c.breakpoint_3() }} {
+				@media screen and (max-width: @breakpoint_3) {
 					&.col-4,
 					&.col-3 {
 						width: e('calc(100% - 30px)');
@@ -643,5 +630,3 @@ body {
 		}
 	}
 }
-
-{% block extras %}{% endblock %}

@@ -123,19 +123,6 @@
 	</div>
 {% endmacro %}
 
-{# TODO: less cmon #}
-{% macro breakpoint_1() %}
-	@media screen and (max-width: {{ config.styling.breakpoints[0] }}px)
-{% endmacro %}
-
-{% macro breakpoint_2() %}
-	@media screen and (max-width: {{ config.styling.breakpoints[1] }}px)
-{% endmacro %}
-
-{% macro breakpoint_3() %}
-	@media screen and (max-width: {{ config.styling.breakpoints[2] }}px)
-{% endmacro %}
-
 {% macro modal_head(template_name) %}
 	<div cv-template="{{ template_name }}">
 		<div class="modal" cv-event="closeModal">

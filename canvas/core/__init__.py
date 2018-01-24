@@ -20,7 +20,8 @@ __all__ = [
 	'get_thread_context',
 	'flash_message',
 	#	Assets subpackage.
-	'render_template'
+	'render_template',
+	'compile_less'
 ]
 
 def create_json(status_str, *data, status=200, headers={}, default_serializer=None):

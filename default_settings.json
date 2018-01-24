@@ -39,22 +39,22 @@
 			"base": {
 				"background1": "white",
 				"background2": "white",
-				"theme1": "black",
-				"theme2": "black",
-				"theme3": "black",
-				"highlight": "red"
+				"theme1": "#FFE5A5",
+				"theme2": "#E8D78A",
+				"theme3": "#FFF698",
+				"highlight": "#6588E3"
 			},
 			"text": {
-				"title": "red",
+				"title": "#506BB2",
 				"text": "black",
 				"subtext": "grey",
-				"link": "blue",
-				"link_clicked": "darkblue"
+				"link": "#A5BEFF",
+				"link_clicked": "#A5BEFF"
 			},
 			"misc": {
-				"background1": "grey",
-				"background2": "darkgrey",
-				"text": "black",
+				"background1": "#8C7654",
+				"background2": "#75694C",
+				"text": "white",
 				"misc1": "orange",
 				"misc2": "purple",
 				"misc3": "magenta",
