@@ -29,7 +29,7 @@ class Breakfast:
 
 #	Create an initialization function that cooks a breakfast.
 @cv.callback.init
-def create_breakfasts():
+def cook_breakfast():
 	session = model.create_session()
 
 	breakfast = Breakfast('Bacon and eggs', {
