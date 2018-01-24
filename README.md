@@ -6,39 +6,17 @@ A full-stack web application framework written in Python and JavaScript.
 
 ## What's it like?
 
-canvas is designed for minimalism and extensibility. Its most basic features are 
-summarized below.
-
-### Controllers
-
-Controllers are singleton objects responsible for accepting requests and dispatching 
-responses. The following sample defines an API endpoint controller.
+canvas is designed for minimalism and extensibility. The following code sample
+defines an API endpoint that serves breakfast. Don't worry if you don't totally understand
+it; it's a demonstration, not a tutorial.
 
 ```python
+#	Import the 3 primary canvas interfaces.
 import canvas as cv
 
-from canvas import controllers
+from canvas import model, controllers
 
-@cv.register.controller
-class BreakfastEndpoint(controllers.APIEndpoint):
-
-	def __init__(self):
-		super().__init__('/api/breakfast')
-
-	def get(self, ctx):
-		return cv.create_json('success', {
-			'breakfast': 'Bacon and eggs'
-		})
-```
-
-### Model
-
-The canvas model leverages object relational mapping. The following sample creates a
-model class, and subsequently database table.
-
-```python
-from canvas import model
-
+#	Create a breakfast model.
 @model.schema('breakfasts', {
 	'id': model.Column('uuid', primary_key=True),
 	'name': model.Column('text'),
@@ -48,28 +26,29 @@ class Breakfast:
 
 	def __init__(self, name, manifest):
 		self.name, self.manifest = name, manifest
-```
 
-An instance of this model could then be inserted into the database (as a row of the 
-`breakfasts` table)
-```python
-session = model.create_session()
+#	Create an initialization function that cooks a breakfast.
+@cv.callback.init
+def create_breakfasts():
+	session = model.create_session()
 
-breakfast = Breakfast('Bacon and eggs', {
-	'bacon': {'type': 'crispy'},
-	'eggs': {'style': 'sunny side up'}
-})
-session.save(breakfast)
-session.commit()
-```
+	breakfast = Breakfast('Bacon and eggs', {
+		'bacon': {'type': 'crispy'},
+		'eggs': {'style': 'sunny side up'}
+	})
+	session.save(breakfast)
+	session.commit()
 
-...and later retrieved and modified.
-```python
-session = model.create_session()
+#	Create an API endpoint that serves breakfast.
+@cv.register.controller
+class BreakfastEndpoint(controllers.APIEndpoint):
 
-breakfast = session.query(Breakfast, Breakfast.name='Bacon and eggs', one=True)
-breakfast.manifest['bacon']['eaten'] = True
-session.commit()
+	def __init__(self):
+		super().__init__('/api/breakfast')
+
+	def get(self, ctx):
+		to_serve = session.query(Breakfast, one=True)
+		return cv.create_json('success', model.dictize(to_serve))
 ```
 
 ## Setup 
@@ -167,3 +146,5 @@ canvas-pl-<plugin_name>/
 	# A preconfigured Travis CI build configuration.
 	.travis.yml
 ```
+
+*To be continued...*
