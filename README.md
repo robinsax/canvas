@@ -109,7 +109,7 @@ Some existing plugins are:
 
 To create a plugin in the configured plugin directory, run:
 ```bash
-python3.6 ./scripts/create_plugin_template.py <plugin_name>
+python3.6 canvas --create_plugin <plugin_name>
 ```
 
 Plugins are organized as follows. Directories prefixed with * are not automatically generated 
@@ -139,8 +139,13 @@ canvas-pl-<plugin_name>/
 		*model/
 		*controllers/
 	tests/
-	# The Python package containing plugin unit tests.
-	__init__.py
+		# The Python package containing plugin unit tests.
+		__init__.py
+	docs/
+		# The plugin documentation directory.
+		code/
+			# The automatically generated code documentation
+			# directory.
 	# The settings JSON file.
 	settings.json
 	# A preconfigured Travis CI build configuration.

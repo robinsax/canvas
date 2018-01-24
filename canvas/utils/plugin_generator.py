@@ -1,24 +1,25 @@
 #   coding utf-8
 '''
-Create a plugin template.
-
-Must be invoked from the root directory.
+Plugin template generation.
 '''
 
 import os
 import sys
-import json
 import shutil
 
-USAGE = 'Usage: python3.6 ./scripts/create_plugin_template.py plugin_name'
+from .. import config
+from . import logger
+
+#   Declare exports.
+__all__ = [
+    'create_plugin_template'
+]
+
+log = logger()
 
 def create_plugin_template(plugin_name):
 	#	Load target directory from config or fail.
-	if not os.path.isfile('settings.json'):
-		print('No settings.json')
-		sys.exit(1)
-	with open('settings.json') as f:
-		target_dir = json.load(f)['plugins']['directory']
+	target_dir = config['plugins']['directory']
 
 	def detemplate(string, variables):
 		'''
@@ -71,14 +72,13 @@ def create_plugin_template(plugin_name):
 
 	#	Copy .gitignore template.
 	shutil.copyfile('./docs/templates/plugin.gitignore', f'{root}/.gitignore')
+	shutil.copyfile('./docs/templates/plugin_dependencies.txt', f'{root}/dependencies.txt')
+	shutil.copyfile('./docs/templates/plugin_requirements.txt', f'{root}/requirements.txt')
 
 	#	Create assets folder.
 	os.mkdir(f'{root}/assets')
+	#	Create documentation folder.
+	os.mkdir(f'{root}/docs')
+	os.mkdir(f'{root}/docs/code')
 
-	print('Done')
-
-if __name__ == '__main__':
-	if len(sys.argv) < 2:
-		print(USAGE)
-		sys.exit(1)
-	create_plugin_template(sys.argv[1])
+	log.info(f'Created plugin {plugin_name} in {root}')

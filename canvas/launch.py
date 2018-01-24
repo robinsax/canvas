@@ -8,11 +8,13 @@ import sys
 
 from .utils.registration import register
 
+#	Declare exports.
 __all__ = [
 	'LaunchMode',
 	'DevServeMode',
 	'UnitTestMode',
-	'BuildDocsMode'
+	'BuildDocsMode',
+	'CreatePluginMode'
 ]
 
 class LaunchMode:
@@ -55,7 +57,7 @@ class DevServeMode(LaunchMode):
 	'''
 
 	def __init__(self):
-		super().__init__('serve', 'PORT')
+		super().__init__('serve', '<port>')
 
 	def launch(self, args):
 		from werkzeug.serving import run_simple
@@ -77,7 +79,7 @@ class UnitTestMode(LaunchMode):
 	'''
 
 	def __init__(self):
-		super().__init__('run_tests', 'SUITE_1 ... SUITE_N')
+		super().__init__('run_tests', '<suite_1> ... <suite_n>')
 
 	def launch(self, args):
 		from .tests import run_tests
@@ -89,14 +91,44 @@ class UnitTestMode(LaunchMode):
 @register.launch_mode
 class BuildDocsMode(LaunchMode):
 	'''
-	The code documentation generation mode, invoked with '--build_docs'.
+	The code documentation generation mode, invoked with `--build_docs`.
 	'''
 	def __init__(self):
-		super().__init__('build_docs')
+		super().__init__('build_docs', '[<target_plugin>]')
 
 	def launch(self, args):
+		import canvas
+
 		from .build_docs import build_docs
 
-		if not build_docs():
+		if len(args) > 0:
+			try:
+				package = sys.modules[args[0]]
+			except:
+				return False
+		else:
+			package = canvas
+
+		if not build_docs(package):
 			sys.exit(1)
+		return True
+
+@register.launch_mode
+class CreatePluginMode(LaunchMode):
+	'''
+	The plugin template generation mode, invoked with `--create_plugin`
+	'''
+
+	def __init__(self):
+		super().__init__('create_plugin', '<plugin_name>')
+
+	def launch(self, args):
+		from .utils.plugin_generator import create_plugin_template
+
+		try:
+			plugin_name = args[0]
+		except:
+			return False
+
+		create_plugin_template(plugin_name)
 		return True

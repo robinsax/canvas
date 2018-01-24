@@ -170,7 +170,7 @@ form input type, and default value.
 Column types are transparent to plugins in the majority of
 use cases, but can be assumed stable.
 #### Methods
-#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x000001C2F6AC95B0>)
+#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x00000210FF7895B0>)
 + *sql_type*:  The name of this type in PostgreSQL. 
 + *input_type*:  The type of input to use for this column type if HTML forms. 
 + *default*:  The default value with which to populate attributes in this column.

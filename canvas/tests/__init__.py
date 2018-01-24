@@ -22,7 +22,7 @@ __all__ = [
 ]
 
 #	Create a testing logger.
-log = cv.logger('Test log')
+log = cv.logger('tests')
 
 #	The test suite master list.
 _suites = []

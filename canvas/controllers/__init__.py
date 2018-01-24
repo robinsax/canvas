@@ -30,19 +30,6 @@ __all__ = [
 	'APIEndpoint',
 	#	Submodule classes.
 	'Component',
-	'PageComponent'
-	#	Functions.
-	'create_everything',
-	'get_controller'
-]
-
-#	Declare documentation targets.
-__doc_items__ = [
-	#	Classes.
-	'Controller',
-	'Page',
-	'APIEndpoint',
-	'Component',
 	'PageComponent',
 	#	Functions.
 	'create_everything',

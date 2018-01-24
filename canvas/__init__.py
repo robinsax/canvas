@@ -10,11 +10,15 @@ import pprint
 import logging
 import werkzeug as wz
 
-#	TODO: Populate
-__all__ = []
+#	Declare documentation targets.
+__documented__ = [
+	'canvas',
+	'canvas.model',
+	'canvas.controllers'
+]
 
-#   Declare documentation targets.
-__doc_items__ = [
+#   Declare exports.
+__all__ = [
 	#	Core.
 	'asset_url',
 	'create_json',

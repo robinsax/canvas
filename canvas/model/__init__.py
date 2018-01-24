@@ -33,26 +33,6 @@ __all__ = [
 	'create_everything',
 	'dictize',
 	'dictize_all',
-	#	Columns.
-	'Column',
-	#	Constraints.
-	'Constraint',
-	'RegexConstraint',
-	'UniquenessConstraint',
-	#	Column types.
-
-]
-
-#	Declare documentation targets.
-__doc_items__ = [
-	#	Decorators.
-	'schema',
-	'enum',
-	#	Interaction points and utilities.
-	'create_session',
-	'create_everything',
-	'dictize',
-	'dictize_all',
 	#	Session.
 	'session',
 	#	Columns.
@@ -61,6 +41,7 @@ __doc_items__ = [
 	'Constraint',
 	'RegexConstraint',
 	'UniquenessConstraint',
+	#	Column types.
 	#	Column types.
 	'ColumnType',
 	'ForeignKeyColumnType',

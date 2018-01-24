@@ -5,6 +5,7 @@ Code documentation generation.
 
 import os
 import re
+import sys
 import inspect
 
 #	TODO: Create plugin interface.
@@ -16,14 +17,6 @@ import canvas
 
 __all__ = [
 	'build_docs'
-]
-
-#	The list of package paths to document. Due to namespace management, the 
-#	majority of relevant code is imported these packages.
-DEFAULT_PACKAGES = [
-	canvas,
-	canvas.model,
-	canvas.controllers
 ]
 
 def get_doc_str(obj):
@@ -123,17 +116,19 @@ def function_doc(func, small=False):
 
 #	TODO: Provide plugin interface
 
-def build_docs(packages=DEFAULT_PACKAGES):
+def build_docs(package):
 	'''
-	Generate a Markdown file for each package in `packages` within the 
-	`./docs/code` directory.
+	Generate a Markdown file for each package in the __documented__ list in
+	`package`.
 	'''
-	for package in packages:
+	targets = [sys.modules[name] for name in package.__documented__]
+	
+	for package in targets:
 		markdown = f'# {package.__name__}\n{package.__doc__}\n'
 
 		#	Sort contents.
 		classes, functions = [], []
-		for attr in package.__doc_items__:
+		for attr in package.__all__:
 			attr = getattr(package, attr)
 
 			if inspect.isclass(attr):
