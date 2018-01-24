@@ -4,6 +4,8 @@ Core functionality including request handling,
 plugin management, and asset management.
 '''
 
+import json
+
 from ..exceptions import _Redirect
 from ..utils.registration import register
 

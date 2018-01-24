@@ -20,9 +20,8 @@ Then download and set up canvas:
 #	Download this repository.
 git clone https://github.com/robinsax/canvas.git
 
-cd canvas
-
 #	Install the Python package requirements.
+cd canvas
 python3.6 -m pip install -r requirements.txt
 ```
 

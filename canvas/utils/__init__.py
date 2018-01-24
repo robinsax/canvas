@@ -3,7 +3,6 @@
 Utilities for the canvas core and plugins.
 '''
 
-import json
 import inspect
 import logging
 import traceback as tb
