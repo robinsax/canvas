@@ -3,12 +3,12 @@
 
 @font-face {
 	font-family: "default-sans";
-	src: url("{{ asset_url('fonts/%s'%config.styling.font_set.sans_serif) }}");
+	src: url("{{ h.asset_url('fonts/%s'%config.styling.font_set.sans_serif) }}");
 }
 
 @font-face {
 	font-family: "default-serif";
-	src: url("{{ asset_url('fonts/%s'%config.styling.font_set.serif) }}");
+	src: url("{{ h.asset_url('fonts/%s'%config.styling.font_set.serif) }}");
 }
 
 * {
