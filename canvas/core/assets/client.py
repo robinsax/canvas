@@ -66,6 +66,8 @@ def get_client_asset(path, _recall=False):
 		#	Compile the `.less` asset since it was 
 		#	requested as css.
 		try:
+			if not isinstance(asset, str):
+				asset = asset.decode()
 			asset = lessc(StringIO(asset), minify=not config['debug'])
 		except CompilationError as e:
 			#	Try to get the error line since templating makes

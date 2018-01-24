@@ -151,12 +151,14 @@ class Page(Controller):
 		#	name (the route) if it wasn't specified.
 		self.template = f'pages/{template if template is not None else route}.html'
 
-	def collect_dependencies(self, ctx):
+	def collect_dependencies(self):
 		'''
 		Return a tuple containing respectively the non-library
 		and library client dependencies of this page, given the 
 		current request context.
 		'''
+		ctx = get_thread_context()
+
 		#	Copy the dependencies lists.
 		deps, lib_deps = (self.dependencies[:], self.library_dependencies[:])
 
