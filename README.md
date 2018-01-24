@@ -4,7 +4,7 @@
 
 A full-stack web application framework written in Python and JavaScript.
 
-### Setup 
+## Setup 
 
 The following setup instructions are intended for Ubuntu, however Windows and OSX
 are also supported. All WSIG-compliant servers are supported.
@@ -44,7 +44,9 @@ An empty canvas instance will then be served at http://localhost.
 
 *Note:* The canvas development server is not suitable for a production environment.
 
-### Basic use
+## Use
+
+### Plugin basics
 
 canvas web applications are implemented as one or more plugins. Plugins are stored
 in a shared plugin folder (by default `../canvas_plugins`) and activated in
@@ -63,4 +65,35 @@ To create a plugin in the configured plugin directory, run:
 python3.6 ./scripts/create_plugin_template.py <plugin_name>
 ```
 
-*To be continued...*
+Plugins are organized as follows (directories prefixed with * do not exist by default):
+```
+canvas-pl-<plugin_name>/
+    assets/
+        # The assets directory contains all non-Python plugin assets.
+        *markdown/
+            # The root directory searched for markdown files.
+        *client/
+            # The root directory searched for client-side assets including 
+            # Javascript, CSS, LESS, media, ect.
+            *lib/
+            *media/
+        *templates/
+            # The root directory searched for Jinja templates.
+            *client/
+                # Client-side assets can also be templated with Jinja.
+            *components/
+                # Component HTML templates.
+            *pages/
+                # Page HTML templates.
+    <plugin_name>/
+        # The Python package containing the plugin logic.
+        __init__.py
+        *model/
+        *controllers/
+    tests/
+        # The Python package containing plugin unit tests.
+        __init__.py
+    # The settings JSON file.
+    settings.json
+    .travis.yml
+```
