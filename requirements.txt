@@ -6,3 +6,6 @@ jinja2
 htmlmin
 markdown
 lesscpy
+#   Testing
+coverage
+python-coveralls

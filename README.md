@@ -82,7 +82,17 @@ run the following to do so:
 python3.6 ./scripts/write_setup_sql.py | sudo -u postgres psql postgres
 ```
 
-You can then start canvas's development server:
+### Running the tests
+
+canvas's unit tests are invoked with:
+```
+python3.6 canvas --run_tests
+```
+
+
+###	Serving for development
+
+You can then start canvas's development server with:
 ```bash
 python3.6 canvas --serve 80
 ```
@@ -144,8 +154,7 @@ canvas-pl-<plugin_name>/
 	docs/
 		# The plugin documentation directory.
 		code/
-			# The automatically generated code documentation
-			# directory.
+			# The automatically generated code documentation directory.
 	# The settings JSON file.
 	settings.json
 	# A preconfigured Travis CI build configuration.

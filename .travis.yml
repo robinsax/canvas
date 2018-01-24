@@ -6,4 +6,7 @@ before_install:
   - sudo ./scripts/ubuntu_trusty_setup.sh
 
 script:
-  - python3.6 canvas --run_tests
+  - coverage-3.6 run canvas --run_tests
+
+after-success:
+  - coveralls
