@@ -1,18 +1,24 @@
 # canvas
 
+canvas initialization and namespace generation.
+
+
 ## Classes
 ### WrappedDict(dict)
 A dictionary with a configurable key error.
 #### Methods
 #### \_\_getitem__(self, key)
+
 Retrieve the value for `key` or raise
 an exception if it's not present.
 
 #### \_\_init__(self, source, exception_cls)
 + *source*:  The dictionary to copy into this dictionary. 
 + *exception_cls*:  The exception class to raise when a missing key is retrieve. Instances will have the offending key passed to their constructor.
+
 Copy the dictionary `source` into this dictionary
 and define the exception class to replace `KeyError`.
+
 
 ### ValidationErrors(Exception)
 An error used to trigger an input validation error response.
@@ -56,6 +62,7 @@ method is invoked.
 
 ## Functions
 ### asset_url(rel_path)
+
 Return the URL relative to domain root for an asset. 
 This message should always be called for asset 
 retrieval to allow for forwards-compatability.
@@ -65,22 +72,30 @@ retrieval to allow for forwards-compatability.
 + *status*:  The HTTP status code for the response. 
 + *headers*:  A dictionary of headers for the response. 
 + *default_serializer*:  A fallback serialization function for complex objects.
+
 Create a JSON response tuple in the canonical format.
+
 : `'success'`, 
         `'failure'`, or `'error'`.
+
 ### redirect_to(target, code=302)
 + *target*:  The URL to redirect to. 
 + *code*:  The HTTP redirect code. Must be 3xx.
+
 Redirect the view to `target`. Does not return
 a value. When called, flow control is halted.
+
 `code` will be ignored if an AJAX POST request
 is being handled; The redirection will be formulated
 as a view action (it wouldn't work otherwise).
+
 ### get_thread_context()
+
 Retrieve the per-thread request context for 
 the current thread, or `None` if there
 isn't one.
 ### flash_message(message)
+
 Flash a message the next time a view or view
 update is sent.
 ### render_template(template_path, minify=None, template_params={}, response=False, status=200, headers={})
@@ -90,50 +105,72 @@ update is sent.
 + *response*:  Whether to return a response tuple. 
 + *status*:  The status code for the response, if `response` is true. 
 + *headers*:  The header dictionary for the response, if `response` is true.
+
 Render a Jinja2 template.
+
 ### format_traceback(error)
 + *error*:  The raised error.
+
 Return a formatted traceback string for `error` if it has
 been raised.
+
 ### export_to_module(module, *items, into_all=True)
 + *module*:  The target module object 
 + *items*:  The functions or classes to place. 
 + *into_all*:  Whether to add the functions or objects to the `__all__` list of the target module.
+
 Export one or more functions or classes onto a module.
+
 ### logger(name=None)
 + *name*:  The name of the logger to create.
+
 Create and return a standard library `logging.Logger`.
 When invoked at package level, the name parameter can
 be safely omitted.
+
 ### get_registered(*types)
+
 Return all registered classes or functions 
 registered as the given types or an empty list 
 if there are none.
 ### get_registered_by_name(*types)
+
 Generate and return a dictionary containing all 
 classes or functions registered as the given type, 
 keyed by name.
 ### call_registered(typ, *args)
+
 Invoke all functions registered as `typ`. The 
 callback prefix is preppended if not present.
 ### place_registered_on(name, typ)
 + *name*:  The name of the module whose namespace is the target. 
 + *typ*:  The registered type to place.
+
 Add all registered classes or functions of the given 
 typ to a module or package namespace.
+
 __TODO__(BP): Side-effect: __all__ list modification
+
 ### markup(text)
+
 Transform the string `text` into markup that is 
 not escaped when rendered in a template.
+
 Available as a template filter.
+
 __Note__: Beware of XSS vulerabilities when using.
 ### markdown(markdown, return_markup=True)
 + *markdown*:  The string to render as markdown. 
 + *return_markup*:  Whether or not to return a markup object that will not be escaped when rendered.
+
 Render a string as markdown.
+
 Available as a template filter.
+
 ### uri_encode(s)
+
 Return `s` encoded as a a URI component.
 ### json(o)
+
 Return the JSON representation of the
 JSON-serializable object `o`.

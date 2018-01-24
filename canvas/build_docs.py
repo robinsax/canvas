@@ -91,7 +91,7 @@ def function_doc(func, small=False):
 	if func_name.startswith('__'):
 		func_name = f'\\_\\_{func_name[2:]}'
 
-	return re.sub('\n+', '\n', f'{prefix}{func_name}({arg_fmt})\n{arg_descs}\n{doc_str}\n')
+	return re.sub('\n\n+', '\n\n', f'{prefix}{func_name}({arg_fmt})\n{arg_descs}\n{doc_str}\n')
 
 def build_docs():
 	'''
@@ -99,7 +99,7 @@ def build_docs():
 	`PACKAGES` within the `./docs/code` directory.
 	'''
 	for package in PACKAGES:
-		markdown = f'# {package.__name__}\n'
+		markdown = f'# {package.__name__}\n{package.__doc__}\n'
 
 		#	Sort contents.
 		classes, functions = [], []
