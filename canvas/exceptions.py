@@ -1,47 +1,61 @@
 #	coding utf-8
 '''
-Exceptions, because shit happens
+Exceptions, because shit happens.
 '''
 
-#	TODO: Cleanup
-
-#	Imported to package level
+#	Declare exports.
 __all__ = [
+	#	Special exceptions.
 	'_Redirect',
-	'TemplateNotFound',
+	'ValidationErrors',
+	#	HTTP exceptions.
 	'HTTPException',
 	'UnsupportedMethod',
 	'RequestParamError',
 	'UnknownAction',
 	'NotFound',
 	'ComponentNotFound',
-	'ValidationErrors',
+	#	Other exceptions.
+	'TemplateNotFound',
 	'ColumnDefinitionError',
 	'MacroParameterError',
 	'MarkdownNotFound',
-	'ConfigKeyError'
+	'PluginConfigError',
+	'ConfigKeyError',
+	'HeaderKeyError',
+	'APIRouteDefinitionError',
+	'TemplateOverlayError',
+	'UnsupportedEnformentMethod'
 ]
 
 class _Redirect(Exception):
+	'''
+	A class used internally as a redirection trigger.
+	'''
 
 	def __init__(self, target, code):
-		self.target, self.code = (target, code)
+		self.target, self.code = target, code
+
+class ValidationErrors(Exception):
+	'''
+	An error used to trigger an input validation error response.
+	'''
+
+	def __init__(self, error_dict):
+		self.error_dict = error_dict
 
 class HTTPException(Exception):
 	'''
-	Represents errors with specific HTTP codes
-	(e.g. `500`, `404`, etc.)
+	An errors with a specific HTTP code (e.g. `500`, `404`, etc.).
 	'''
 
-	def __init__(self, msg, code, desc):
-		super().__init__(msg)
+	def __init__(self, message, code, desc):
+		super().__init__(message)
 		self.code, self.desc = (code, desc)
 
 class RequestParamError(HTTPException):
 	'''
-	Indicates missing request parameters.
-	Automatically returned as the `KeyError`
-	replacement for `request` in `vars`
+	An error triggered by an incomplete request parameter set.
 	'''
 
 	def __init__(self, param):
@@ -49,9 +63,8 @@ class RequestParamError(HTTPException):
 
 class UnknownAction(HTTPException):
 	'''
-	Indicated the action specified by the
-	client is unknown to the dispatched
-	controller
+	An error to raise when an invalid `action` parameter is specified in a 
+	request. 
 	'''
 	
 	def __init__(self, action):
@@ -59,9 +72,7 @@ class UnknownAction(HTTPException):
 
 class NotFound(HTTPException):
 	'''
-	Indicates the requested route is unmapped.
-	Canonically, should never be raised unless
-	you're abstracting routes
+	An error used internally when an uncontrolled route is requested.
 	'''
 
 	def __init__(self, key):
@@ -69,8 +80,7 @@ class NotFound(HTTPException):
 
 class ComponentNotFound(HTTPException):
 	'''
-	Indicates the component to which the request
-	was addressed doesn't exist
+	An error used internally when an unavailable component is addressed.
 	'''
 
 	def __init__(self, component):
@@ -78,81 +88,72 @@ class ComponentNotFound(HTTPException):
 
 class UnsupportedMethod(HTTPException):
 	'''
-	Indicates the requested route does not support
-	the request method. Should not be raised unless
-	you're abstracting routes
+	An error used internally when an unsupported request method is used.
 	'''
 
 	def __init__(self):
 		super().__init__('', 405, 'Unsupported Request Method')
 
-class ResourcePackagingError(Exception):
-	'''
-	Raised if resources are packaged incorrectly
-	'''
-	pass
-
-class ValidationErrors(Exception):
-	'''
-	Raised when model constraints are violated
-	by input.
-	'''
-
-	def __init__(self, error_dict):
-		self.error_dict = error_dict
-
 class ColumnDefinitionError(Exception):
 	'''
-	Raised when an invalid column type is specified
+	An error raised when an invalid column type is declared.
 	'''
 	pass
 
 class MacroParameterError(Exception):
 	'''
-	Raised by Jinja macros when they are supplied an invalid
-	set of parameters
+	An exception raised by Jinja macros when they are supplied an invalid set 
+	of parameters.
 	'''
 	pass
 
 class MarkdownNotFound(Exception):
 	'''
-	Raised when a markdown file isn't found
+	An exception raised when a markdown file doesn't exist.
 	'''
 	pass
 
 class PluginConfigError(Exception):
 	'''
-	Raised if a plugin modifies configuration incorrectly.
+	An exception raised if a plugin modifies configuration incorrectly.
 	'''
 	pass
 
 class ConfigKeyError(KeyError):
 	'''
-	Raised as the `KeyError` for `config`.
+	An exception raised as the `KeyError` for `config`.
 	'''
 	pass
 
 class HeaderKeyError(KeyError):
 	'''
-	Raised as the `KeyError` for the `headers` dict
-	in the request context
+	An exception raised when a non-present header is retrieved.
 	'''
+	pass
 
 class APIRouteDefinitionError(Exception):
 	'''
-	Raised when the route of an `APIEndpointController`
-	isn't prefixed with `api/`
+	An exception raised when the route of an `APIEndpointController` isn't 
+	prefixed with `api/`.
 	'''
 	pass
 
 class TemplateNotFound(Exception):
+	'''
+	An exception raised when a template cannot be located for render.
+	'''
 	pass
 
 class TemplateOverlayError(Exception):
+	'''
+	An exception raised when the `{% overlay %}` Jinja tag is used in a
+	bottom-level template.
+	'''
 	pass
 
 class UnsupportedEnformentMethod(Exception):
-	pass
-
-class MappedTypeError(Exception):
+	'''
+	An exception raised by constraints when an unsupported enforcement
+	method is invoked.
+	'''
 	pass

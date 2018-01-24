@@ -9,7 +9,6 @@ import jinja2
 from urllib import parse
 
 from jinja2 import Markup
-from jinja2.exceptions import TemplateNotFound
 
 from ..exceptions import (
 	MacroParameterError, 

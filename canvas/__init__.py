@@ -13,6 +13,59 @@ import werkzeug as wz
 #	TODO: Populate
 __all__ = []
 
+#   Declare documentation targets.
+__doc_items__ = [
+	#	Core.
+	'asset_url',
+	'create_json',
+	'redirect_to',
+	'get_thread_context',
+	'flash_message',
+	#	Assets subpackage.
+	'render_template',
+	#	Utilities.
+	#	Functions.
+	'format_traceback',
+	'export_to_module',
+	'logger',
+	#	Subpackage functions - registration.
+	'register',
+	'callback',
+	'get_registered',
+	'get_registered_by_name',
+	'call_registered',
+	'place_registered_on',
+	#	Subpackage functions - template_utils.
+	'markup',
+	'markdown',
+	'uri_encode',
+	'json',
+	#	Classes.
+	'WrappedDict',
+	#   Exceptions.
+	#	Special exceptions.
+	'_Redirect',
+	'ValidationErrors',
+	#	HTTP exceptions.
+	'HTTPException',
+	'UnsupportedMethod',
+	'RequestParamError',
+	'UnknownAction',
+	'NotFound',
+	'ComponentNotFound',
+	#	Other exceptions.
+	'TemplateNotFound',
+	'ColumnDefinitionError',
+	'MacroParameterError',
+	'MarkdownNotFound',
+	'PluginConfigError',
+	'ConfigKeyError',
+	'HeaderKeyError',
+	'APIRouteDefinitionError',
+	'TemplateOverlayError',
+	'UnsupportedEnformentMethod'
+]
+
 #	An alias for the CANVAS_HOME environment variable
 #	that controls the base path used by asset and module 
 #	loaders. Usually nessesary when running as a service

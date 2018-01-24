@@ -23,6 +23,7 @@ from .constraints import *
 from .session import Session
 from .sql_factory import table_creation, enum_creation
 
+#	Declare exports.
 __all__ = [
 	#	Decorators.
 	'schema',
@@ -37,7 +38,33 @@ __all__ = [
 	#	Constraints.
 	'Constraint',
 	'RegexConstraint',
-	'UniquenessConstraint'
+	'UniquenessConstraint',
+	#	Column types.
+
+]
+
+#	Declare documentation targets.
+__doc_items__ = [
+	#	Decorators.
+	'schema',
+	'enum',
+	#	Interaction points and utilities.
+	'create_session',
+	'create_everything',
+	'dictize',
+	'dictize_all',
+	#	Session.
+	'session',
+	#	Columns.
+	'Column',
+	#	Constraints.
+	'Constraint',
+	'RegexConstraint',
+	'UniquenessConstraint',
+	#	Column types.
+	'ColumnType',
+	'ForeignKeyColumnType',
+	'EnumColumnType'
 ]
 
 #	TODO: Encode column defaults into SQL when possible.

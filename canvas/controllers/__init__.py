@@ -23,13 +23,28 @@ from ..core.assets import render_template, markup
 from .components import *
 from .. import config
 
+#	Declare exports.
 __all__ = [
 	'Controller',
 	'Page',
+	#	Submodule classes.
 	'Component',
+	'PageComponent'
+	#	Functions.
 	'create_everything',
-	'get_controller',
-	'get_component'
+	'get_controller'
+]
+
+#	Declare documentation targets.
+__doc_items__ = [
+	#	Classes.
+	'Controller',
+	'Page',
+	'Component',
+	'PageComponent',
+	#	Functions.
+	'create_everything',
+	'get_controller'
 ]
 
 #	TODO: Route mapping.
@@ -119,7 +134,7 @@ class Page(Controller):
 	features.
 	'''
 
-	def __init__(self, route, name, dependencies=[], library_dependencies=[], 
+	def __init__(self, route, title, dependencies=[], library_dependencies=[], 
 			template=None, template_params={}, description=config['description'],
 			**super_kwargs):
 		'''
@@ -127,9 +142,9 @@ class Page(Controller):
 
 		:route The route for this controller, relative to 
 			domain root.
-		:name The name of the page with which to populate
+		:title The title of the page with which to populate
 			the title tag.
-		:template The name of this pages template file, without
+		:template The title of this pages template file, without
 			the `pages/` prefix and `html` file extension.
 		:dependencies A list of non-library client dependencies.
 		:library_dependencies A list of library client dependencies.
@@ -141,7 +156,7 @@ class Page(Controller):
 			keyword arguments.
 		'''
 		super().__init__(route, **super_kwargs)
-		self.name, self.template_params = name, template_params
+		self.title, self.template_params = title, template_params
 
 		#	Collect the dependency lists.
 		self.dependencies = GLOBAL_DEPS['dependencies'][:] + dependencies
@@ -157,6 +172,7 @@ class Page(Controller):
 		and library client dependencies of this page, given the 
 		current request context.
 		'''
+		#	Retrieve the request context.
 		ctx = get_thread_context()
 
 		#	Copy the dependencies lists.

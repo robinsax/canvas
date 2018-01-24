@@ -12,13 +12,14 @@ from ..utils.registration import register
 from .thread_context import get_thread_context
 from .assets import *
 
+#	Declare exports.
 __all__ = [
 	'asset_url',
 	'create_json',
 	'redirect_to',
 	'get_thread_context',
-	#	Assets subpackage
-	#	TODO: Populate
+	'flash_message',
+	#	Assets subpackage.
 	'render_template'
 ]
 

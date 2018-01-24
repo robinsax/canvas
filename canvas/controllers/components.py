@@ -8,6 +8,11 @@ duplicated between routes.
 from ..exceptions import UnsupportedMethod
 from ..core.assets import render_template
 
+__all__ = [
+	'Component',
+	'PageComponent'
+]
+
 class Component:
 	'''
 	The base component class enforces name and targeted 

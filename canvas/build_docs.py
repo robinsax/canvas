@@ -91,7 +91,7 @@ def function_doc(func, small=False):
 	if func_name.startswith('__'):
 		func_name = f'\\_\\_{func_name[2:]}'
 
-	return f'{prefix}{func_name}({arg_fmt})\n{arg_descs}\n{doc_str}\n'
+	return re.sub('\n+', '\n', f'{prefix}{func_name}({arg_fmt})\n{arg_descs}\n{doc_str}\n')
 
 def build_docs():
 	'''
@@ -103,7 +103,7 @@ def build_docs():
 
 		#	Sort contents.
 		classes, functions = [], []
-		for attr in dir(package):
+		for attr in package.__doc_items__:
 			attr = getattr(package, attr)
 
 			if inspect.isclass(attr):

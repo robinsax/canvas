@@ -201,7 +201,7 @@ def _handle_controller_request(req, cookie):
 		if isinstance(controller, Page):
 			#	The template reads this to populate the `title`
 			#	tag so to allow it to be set dynamically.
-			ctx['page_name'] = controller.name
+			ctx['page_title'] = controller.title
 
 		#	Allow callbacks to raise exceptions if there
 		#	is something wrong with the context.

@@ -8,10 +8,7 @@ import json
 import uuid
 import datetime as dt
 
-from ..exceptions import (
-	ColumnDefinitionError, 
-	MappedTypeError
-)
+from ..exceptions import ColumnDefinitionError
 from ..utils import call_registered
 from . import _all_enum
 
