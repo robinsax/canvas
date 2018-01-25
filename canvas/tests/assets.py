@@ -68,7 +68,6 @@ def test_jinja_environ():
 		presence_render == f'{name} foobar foobar'
 	), 'Template helpers, globals, and config presence')
 
-
 @assets_test('less compilation')
 def test_less_basic():
 	'''

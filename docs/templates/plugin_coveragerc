@@ -4,4 +4,4 @@ omit =
     docs/*
     tests/*
     #   TODO: Update once resolved.
-    home/*
+    */lib/*

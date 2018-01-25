@@ -5,4 +5,4 @@ omit =
     docs/*
     scripts/*
     #   TODO: Why is this in the build environment?
-    home/*
+    */lib/*
