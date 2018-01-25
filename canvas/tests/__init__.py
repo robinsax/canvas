@@ -17,7 +17,6 @@ from ..core.plugins import get_path_occurrences
 from .. import application
 
 #	TODO: Refactor.
-#	TODO: Service interface.
 
 __all__ = [
 	'TestSuite',
@@ -27,7 +26,9 @@ __all__ = [
 	'case',
 	'subcase',
 	'check',
-	'check_throw'
+	'check_throw',
+	'check_json_response',
+	'check_html_response'
 ]
 
 #	Create a testing logger.
@@ -116,6 +117,16 @@ def check_json_response(response, status, json_valid, name):
 	check((
 		response.status_code == status and
 		json_valid(json.loads(response.data))
+	), name)
+
+def check_html_response(response, status, html_valid, name):
+	'''
+	Perform a check on a JSON response produced by a testing
+	client.
+	'''
+	check((
+		response.status_code == status and
+		html_valid(response.data)
 	), name)
 
 #	Allow sub-modules to create test suites.
