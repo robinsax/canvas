@@ -20,7 +20,7 @@ def plugin_base_path(name):
 
 	:name The name of the plugin.
 	'''
-	return os.path.join(config['plugins']['directory'], f'canvas-pl-{name}')
+	return os.path.join(CANVAS_HOME, config['plugins']['directory'], f'canvas-pl-{name}')
 
 def load_all_plugins():
 	'''
