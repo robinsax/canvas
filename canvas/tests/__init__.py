@@ -26,6 +26,7 @@ __all__ = [
 	'subcase',
 	'check',
 	'check_throw',
+	'check_response',
 	'check_json_response',
 	'check_html_response',
 	'always_valid'
@@ -110,6 +111,14 @@ def check_throw(trigger, ex_cls, message='Generic throw check'):
 		trigger()
 	except ex_cls: return
 	raise Fail(message)
+
+def check_response(response, status, name):
+	'''
+	Perform a check on a response code.
+	'''
+	check((
+		response.status_code == status
+	), name)
 
 def check_json_response(response, status, json_valid, name):
 	'''
