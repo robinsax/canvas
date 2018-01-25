@@ -70,10 +70,11 @@ def create_plugin_template(plugin_name):
 		'plugin_name': plugin_name
 	})
 
-	#	Copy .gitignore template.
+	#	Copy non-template.
 	shutil.copyfile('./docs/templates/plugin.gitignore', f'{root}/.gitignore')
 	shutil.copyfile('./docs/templates/plugin_dependencies.txt', f'{root}/dependencies.txt')
 	shutil.copyfile('./docs/templates/plugin_requirements.txt', f'{root}/requirements.txt')
+	shutil.copyfile('./docs/templates/plugin_coveragerc', f'{root}/.coveragerc')
 
 	#	Create assets folder.
 	os.mkdir(f'{root}/assets')

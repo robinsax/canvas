@@ -159,8 +159,11 @@ canvas-pl-<plugin_name>/
 			# The automatically generated code documentation directory.
 	# The settings JSON file.
 	settings.json
-	# A preconfigured Travis CI build configuration.
+	# A preconfigured Travis CI build configuration with Coveralls
+	# integration.
 	.travis.yml
+	# A preconfigured coverage configuration.
+	.coveragerc
 ```
 
 *To be continued...*

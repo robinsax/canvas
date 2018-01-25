@@ -1,11 +1,11 @@
-#	Core
+#	Core.
 werkzeug
 psycopg2
-#	Asset rendering
+#	Asset rendering.
 jinja2
 htmlmin
 markdown
 lesscpy
-#   Testing
+#   Testing.
 coverage
 python-coveralls

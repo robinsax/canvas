@@ -1,9 +1,8 @@
-#	A template Travis CI configuration file for 
-#	plugin repositories.
-
 sudo: required
 
 language: python
+python:
+  - '3.6'
 
 before_install:
   - cd ..
@@ -13,4 +12,7 @@ before_install:
   - sudo python3.6 ./scripts/configure_plugin_test.py $plugin_name
 
 script:
-  - python3.6 canvas --run_tests $test_suite_names
+  - coverage-3.6 canvas --run_tests $plugin_name
+
+after_success:
+  - coveralls

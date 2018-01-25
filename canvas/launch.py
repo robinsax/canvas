@@ -99,7 +99,7 @@ class BuildDocsMode(LaunchMode):
 	def launch(self, args):
 		import canvas
 
-		from .build_docs import build_docs
+		from .utils.doc_builder import build_docs
 
 		if len(args) > 0:
 			try:
@@ -109,8 +109,7 @@ class BuildDocsMode(LaunchMode):
 		else:
 			package = canvas
 
-		if not build_docs(package):
-			sys.exit(1)
+		build_docs(package)
 		return True
 
 @register.launch_mode
