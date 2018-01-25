@@ -1,6 +1,8 @@
 sudo: required
 
 language: python
+python:
+  - '3.6'
 
 before_install:
   - sudo ./scripts/ubuntu_trusty_setup.sh
