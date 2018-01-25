@@ -193,6 +193,7 @@ class Session:
 
 		#	Dispatch creation callback.
 		model.__on_create__()
+		return self
 
 	def delete(self, model):
 		'''
@@ -203,6 +204,7 @@ class Session:
 
 		#	Remove the mapping.
 		del self.active_mappings[self._row_reference(model)]
+		return self
 
 	def query(self, model_cls, conditions=True, one=False):
 		'''
@@ -260,6 +262,7 @@ class Session:
 		
 		#	Commit the transaction.
 		self.conn.commit()
+		return self
 
 	def reset(self):
 		'''
@@ -269,6 +272,7 @@ class Session:
 		self.rollback()
 		#	Reset active mappings.
 		self.active_mappings = {}
+		return self
 	
 	def rollback(self):
 		'''
@@ -277,6 +281,7 @@ class Session:
 		TODO: Rollback changes to model instances too.
 		'''
 		self.conn.rollback()
+		return self
 
 	def close(self):
 		'''
@@ -284,6 +289,7 @@ class Session:
 		session.
 		'''
 		self.conn.close()
+		return self
 
 	def __del__(self):
 		'''
