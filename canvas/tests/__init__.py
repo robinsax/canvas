@@ -16,7 +16,9 @@ from canvas.core.plugins import get_path_occurrences
 __all__ = [
 	'TestSuite',
 	'Fail',
+	'fail',
 	'case',
+	'subcase',
 	'check',
 	'check_throw'
 ]
@@ -54,17 +56,29 @@ class Fail(Exception):
 	'''
 	pass
 
+def fail(desc='Generic failure'):
+	'''
+	Fail a test.
+	'''
+	raise Fail(desc)
+
 def case(desc):
 	'''
 	Log the current case being tested.
 	'''
 	log.debug(f'\t | - {desc}')
 
+def subcase(desc):
+	'''
+	Log the current subcase being tested.
+	'''
+	log.debug(f'\t\t| - {desc}')
+
 def check(cond, message='Generic check'):
 	'''
 	Perform a check, failing the build if it fails.
 	'''
-	log.debug(f'\t\t| - {message}')
+	subcase(message)
 
 	if not cond:
 		raise Fail(message)
@@ -82,7 +96,11 @@ def check_throw(trigger, ex_cls, message='Generic throw check'):
 	raise Fail(message)
 
 #	Allow sub-modules to create test suites.
-from . import utils, templates, orm
+from . import (
+	utils,
+	assets,
+	model
+)
 
 def run_tests(suites):
 	'''

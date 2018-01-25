@@ -3,4 +3,5 @@ omit =
     assets/*
     docs/*
     tests/*
-    /home/*
+    #   TODO: Update once resolved.
+    home/*
