@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 
+[![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
+
 A full-stack web application framework written in Python and JavaScript.
 
 ## What's it like?
@@ -111,11 +113,11 @@ configuration.
 
 Some existing plugins are:
 * [users](https://github.com/robinsax/canvas-pl-users) - Extensible skeleton user model with authorization integration. 
-  <br>[![Build status](https://travis-ci.org/robinsax/canvas-pl-users.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-users)
+  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-users.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-users)
 * [deferral](https://github.com/robinsax/canvas-pl-deferral) - Scheduled and asynchronous code execution.
-  <br>[![Build status](https://travis-ci.org/robinsax/canvas-pl-deferral.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-deferral)
+  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-deferral.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-deferral)
 * [email](https://github.com/robinsax/canvas-pl-email) - SMTP-based email templating and dispatch.
-  <br>[![Build status](https://travis-ci.org/robinsax/canvas-pl-email.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-email)
+  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-email.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-email)
 
 To create a plugin in the configured plugin directory, run:
 ```bash
