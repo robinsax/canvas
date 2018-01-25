@@ -1,0 +1,6 @@
+[run]
+omit = 
+    canvas/tests/*
+    canvas/assets/*
+    docs/*
+    scripts/*
