@@ -15,10 +15,11 @@ from ..utils import (
 	WrappedDict, 
 	register, 
 	get_registered, 
-	call_registered
+	call_registered,
+	markup
 )
 from ..core.thread_context import get_thread_context
-from ..core.assets import render_template, markup
+from ..core.assets import render_template
 from .components import *
 from .. import config
 

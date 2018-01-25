@@ -12,7 +12,6 @@ from lesscpy import compile as lessc
 
 from ...utils import logger
 from ...utils.registration import callback
-from .markdown import *
 from .templates import *
 
 log = logger()

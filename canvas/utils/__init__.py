@@ -15,7 +15,6 @@ from .template_utils import *
 __all__ = [
 	#	Functions.
 	'format_traceback',
-	'export_to_module',
 	'logger',
 	#	Subpackage functions - registration.
 	'register',
@@ -94,23 +93,3 @@ def logger(name=None):
 	
 	#	Create and return logger.
 	return logging.getLogger(name)
-
-def export_to_module(module, *items, into_all=True):
-	'''
-	Export one or more functions or classes onto a module.
-
-	:module The target module object
-	:items The functions or classes to place.
-	:into_all Whether to add the functions or objects
-		to the `__all__` list of the target module.
-	'''
-	if into_all:
-		#	Add to the `__all__` list of target.
-		if not hasattr(module, '__all__'):
-			#	Create the all object if it doesn't exist.
-			module.__all__ = []
-		module.__all__.extend(items)
-	
-	for item in items:
-		#	Place the object in the modules namespace.
-		setattr(module, item.__name__.split('.')[-1], item)

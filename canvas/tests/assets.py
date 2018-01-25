@@ -24,7 +24,7 @@ def test_jinja_environ():
 	#	Create a fake set of base paths from `./extras`.
 	base_paths = []
 	for i in range(1, 4):
-		base_paths.append(os.path.join(CANVAS_HOME, 'canvas', 'tests', 'extras', 'rendering', str(i), 'templates'))
+		base_paths.append(os.path.join(CANVAS_HOME, 'canvas', 'tests', 'test_assets', 'rendering', str(i), 'templates'))
 
 	#	Create a simple helper and global to use in testing.
 	@register.template_helper
@@ -68,6 +68,11 @@ def test_jinja_environ():
 		presence_render == f'{name} foobar foobar'
 	), 'Template helpers, globals, and config presence')
 
+	#	Case: template helper and filter implementations
+	case('Template utilities')
+
+	filter_check
+
 @assets_test('less compilation')
 def test_less_basic():
 	'''
@@ -86,9 +91,3 @@ def test_less_basic():
 		''')
 	except:
 		fail()
-	
-@assets_test('Markdown rendering')
-def test_markdown_basic():
-	'''
-	Unit tests on markdown
-	'''

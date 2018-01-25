@@ -91,7 +91,6 @@ canvas's unit tests are invoked with:
 python3.6 canvas --run_tests
 ```
 
-
 ###	Serving for development
 
 You can then start canvas's development server with:

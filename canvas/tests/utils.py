@@ -11,11 +11,15 @@ utils_test = TestSuite('utils')
 
 @utils_test('registration')
 def test_registration():
+	'''
+	Unit tests on the registration utility.
+	'''
 	from ..utils.registration import (
 		register,
 		get_registered,
 		get_registered_by_name,
-		place_registered_on
+		place_registered_on,
+		clear_registered
 	)
 
 	@register('test')
@@ -24,6 +28,7 @@ def test_registration():
 	@register.test
 	def test2(): pass
 
+	#	Test list retrieval.
 	l = get_registered('test')
 	check((
 		len(l) == 2 and 
@@ -31,6 +36,7 @@ def test_registration():
 		l[1] == test2
 	), 'List retrieval')
 
+	#	Test map retrieval.
 	m = get_registered_by_name('test')
 	check((
 		len(m) == 2 and 
@@ -38,6 +44,7 @@ def test_registration():
 		m.get('test2', None) == test2
 	), 'By-name dict retrieval')
 
+	#	Test placement.
 	here = sys.modules[__name__]
 	place_registered_on(__name__, 'test')
 	check((
@@ -45,8 +52,17 @@ def test_registration():
 		getattr(here, 'test2', None) == test2
 	), 'Placement')
 
+	#	Test clearing.
+	clear_registered('test')
+	check((
+		len(get_registered('test')) == 0
+	), 'Clearing')
+
 @utils_test('WrappedDict')
 def test_wrapped_dict():
+	'''
+	Unit tests on the WrappedDict object.
+	'''
 	from ..utils import WrappedDict
 
 	class TestKeyError(Exception):
@@ -68,3 +84,22 @@ def test_wrapped_dict():
 		w.get('d', 4) == 4
 	), 'get()')
 	check_throw(lambda: w['d'], TestKeyError, 'Custom exception')
+
+@utils_test('Traceback formatting')
+def test_traceback_format():
+	'''
+	Unit test on `format_traceback()` to ensure it returns output.
+	'''
+	from ..utils import format_traceback
+
+	#	Generate an exception.
+	try:
+		raise Exception()
+	except Exception as e:
+		ex = e
+	
+	#	Format it.
+	try:
+		format_traceback(ex)
+	except:
+		fail()

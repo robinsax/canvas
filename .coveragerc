@@ -4,5 +4,5 @@ omit =
     canvas/assets/*
     docs/*
     scripts/*
-    #   TODO: Why is this in the build environment?
+    #   TODO: Python libraries are being included.
     */lib/*

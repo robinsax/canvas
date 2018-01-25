@@ -9,10 +9,12 @@ import jinja2
 from urllib import parse
 
 from jinja2 import Markup
+from markdown import markdown as render_markdown
 
 from ..exceptions import (
 	MacroParameterError, 
-	UnsupportedEnformentMethod
+	UnsupportedEnformentMethod,
+	MarkdownNotFound
 )
 from .registration import register, callback
 
@@ -46,7 +48,48 @@ def markdown(markdown, return_markup=True):
 	:return_markup Whether or not to return a markup object
 		that will not be escaped when rendered.
 	'''
-	rendered = markdown(markdown)
+	rendered = render_markdown(markdown)
+	if return_markup:
+		return markup(rendered)
+	return rendered
+
+_markdown_cache = {}
+@register.template_helper
+def markdown_file(filename, return_markup=True):
+	'''
+	Load and render a file as markdown.
+
+	Available as a template global.
+
+	:filename The name of the markdown file to render,
+		from `/markdown`.
+	:return_markup Whether or not the output should
+		be escaped when rendered in Jinja.
+	'''
+	#	TODO: Fix these imports.
+	from ..core.plugins import get_path_occurrences
+	from .. import config
+	
+	#	Check cache.
+	if filename in _markdown_cache:
+		if return_markup:
+			return markup(_markdown_cache[filename])
+		return _markdown_cache[filename]
+
+	#	Get file occurrences.
+	paths = get_path_occurrences(os.path.join('assets', 'markdown', filename), filter=os.path.isfile)
+	#	Assert an instance exists.
+	if len(paths) == 0:
+		raise MarkdownNotFound(filename)
+	
+	#	Load and render.
+	with open(paths[-1], 'r') as f:
+		rendered = render_markdown(f.read())
+
+	if not config['debug']:
+		#	Don't cache in debug mode.
+		_markdown_cache[filename] = rendered
+	
 	if return_markup:
 		return markup(rendered)
 	return rendered
