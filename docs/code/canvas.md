@@ -40,8 +40,8 @@ An exception raised when a template cannot be located for render.
 ### ColumnDefinitionError(Exception)
 An error raised when an invalid column type is declared.
 ### MacroParameterError(Exception)
-An exception raised by Jinja macros when they are supplied an invalid set 
-of parameters.
+An exception raised by Jinja macros when they are supplied an invalid set of 
+parameters.
 ### MarkdownNotFound(Exception)
 An exception raised when a markdown file doesn't exist.
 ### PluginConfigError(Exception)
@@ -113,13 +113,6 @@ Render a Jinja2 template.
 
 Return a formatted traceback string for `error` if it has
 been raised.
-
-### export_to_module(module, *items, into_all=True)
-+ *module*:  The target module object 
-+ *items*:  The functions or classes to place. 
-+ *into_all*:  Whether to add the functions or objects to the `__all__` list of the target module.
-
-Export one or more functions or classes onto a module.
 
 ### logger(name=None)
 + *name*:  The name of the logger to create.

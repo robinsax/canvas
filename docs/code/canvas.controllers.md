@@ -1,7 +1,6 @@
 # canvas.controllers
 
-Controller base class definition and namespace
-generation.
+Controller base class definitions and namespace generation.
 
 
 ## Classes
@@ -21,28 +20,24 @@ Configure the overriding controller class.
 
 The GET request method handler.
 
-By default raises an exception that causes
-a 405 response code to be returned to the 
-client.
+By default raises an exception that causes a `405` response to be 
+returned to the client.
 
 #### get_components(self, ctx)
 
-Return all components that that didnt raise an 
-exception when their `check()` method was called 
-with the current request context.
+Return all components that that didnt raise an exception when their 
+`check()` method was called with the current request context.
 
 #### post(self, ctx)
 
 The POST request method handler.
 
-By default raises an exception that causes
-a 405 response code to be returned to the 
-client.
+By default raises an exception that causes a `405` response to be 
+returned to the client.
 
 ### Page(Controller)
-The base page class implements template rendering
-for GET requests, dependency management, and supporting
-features.
+The base page class implements template rendering for GET requests, 
+dependency management, and supporting features.
 #### Methods
 #### \_\_init__(self, route, title, dependencies=[], library_dependencies=[], template=None, template_params={}, description=Fast, customizable websites and web applications)
 + *route*:  The route for this controller, relative to domain root. 
@@ -58,46 +53,40 @@ Configure the overriding controller class.
 
 #### collect_dependencies(self)
 
-Return a tuple containing respectively the non-library
-and library client dependencies of this page, given the 
-current request context.
+Return a tuple containing respectively the non-library and library 
+client dependencies of this page, given the current request context.
 
 #### get(self, ctx)
 
-Return a response tuple containing the rendered 
-template for this page.
+Return a response tuple containing the rendered template for this page.
 
 #### get_components(self, ctx)
 
-Return all components that that didnt raise an 
-exception when their `check()` method was called 
-with the current request context.
+Return all components that that didnt raise an exception when their 
+`check()` method was called with the current request context.
 
 #### post(self, ctx)
 
 The POST request method handler.
 
-By default raises an exception that causes
-a 405 response code to be returned to the 
-client.
+By default raises an exception that causes a `405` response to be 
+returned to the client.
 
 #### render_component(self, name)
 
-Render the component with name `name` and return its 
-rendered template as markup, or return `None` if the
-there is no component called `name` available to the
-current request context.
+Render the component with name `name` and return its rendered template as 
+markup, or return `None` if the there is no component called `name` 
+available to the current request context.
 
 #### render_components(self)
 
-Render each component available given the current 
-request context and return the sum of their rendered 
-templates as markup.
+Render each component available given the current request context and 
+return the sum of their rendered templates as markup.
 
 ### APIEndpoint(Controller)
-The canonical API endpoint controller base class enforces
-a `api/` route prefix and the presence of a description
-to allow intuative endpoint presentation.
+The canonical API endpoint controller base class enforces an `api/` route 
+prefix and the presence of a description to allow intuative endpoint 
+presentation.
 #### Methods
 #### \_\_init__(self, route, description=No description available)
 + *route*:  The route for this controller, relative to domain root. Must begin with `'/api/'`. 
@@ -111,23 +100,20 @@ Configure the overriding controller class.
 
 The GET request method handler.
 
-By default raises an exception that causes
-a 405 response code to be returned to the 
-client.
+By default raises an exception that causes a `405` response to be 
+returned to the client.
 
 #### get_components(self, ctx)
 
-Return all components that that didnt raise an 
-exception when their `check()` method was called 
-with the current request context.
+Return all components that that didnt raise an exception when their 
+`check()` method was called with the current request context.
 
 #### post(self, ctx)
 
 The POST request method handler.
 
-By default raises an exception that causes
-a 405 response code to be returned to the 
-client.
+By default raises an exception that causes a `405` response to be 
+returned to the client.
 
 ### Component(object)
 The base component class enforces name and targeted 
@@ -142,7 +128,7 @@ Configure the overriding component.
 
 #### check(self, ctx)
 
-Check a request context and raise a subclass of `HTTPException` 
+Check a request context and raise a subclass of `Unavailable` 
 if this component does not want to be available for the 
 handling of that request.
 
@@ -177,7 +163,7 @@ Configure the overriding component.
 
 #### check(self, ctx)
 
-Check a request context and raise a subclass of `HTTPException` 
+Check a request context and raise a subclass of `Unavailable` 
 if this component does not want to be available for the 
 handling of that request.
 
@@ -203,11 +189,8 @@ Return the rendered template for this component.
 ## Functions
 ### create_everything()
 
-Create the singleton instance of all controllers and 
-components, then add components to controllers.
-### get_controller(route_or_controller)
-+ *route_or_controller*:  A controller instance or existing route.
+Create the singleton instance of all controllers and components, then add 
+components to controllers.
+### get_controller(route)
 
-Return the controller for the given route or
-the parameter if it's already a controller.
-
+Return the controller for the given route.

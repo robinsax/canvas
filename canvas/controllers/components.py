@@ -38,7 +38,7 @@ class Component:
 
 	def check(self, ctx):
 		'''
-		Check a request context and raise a subclass of `HTTPException` 
+		Check a request context and raise a subclass of `Unavailable` 
 		if this component does not want to be available for the 
 		handling of that request.
 

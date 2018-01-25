@@ -16,6 +16,7 @@ __all__ = [
 	'NotFound',
 	'ComponentNotFound',
 	#	Other exceptions.
+	'Unavailable',
 	'TemplateNotFound',
 	'ColumnDefinitionError',
 	'MacroParameterError',
@@ -94,6 +95,12 @@ class UnsupportedMethod(HTTPException):
 	def __init__(self):
 		super().__init__('', 405, 'Unsupported Request Method')
 
+class Unavailable(Exception):
+	'''
+	An error to be raised by components who do not want to be available for the
+	handling of the current request.
+	'''
+
 class ColumnDefinitionError(Exception):
 	'''
 	An error raised when an invalid column type is declared.
@@ -102,8 +109,8 @@ class ColumnDefinitionError(Exception):
 
 class MacroParameterError(Exception):
 	'''
-	An exception raised by Jinja macros when they are supplied an invalid set 
-	of parameters.
+	An exception raised by Jinja macros when they are supplied an invalid set of 
+	parameters.
 	'''
 	pass
 

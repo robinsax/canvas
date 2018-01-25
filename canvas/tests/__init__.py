@@ -13,6 +13,8 @@ import canvas as cv
 
 from canvas.core.plugins import get_path_occurrences
 
+#	TODO: Refactor.
+
 __all__ = [
 	'TestSuite',
 	'Fail',
@@ -101,6 +103,7 @@ from . import (
 	thread_contexts,
 	assets,
 	model,
+	controllers,
 	combine
 )
 

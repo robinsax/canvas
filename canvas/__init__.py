@@ -32,7 +32,6 @@ __all__ = [
 	#	Utilities.
 	#	Functions.
 	'format_traceback',
-	'export_to_module',
 	'logger',
 	#	Subpackage functions - registration.
 	'register',
