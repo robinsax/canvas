@@ -72,7 +72,7 @@ __all__ = [
 ]
 
 #	Where am I?
-CANVAS_HOME = os.path.abspath(f'../{os.path.dirname(inspect.getfile(sys.modules[__name__]))}')
+CANVAS_HOME = os.path.abspath(os.path.dirname(os.path.dirname(inspect.getfile(sys.modules[__name__]))))
 
 #	Populate namespace with exceptions and utilities.
 from .exceptions import *
