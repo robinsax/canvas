@@ -76,3 +76,7 @@ def test_basic():
 		),
 		'Missing request parameter handling'
 	)
+
+	check((
+		client.get('/assets/style.css').status_code == 200
+	), 'style.css serves')
