@@ -1,4 +1,3 @@
-# TODO: Cleanup.
 sudo: required
 
 language: python
@@ -9,16 +8,15 @@ before_install:
   - cd ..
   - git clone https://github.com/robinsax/canvas.git
   - cd canvas
-  - sudo pip install -r requirements.txt
   - sudo ./scripts/ubuntu_trusty_setup.sh
-  - sudo python3.6 ./scripts/configure_plugin_test.py $plugin_name
+  - sudo python ./scripts/configure_plugin_test.py $plugin_name
   - cd ../canvas-pl-$plugin_name
-  - echo $PYTHONPATH
   - export PYTHONPATH="../canvas"
 
 script:
   - coverage-3.6 run -m canvas --run_tests $plugin_name
 
 after_success:
-  - python3.6 -m pip install python-coveralls
-  - which coveralls | xargs cat | python3.6
+  # This may seem excessive but it isn't
+  - python -m pip install python-coveralls
+  - which coveralls | xargs cat | python
