@@ -12,7 +12,7 @@ before_install:
   - sudo python3.6 ./scripts/configure_plugin_test.py $plugin_name
 
 script:
-  - coverage-3.6 canvas --run_tests $plugin_name
+  - coverage-3.6 run canvas --run_tests $plugin_name
 
 after_success:
   - coveralls
