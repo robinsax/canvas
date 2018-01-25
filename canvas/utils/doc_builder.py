@@ -8,6 +8,8 @@ import re
 import sys
 import inspect
 
+#	TODO: Multiple class bases.
+
 #	Import the root package for reference.
 import canvas
 

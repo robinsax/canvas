@@ -14,6 +14,7 @@ import canvas as cv
 from canvas.core.plugins import get_path_occurrences
 
 #	TODO: Refactor.
+#	TODO: Service interface.
 
 __all__ = [
 	'TestSuite',
