@@ -3,3 +3,4 @@ omit =
     assets/*
     docs/*
     tests/*
+    /home/*

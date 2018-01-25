@@ -167,8 +167,7 @@ class Session:
 
 	def save(self, model):
 		'''
-		Insert a new table row given a constructed model 
-		object.
+		Insert a new table row given a constructed model object.
 		'''
 		model_cls = model.__class__
 
@@ -261,11 +260,20 @@ class Session:
 		
 		#	Commit the transaction.
 		self.conn.commit()
+
+	def reset(self):
+		'''
+		Rollback this session, then remove all active mappings.
+		'''
+		#	Rollback.
+		self.rollback()
+		#	Reset active mappings.
+		self.active_mappings = {}
 	
 	def rollback(self):
 		'''
 		Undo all changes made during the current transaction.
-
+		
 		TODO: Rollback changes to model instances too.
 		'''
 		self.conn.rollback()

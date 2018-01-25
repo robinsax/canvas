@@ -104,6 +104,13 @@ def call_registered(typ, *args, **kwargs):
 	for func in get_registered(typ):
 		func(*args, **kwargs)
 
+def clear_registered(typ):
+	'''
+	Remove all registrations for `typ` if there are any.
+	'''
+	if typ in _registrations:
+		del _registrations[typ]
+
 def place_registered_on(name, typ):
 	'''
 	Add all registered classes or functions of the given 

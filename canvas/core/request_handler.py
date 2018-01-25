@@ -113,6 +113,8 @@ def handle_request(environ, start_response):
 		#	Set the cookie.
 		response_obj.set_cookie('canvas_session', cookie.serialize())
 	
+	call_registered('response_dispatch', response_obj)
+
 	#	Invoke the response object.
 	return response_obj(environ, start_response)
 
