@@ -10,6 +10,8 @@ import pprint
 import logging
 import werkzeug as wz
 
+#	TODO: Core versus utils packaging.
+
 #	Declare documentation targets.
 __documented__ = [
 	'canvas',

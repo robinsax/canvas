@@ -7,6 +7,8 @@ import inspect
 import logging
 import traceback as tb
 
+from werkzeug.serving import run_simple
+
 #	Import subpackage to namespace.
 from .registration import *
 from .template_utils import *
@@ -14,6 +16,7 @@ from .template_utils import *
 #	Declare exports.
 __all__ = [
 	#	Functions.
+	'serve',
 	'format_traceback',
 	'logger',
 	#	Subpackage functions - registration.
@@ -31,6 +34,16 @@ __all__ = [
 	#	Classes.
 	'WrappedDict'
 ]
+
+def serve(port):
+	'''
+	Serve the canvas development server on `localhost`.
+	
+	Cannot be called until canvas is initialized.
+	'''
+	from .. import application
+
+	run_simple('localhost', port, application)
 
 class WrappedDict(dict):
 	'''
@@ -54,7 +67,6 @@ class WrappedDict(dict):
 
 		#	Save the exception class.
 		self.exception_cls = exception_cls
-
 
 	def __getitem__(self, key):
 		'''

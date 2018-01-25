@@ -98,8 +98,10 @@ def check_throw(trigger, ex_cls, message='Generic throw check'):
 #	Allow sub-modules to create test suites.
 from . import (
 	utils,
+	thread_contexts,
 	assets,
-	model
+	model,
+	combine
 )
 
 def run_tests(suites):

@@ -10,13 +10,16 @@ import re
 from .. import CANVAS_HOME
 from . import *
 
-assets_test = TestSuite('assets')
+assets_test = TestSuite('canvas.core.assets')
 
 @assets_test('Jinja environment')
 def test_jinja_environ():
 	'''
 	Unit tests on the CanvasJinjaEnvironment object.
+
+	TODO: Create test for markdown_file() helper.
 	'''
+	from ..exceptions import MacroParameterError
 	from ..utils.registration import register
 	from ..core.assets.jinja_extensions import CanvasJinjaEnvironment
 	from .. import config
@@ -68,10 +71,19 @@ def test_jinja_environ():
 		presence_render == f'{name} foobar foobar'
 	), 'Template helpers, globals, and config presence')
 
-	#	Case: template helper and filter implementations
+	#	Case: template helper and filter implementations.
 	case('Template utilities')
 
-	filter_check
+	#	Check utility filters.
+	filter_render = cleaned_render('util_filter_check.jinja')
+	check((
+		filter_render == '<h1>Foobar</h1> '*2 + '{"foo": "bar"} %40'
+	), 'Template filters')
+
+	check_throw(lambda: cleaned_render('throw_check.jinja'), 
+			MacroParameterError, 'parameter_error() helper')
+
+	#	*Note:* core filters are checked with model since they depend on it.
 
 @assets_test('less compilation')
 def test_less_basic():

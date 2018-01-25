@@ -60,8 +60,7 @@ class DevServeMode(LaunchMode):
 		super().__init__('serve', '<port>')
 
 	def launch(self, args):
-		from werkzeug.serving import run_simple
-		from canvas import application
+		from .utils import serve
 
 		#	Parse arguments.
 		try:
@@ -69,7 +68,7 @@ class DevServeMode(LaunchMode):
 		except:
 			return False
 		
-		run_simple('localhost', port, application)
+		serve(port)
 		return True
 
 @register.launch_mode

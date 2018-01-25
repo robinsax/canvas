@@ -174,7 +174,11 @@ def _handle_controller_request(req, cookie):
 	if is_get:
 		params = req.args
 	else:
-		params = json.loads(req.get_data(as_text=True))
+		try:
+			params = json.loads(req.get_data(as_text=True))
+		except:
+			#	TODO: Better.
+			params = {}
 	params = WrappedDict(params, RequestParamError)
 
 	#	Create database session.

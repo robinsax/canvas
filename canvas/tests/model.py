@@ -9,12 +9,11 @@ from ..exceptions import ValidationErrors
 from .. import model
 from . import *
 
-#	Create the ORM test suite registrar.
-orm_test = TestSuite('orm')
+orm_test = TestSuite('canvas.model')
 
-#	A table name to use for the contained
-#	unit tests.
+#	A table name to use for the contained unit tests.
 TEST_TABLE = '__canvas_orm_unit_test__'
+
 def drop_table(session):
 	'''
 	Drop the test table if it exists.

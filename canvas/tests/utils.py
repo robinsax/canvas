@@ -7,7 +7,7 @@ import sys
 
 from . import *
 
-utils_test = TestSuite('utils')
+utils_test = TestSuite('canvas.utils')
 
 @utils_test('registration')
 def test_registration():
