@@ -6,8 +6,6 @@ Provides an interface for plugin tests.
 '''
 
 import sys
-import imp
-import uuid
 import json
 
 from werkzeug.wrappers import BaseResponse
@@ -150,10 +148,8 @@ def run_tests(suites):
 	#	since all packages are named `test` and are never
 	#	referenced by name.
 	for test_pkg_path in get_path_occurrences('tests/', include_base=False):
-		imp.load_source(uuid.uuid4().hex, f'{test_pkg_path}/__init__.py')
-	#	Do the same for modules.
-	for test_module_path in get_path_occurrences('tests.py', include_base=False):
-		imp.load_source(uuid.uuid4().hex, test_module_path)
+		sys.path.insert(0, test_pkg_path)
+		import tests
 
 	run_all = len(suites) == 0
 
