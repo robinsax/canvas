@@ -1,7 +1,6 @@
 #	coding utf-8
 '''
-Controller base class definition and namespace
-generation.
+Controller base class definitions and namespace generation.
 '''
 
 import types
@@ -40,7 +39,7 @@ __all__ = [
 
 #	Create an alias to the list of global client 
 #	dependencies (to be included with every page).
-GLOBAL_DEPS = config['client_dependencies']
+CLIENT_DEPENDENCIES = config['client_dependencies']
 
 class Controller:
 	'''
@@ -148,8 +147,8 @@ class Page(Controller):
 		self.title, self.template_params = title, template_params
 
 		#	Collect the dependency lists.
-		self.dependencies = GLOBAL_DEPS['dependencies'][:] + dependencies
-		self.library_dependencies = GLOBAL_DEPS['library_dependencies'][:] + library_dependencies
+		self.dependencies = CLIENT_DEPENDENCIES['dependencies'][:] + dependencies
+		self.library_dependencies = CLIENT_DEPENDENCIES['library_dependencies'][:] + library_dependencies
 
 		#	Format the template file path and get the default
 		#	name (the route) if it wasn't specified.

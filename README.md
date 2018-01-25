@@ -10,7 +10,7 @@ A full-stack web application framework written in Python and JavaScript.
 
 canvas is designed for minimalism and extensibility. The following code sample
 defines an API endpoint that serves breakfast. Don't worry if you don't totally understand
-it; it's a demonstration, not a tutorial.
+it; it's just a demonstration.
 
 ```python
 #	Import the 3 primary canvas interfaces.
