@@ -5,3 +5,4 @@ omit =
     tests/*
     #   TODO: Update once resolved.
     */lib/*
+    */canvas/*
