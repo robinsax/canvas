@@ -8,5 +8,5 @@ before_install:
 script:
   - coverage-3.6 run canvas --run_tests
 
-after-success:
+after_success:
   - coveralls
