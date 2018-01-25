@@ -107,7 +107,7 @@
 				{% set model = form_model %}
 			{% endif %}
 		{% endif %}
-		{% set model_attr = describe_model_attr(model, attr) %}
+		{% set model_attr = h.describe_model_attr(model, attr) %}
 		{% if type is none %}
 			{% set type = model_attr.type %}
 		{% endif %}
@@ -139,7 +139,7 @@
 	{% if type == 'select' or type == 'date' %}
 		{% set validator = {'repr': 'option:any', 'error': 'Select a value'} %}
 	{% else %}
-		{% set validator = get_client_validator(validator) %}
+		{% set validator = h.get_client_validator(validator) %}
 	{% endif %}
 	{% set common_attrs = 'name="%s" cv-validator="%s" cv-error="%s"'%(name, validator.repr, validator.error) %}
 	{% if value is not none %}
