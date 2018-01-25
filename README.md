@@ -49,7 +49,7 @@ class BreakfastEndpoint(controllers.APIEndpoint):
 		super().__init__('/api/breakfast')
 
 	def get(self, ctx):
-		to_serve = session.query(Breakfast, one=True)
+		to_serve = ctx['session'].query(Breakfast, one=True)
 		return cv.create_json('success', model.dictize(to_serve))
 ```
 
