@@ -266,7 +266,7 @@ def _handle_controller_request(req, cookie):
 		#	response.
 		return create_json('failure', {
 			'errors': e.error_dict
-		}, status=400)
+		}, status=422)
 	except HTTPException as e:
 		#	A status-coded exception was raised.
 		error, error_desc, error_code = (e, e.desc, e.code)
