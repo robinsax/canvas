@@ -27,11 +27,14 @@ __all__ = [
 	'check',
 	'check_throw',
 	'check_json_response',
-	'check_html_response'
+	'check_html_response',
+	'always_valid'
 ]
 
 #	Create a testing logger.
 log = logger('tests')
+
+always_valid = lambda *args, **kwargs: True
 
 #	The test suite master list.
 _suites = []
@@ -113,11 +116,18 @@ def check_json_response(response, status, json_valid, name):
 	Perform a check on a JSON response produced by a testing
 	client.
 	'''
-	check((
-		response.status_code == status and
-		json_valid(json.loads(response.data))
-	), name)
+	try:
+		check((
+			response.status_code == status and
+			json_valid(json.loads(response.data))
+		), name)
+	except Fail as e:
+		formatted = json.dumps(json.loads(response.data), indent=4)
+		log.warning(f'JSON response didn\'t validate: {formatted}')
+		raise e
 
+#	TODO: Print repr. on fail.
+#	TODO: Beautiful soup.
 def check_html_response(response, status, html_valid, name):
 	'''
 	Perform a check on a JSON response produced by a testing
