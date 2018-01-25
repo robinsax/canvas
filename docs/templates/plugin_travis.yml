@@ -8,6 +8,7 @@ before_install:
   - cd ..
   - git clone https://github.com/robinsax/canvas.git
   - cd canvas
+  - pip install -r requirements.txt
   - sudo ./scripts/ubuntu_trusty_setup.sh
   - sudo python ./scripts/configure_plugin_test.py $plugin_name
   - cd ../canvas-pl-$plugin_name

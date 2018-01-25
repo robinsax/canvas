@@ -9,9 +9,12 @@ import sys
 import imp
 import uuid
 
-import canvas as cv
+from werkzeug.wrappers import BaseResponse
+from werkzeug.test import Client
 
-from canvas.core.plugins import get_path_occurrences
+from ..utils import logger
+from ..core.plugins import get_path_occurrences
+from .. import application
 
 #	TODO: Refactor.
 #	TODO: Service interface.
@@ -20,6 +23,7 @@ __all__ = [
 	'TestSuite',
 	'Fail',
 	'fail',
+	'create_client',
 	'case',
 	'subcase',
 	'check',
@@ -27,7 +31,7 @@ __all__ = [
 ]
 
 #	Create a testing logger.
-log = cv.logger('tests')
+log = logger('tests')
 
 #	The test suite master list.
 _suites = []
@@ -65,6 +69,12 @@ def fail(desc='Generic failure'):
 	'''
 	raise Fail(desc)
 
+def create_client():
+	'''
+	Create and return a werkzeug testing client.
+	'''
+	return Client(application, BaseResponse)
+
 def case(desc):
 	'''
 	Log the current case being tested.
@@ -98,6 +108,16 @@ def check_throw(trigger, ex_cls, message='Generic throw check'):
 	except ex_cls: return
 	raise Fail(message)
 
+def check_json_response(response, status, json_valid, name):
+	'''
+	Perform a check on a JSON response produced by a testing
+	client.
+	'''
+	check((
+		response.status_code == status and
+		json_valid(json.loads(response.data))
+	), name)
+
 #	Allow sub-modules to create test suites.
 from . import (
 	utils,
@@ -105,7 +125,7 @@ from . import (
 	assets,
 	model,
 	controllers,
-	combine
+	combined
 )
 
 def run_tests(suites):
