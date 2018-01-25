@@ -7,7 +7,7 @@ import os
 import sys
 import shutil
 
-from .. import config
+from .. import CANVAS_HOME, config
 from . import logger
 
 #   Declare exports.
@@ -17,9 +17,11 @@ __all__ = [
 
 log = logger()
 
+TEMPLATE_DIR = os.path.join(CANVAS_HOME, './docs/templates')
+
 def create_plugin_template(plugin_name):
 	#	Load target directory from config or fail.
-	target_dir = config['plugins']['directory']
+	target_dir = os.path.join(CANVAS_HOME, config['plugins']['directory'])
 
 	def detemplate(string, variables):
 		'''
@@ -44,12 +46,12 @@ def create_plugin_template(plugin_name):
 	os.makedirs(root)
 
 	#   De-template and copy settings.
-	detemplate_file_to('./docs/templates/plugin_settings.json', f'{root}/settings.json', {
+	detemplate_file_to(f'{TEMPLATE_DIR}/plugin_settings.json', f'{root}/settings.json', {
 		'plugin_name': plugin_name
 	})
 
 	#	De-template and copy Travis YML
-	detemplate_file_to('./docs/templates/plugin_travis.yml', f'{root}/.travis.yml', {
+	detemplate_file_to(f'{TEMPLATE_DIR}/plugin_travis.yml', f'{root}/.travis.yml', {
 		'plugin_name': plugin_name,
 		'test_suite_names': plugin_name
 	})
@@ -58,7 +60,7 @@ def create_plugin_template(plugin_name):
 	pkg_root = f'{root}/{plugin_name}'
 	os.mkdir(pkg_root)
 	#	...and __init__.py
-	detemplate_file_to('./docs/templates/plugin_init.py', f'{pkg_root}/__init__.py', {
+	detemplate_file_to(f'{TEMPLATE_DIR}/plugin_init.py', f'{pkg_root}/__init__.py', {
 		'plugin_name': plugin_name
 	})
 
@@ -66,15 +68,15 @@ def create_plugin_template(plugin_name):
 	pkg_root = f'{root}/tests'
 	os.mkdir(pkg_root)
 	#	...and __init__.py
-	detemplate_file_to('./docs/templates/plugin_test_init.py', f'{pkg_root}/__init__.py', {
+	detemplate_file_to(f'{TEMPLATE_DIR}/plugin_test_init.py', f'{pkg_root}/__init__.py', {
 		'plugin_name': plugin_name
 	})
 
 	#	Copy non-template.
-	shutil.copyfile('./docs/templates/plugin.gitignore', f'{root}/.gitignore')
-	shutil.copyfile('./docs/templates/plugin_dependencies.txt', f'{root}/dependencies.txt')
-	shutil.copyfile('./docs/templates/plugin_requirements.txt', f'{root}/requirements.txt')
-	shutil.copyfile('./docs/templates/plugin_coveragerc', f'{root}/.coveragerc')
+	shutil.copyfile(f'{TEMPLATE_DIR}/plugin.gitignore', f'{root}/.gitignore')
+	shutil.copyfile(f'{TEMPLATE_DIR}/plugin_dependencies.txt', f'{root}/dependencies.txt')
+	shutil.copyfile(f'{TEMPLATE_DIR}/plugin_requirements.txt', f'{root}/requirements.txt')
+	shutil.copyfile(f'{TEMPLATE_DIR}/plugin_coveragerc', f'{root}/.coveragerc')
 
 	#	Create assets folder.
 	os.mkdir(f'{root}/assets')
