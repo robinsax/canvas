@@ -5,11 +5,14 @@ python:
   - '3.6'
 
 before_install:
-  - cd ..
+  - cd ../..
   - git clone https://github.com/robinsax/canvas.git
   - cd canvas
   - sudo ./scripts/ubuntu_trusty_setup.sh
   - sudo python3.6 ./scripts/configure_plugin_test.py $plugin_name
+  - PYTHONPATH="/home/travis/build/canvas/"
+  - export PYTHONPATH
+  - cd ../build/canvas-pl-$plugin_name
 
 script:
   - coverage-3.6 run canvas --run_tests $plugin_name

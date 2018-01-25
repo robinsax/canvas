@@ -6,9 +6,9 @@ canvas initialization and namespace generation.
 __version__ = '0.0.1'
 
 import os
+import sys
 import pprint
-import logging
-import werkzeug as wz
+import inspect
 
 #	TODO: Core versus utils packaging.
 
@@ -71,12 +71,8 @@ __all__ = [
 	'UnsupportedEnformentMethod'
 ]
 
-#	An alias for the CANVAS_HOME environment variable
-#	that controls the base path used by asset and module 
-#	loaders. Usually nessesary when running as a service
-# 	in Windows environments. Assumed to be the current 
-#	working directory when not present.
-CANVAS_HOME = os.environ.get('CANVAS_HOME', '')
+#	Where am I?
+CANVAS_HOME = os.path.abspath(f'../{os.path.dirname(inspect.getfile(sys.modules[__name__]))}')
 
 #	Populate namespace with exceptions and utilities.
 from .exceptions import *
