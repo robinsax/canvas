@@ -8,6 +8,7 @@ Provides an interface for plugin tests.
 import sys
 import imp
 import uuid
+import json
 
 from werkzeug.wrappers import BaseResponse
 from werkzeug.test import Client

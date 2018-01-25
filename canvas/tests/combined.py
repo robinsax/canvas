@@ -3,8 +3,6 @@
 Combined tests for good request handler coverage.
 '''
 
-import json
-
 from . import *
 
 MISSING_PATH = '/api/nowhere'
