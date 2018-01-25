@@ -133,19 +133,22 @@ def build_docs(package):
 				functions.append(attr)
 
 		#	Document.
-		markdown += f'\n## Classes\n'
-		for cls in classes:
-			c_doc = class_doc(cls)
-			if c_doc is None:
-				continue
-			markdown += c_doc
-		markdown += f'\n## Functions\n'
-		for func in functions:
-			f_doc = function_doc(func)
-			if f_doc is None:
-				continue
-			markdown += f_doc
+		if len(classes) > 0:
+			markdown += f'\n## Classes\n'
+			for cls in classes:
+				c_doc = class_doc(cls)
+				if c_doc is None:
+					continue
+				markdown += c_doc
+		
+		if len(functions) > 0:
+			markdown += f'\n## Functions\n'
+			for func in functions:
+				f_doc = function_doc(func)
+				if f_doc is None:
+					continue
+				markdown += f_doc
 
 		#	Save.
-		with open(f'./docs/code/{package.__name__}.md', 'w') as f:
+		with open(f'{os.path.dirname(targets[0].__file__)}/../docs/code/{package.__name__}.md', 'w') as f:
 			f.write(markdown)
