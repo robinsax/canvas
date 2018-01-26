@@ -32,7 +32,7 @@ Delete the row mapped to a loaded model.
 Execute SQL with debug logging, throwing a `ValidationError` 
 when an integrity check fails.
 
-#### query(self, model_cls, conditions=True, one=False, order_by=None, ascending=True)
+#### query(self, model_cls, conditions=True, one=False, order_by=None, descending=False)
 + *model_cls*:  The model class (must have been decorated with `model.schema()`). 
 + *conditions*:  A primitive type or comparison on class-level column attributes. 
 + *one*:  Whether to return the first result only, or `None` if there are not results.
@@ -239,14 +239,12 @@ form input type, and default value.
 Column types are transparent to plugins in the majority of
 use cases, but can be assumed stable.
 #### Methods
-#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x000002530B8B8340>)
+#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x000001B226FC8340>)
 + *sql_type*:  The name of this type in PostgreSQL. 
 + *input_type*:  The type of input to use for this column type if HTML forms. 
 + *default*:  The default value with which to populate attributes in this column.
 
 Define a new column type.
-
-__TODO__: Extend `input_type` capabilities.
 
 
 ### ForeignKeyColumnType(ColumnType)
@@ -259,8 +257,6 @@ table and column specified in `target_name`.
 
 ### EnumColumnType(ColumnType)
 An enumerable type column type.
-
-__TODO__: Form inputs for this type.
 #### Methods
 #### \_\_init__(self, enum_name)
 + *enum_name*:  The name of an enumerable type decorated with `@model.enum`.
@@ -368,7 +364,7 @@ Invoke `serialize()` on `SQLExpression`s and serialize leaves
 
 
 ## Functions
-### schema(table_name, schema, accessors=[])
+### schema(table_name, schema, accessors=None)
 + *table_name*:  The name of the SQL table for this model class. 
 + *schema*:  A column name to column definition mapping. 
 + *accessors*:  A list of column names which are checked for equality by the `get(reference, session)` classmethod.

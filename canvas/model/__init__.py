@@ -97,7 +97,7 @@ class _ColumnIterator:
 
 #	The table name to model class mapping.
 _all_orm = {}
-def schema(table_name, schema, accessors=[]):
+def schema(table_name, schema, accessors=None):
 	'''
 	The model class mapping and schema declaration 
 	decorator.
@@ -153,7 +153,11 @@ def schema(table_name, schema, accessors=[]):
 		#	Define a dirty-checking flag for simple pre-insert
 		#	necessity checks.
 		cls.__dirty__ = False
-		cls.__accessors__ = [schema[name] for name in accessors]
+
+		access = accessors
+		if access is None:
+			access = [primary_key.name]
+		cls.__accessors__ = [schema[name] for name in access]
 
 		#	Create a `get()` class method for easy single-item 
 		#	retrieval.
@@ -246,6 +250,7 @@ def create_session():
 	'''
 	return Session()
 
+#	TODO: FK column data storage refactor.
 def create_everything():
 	'''
 	Resolve foreign keys and enum references then issue table 
@@ -259,22 +264,24 @@ def create_everything():
 				continue
 			
 			#	Parse reference.
+			reference = col_obj.type.target_name
 			try:
-				dest_table_name, dest_col_name = col_obj.reference.split('.')
+				dest_table_name, dest_col_name = reference.split('.')
 			except:
-				raise ColumnDefinitionError(f'Malformed foreign key declaration: {col_obj.reference}')
+				raise ColumnDefinitionError(f'Malformed foreign key declaration: {reference}')
 
 			#	Assert reference validity.
 			if dest_table_name not in _all_orm:
 				#	The referenced table does not exist.
-				raise ColumnDefinitionError(f'Invalid foreign key {col_obj.reference}: No such table')
-			dest_schema = _all_orm[dest_table_name].__schema__
-			if dest_col_name not in dest_schema:
+				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such table')
+			dest = _all_orm[dest_table_name]
+			if dest_col_name not in dest.__schema__:
 				#	The referenced column does not exist.
-				raise ColumnDefinitionError(f'Invalid foreign key {col_obj.reference}: No such column')
+				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such column')
 
 			#	Store the reference in the column.
-			col_obj.reference = dest_schema[dest_col_name]
+			col_obj.type.target_model = dest
+			col_obj.reference = dest.__schema__[dest_col_name]
 
 	#	Create a database session for table and type creation.
 	session = create_session()

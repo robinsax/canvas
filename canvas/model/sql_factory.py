@@ -212,6 +212,7 @@ def table_creation(model_cls):
 		'''
 		Serialize a column generation.
 		'''
+		#	TODO: Foreign key logic improvement.
 		#	Create definition base; name and type.
 		col_sql = f'{col.name} {col.type.sql_type}'
 
@@ -222,7 +223,7 @@ def table_creation(model_cls):
 		#	Add foreign key target if applicable.
 		if isinstance(col.type, ForeignKeyColumnType):
 			target = col.type.target_model
-			col_sql = f'{col_sql} REFERENCES {target.__table__} ({target.name})'
+			col_sql = f'{col.name} {col.reference.type.sql_type} REFERENCES {target.__table__}({col.reference.name})'
 		
 		#	Add all constraints that support SQL serialization.
 		for constr in col.constraints:

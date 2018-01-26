@@ -33,11 +33,10 @@ class ColumnType:
 	use cases, but can be assumed stable.
 	'''
 
+	#	TODO: Extend `input_type` capabilities.
 	def __init__(self, sql_type, input_type='text', default=_sentinel):
 		'''
 		Define a new column type.
-		
-		TODO: Extend `input_type` capabilities.
 
 		:sql_type The name of this type in PostgreSQL.
 		:input_type The type of input to use for this column type
@@ -65,11 +64,10 @@ class ForeignKeyColumnType(ColumnType):
 		self.target_name = target_name
 		self.target_model = None
 
+#	TODO: Form inputs for this type.
 class EnumColumnType(ColumnType):
 	'''
 	An enumerable type column type.
-
-	TODO: Form inputs for this type.
 	'''
 
 	def __init__(self, enum_name):
