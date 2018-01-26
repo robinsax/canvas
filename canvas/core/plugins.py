@@ -27,7 +27,7 @@ def load_all_plugins():
 	Initialize all plugins activated in configuration
 	and populate the `canvas.plugins` namespace.
 	'''
-	loaded = []
+	from .. import plugins as plugins_namespace
 	for plugin in config['plugins']['active']:
 		path = plugin_base_path(plugin)
 
@@ -37,12 +37,9 @@ def load_all_plugins():
 		#	Import.
 		log.debug(f'Importing plugin {plugin}')
 		__import__(plugin)
-		loaded.append(path)
+		#	Populate into canvas.plugins namespace
+		plugins_namespace.__path__.append(path)
 	
-	#	Populate the canvas.plugins namespace
-	from .. import plugins as plugins_namespace
-	plugins_namespace.__path__.extend(loaded)
-
 def get_path_occurrences(target, include_base=True, filter=os.path.exists):
 	'''
 	Return a list of absolute paths to all files or directories
