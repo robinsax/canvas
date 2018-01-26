@@ -242,7 +242,7 @@ def table_creation(model_cls):
 	#	Return formatted statement.
 	return f'CREATE TABLE IF NOT EXISTS {model_cls.__table__} ({col_defns});', ()
 
-def row_retrieval(model_cls, query):
+def row_retrieval(model_cls, query, ordering=None):
 	'''
 	Serialize a row retrieval based on some query expression.
 
@@ -255,14 +255,26 @@ def row_retrieval(model_cls, query):
 	values = []
 	#	Handle the case where no query conditions are supplied.
 	if query is True:
-		condition = ''
+		condition = None
 	elif isinstance(query, SQLExpression):
 		condition = query.as_condition(values)
 	else:
 		raise InvalidQuery('Bad type')
 
-	#	Return formatted statement.
-	return f'SELECT {_column_ordering(model_cls)} FROM {model_cls.__table__} {condition};', values
+	sql = f'SELECT {_column_ordering(model_cls)} FROM {model_cls.__table__}'
+
+	#	Maybe add condition.
+	if condition is not None:
+		sql = f'{sql} {condition}'
+	
+	#	Maybe order.
+	if ordering is not None:
+		column, ascending = ordering
+		order = 'ASC' if ascending else 'DESC'
+		sql = f'{sql} ORDER BY {column.serialize()} {order}'
+
+	#	Return.
+	return f'{sql};', values
 
 def row_update(model):
 	'''

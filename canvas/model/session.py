@@ -206,7 +206,8 @@ class Session:
 		del self.active_mappings[self._row_reference(model)]
 		return self
 
-	def query(self, model_cls, conditions=True, one=False):
+	#	TODO: Redoc.
+	def query(self, model_cls, conditions=True, one=False, order_by=None, ascending=True):
 		'''
 		Retrieve rows from a table based on some query, then
 		load them as models and return the resulting model
@@ -219,8 +220,11 @@ class Session:
 		:one Whether to return the first result only, or `None`
 			if there are not results.
 		'''
+		#	Check if order specified.
+		order = (order_by, ascending) if order_by is not None else None
+
 		#	Execute the selection.
-		self.execute(*row_retrieval(model_cls, conditions))
+		self.execute(*row_retrieval(model_cls, conditions, order))
 
 		if one:
 			#	Return the first entry or `None`.
