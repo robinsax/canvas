@@ -3,6 +3,7 @@
 Utilities present in templates.
 '''
 
+import os
 import json as jsonlib
 import jinja2
 
