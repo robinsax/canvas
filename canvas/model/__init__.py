@@ -259,7 +259,8 @@ def create_everything():
 	'''
 	#	Order tables.
 	#	TODO: This is a hotfix: resolve FK-enforced order manually.
-	order = sorted([cls for t, cls in _all_orm.items()], key=lambda cls: cls.__priority__)
+	order = sorted([cls for t, cls in _all_orm.items()], key=lambda cls: -cls.__priority__)
+	print(order)
 
 	#	Resolve foreign keys.
 	for model_cls in order:
@@ -296,7 +297,7 @@ def create_everything():
 		session.execute(*enum_creation(enum))
 	
 	#	Issue table creation.
-	for tn, model in _all_orm.items():
+	for model in order:
 		session.execute(*table_creation(model))
 	
 	#	Commit the transaction.
