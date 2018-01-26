@@ -1,12 +1,12 @@
 #	coding utf-8
 '''
-Command line launch handler interface and 
-default implementations.
+Command line launch handler interface and default implementations.
 '''
 
 import sys
 
 from .utils.registration import register
+from .utils import logger
 
 #	Declare exports.
 __all__ = [
@@ -17,36 +17,34 @@ __all__ = [
 	'CreatePluginMode'
 ]
 
+log = logger()
+
 class LaunchMode:
 	'''
-	`LaunchMode`s handle command-line
-	invocation of canvas for a specific mode.
+	`LaunchMode`s handle command-line invocation of canvas for a specific mode.
 	The mode is prefixed with `--` in the command line.
 
-	Implementations' constructors must take no
-	parameters.
+	Implementations' constructors must take no parameters.
 	'''
 
 	def __init__(self, mode, arg_fmt=''):
 		'''
-		Create a new launch handler. Must be
-		registered as `launch_mode` for actuation.
-		:mode The mode string (e.g. `serve` to be triggered
-			by `--serve`).
-		:arg_fmt The usage format (i.e. argument specification),
-			as a string
+		Create a new launch handler. Must be registered as `launch_mode` for 
+		actuation.
+		
+		:mode The mode string (e.g. `serve` to be triggered by `--serve`).
+		:arg_fmt The usage format (i.e. argument specification), as a string.
 		'''
 		self.mode, self.arg_fmt = (mode, arg_fmt)
 	
 	def launch(self, args):
 		'''
-		Handle a command line invocation. Return `True` if the
-		command line input was valid and `False` otherwise.
+		Handle a command line invocation. Return `True` if the command line 
+		input was valid and `False` otherwise.
 
-		If `False` is returned, the argument specification is
-		presented.
+		If `False` is returned, the argument specification is presented.
 
-		:args The command line arguments
+		:args The command line arguments.
 		'''
 		raise NotImplemented()
 
@@ -109,6 +107,7 @@ class BuildDocsMode(LaunchMode):
 			package = canvas
 
 		build_docs(package)
+		log.info('Docs built')
 		return True
 
 @register.launch_mode
@@ -129,4 +128,30 @@ class CreatePluginMode(LaunchMode):
 			return False
 
 		create_plugin_template(plugin_name)
+		log.info('Plugin created')
+		return True
+
+@register.launch_mode
+class ActivatePluginMode(LaunchMode):
+	'''
+	The plugin activation mode. Mostly a development helper. Invoked with 
+	`--activate_plugin`.
+	'''
+
+	def __init__(self):
+		super().__init__('activate_plugin', '<plugin_name>')
+
+	def launch(self, args):
+		from . import config
+		from .configuration import write
+
+		try:
+			plugin_name = args[0]
+		except:
+			return False
+		if plugin_name not in config['plugins']['active']:
+			config['plugins']['active'].append(plugin_name)
+
+		write(config)
+		log.info(f'Activated plugin {plugin_name}')
 		return True
