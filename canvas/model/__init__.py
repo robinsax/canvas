@@ -97,7 +97,7 @@ class _ColumnIterator:
 
 #	The table name to model class mapping.
 _all_orm = {}
-def schema(table_name, schema, accessors=None):
+def schema(table_name, schema, accessors=None, priority=0):
 	'''
 	The model class mapping and schema declaration 
 	decorator.
@@ -145,6 +145,7 @@ def schema(table_name, schema, accessors=None):
 		_all_orm[table_name] = cls
 
 		#	Populate class attributes.
+		cls.__priority__ = priority
 		cls.__table__ = table_name
 		cls.__schema__ = schema
 		#	Define a fixed order on columns for use in SQL serialization.
@@ -256,8 +257,12 @@ def create_everything():
 	Resolve foreign keys and enum references then issue table 
 	and enumarable type creation SQL.
 	'''
+	#	Order tables.
+	#	TODO: This is a hotfix: resolve FK-enforced order manually.
+	order = sorted([cls for t, cls in _all_orm.items()], key=lambda cls: cls.__priority__)
+
 	#	Resolve foreign keys.
-	for table, model_cls in _all_orm.items():
+	for model_cls in order:
 		for col_name, col_obj in model_cls.schema_iter():
 			if not isinstance(col_obj.type, ForeignKeyColumnType):
 				#	No foreign key to resolve.
