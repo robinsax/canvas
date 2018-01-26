@@ -10,11 +10,19 @@ import datetime as dt
 
 from ..exceptions import ColumnDefinitionError
 from ..utils import call_registered
-from . import _all_enum
 
-#	An object used to identify un-initialized
-#	columns when issuing row creation.
+#	An object used to identify un-initialized columns when issuing row 
+#	creation.
 _sentinel = object()
+
+from .sql_factory import (
+	SQLExpression,
+	SQLComparison,
+	SQLAggregatorCall
+)
+
+#	TODO: Refactor this import.
+from . import _all_enum
 
 class ColumnType:
 	'''
@@ -98,75 +106,13 @@ _column_types = {
 #	Allow plugins to extend the basic column type definitions.
 call_registered('column_types_defined', _column_types)
 
-class _ColumnComparator:
+class Column(SQLExpression):
 	'''
-	A value comparison used to allow class-attribute-based
-	SQL queries.
+	The class-level representation of a table column, placed as a class 
+	attribute by the `model.schema()` decorator.
 
-	The nature of this object, aside from the existance of a
-	`group()` method, is not exposed outside of this package.
-	'''
-
-	def __init__(self, left, right, operator):
-		'''
-		Create a column comparator representing a comparsion
-		of `left` to `right` using the SQL operator `operator`.
-		'''
-		#	Left and right sides of the expression.
-		self.left, self.right = (left, right)
-		#	The operator as a string.
-		self.operator = operator
-		
-		#	Placeholder properties modifiable by later
-		#	unary operations.
-		self.inverted = False
-		self.grouped = False
-
-	def group(self):
-		'''
-		*Group* this comparison expression to give it 
-		precedence.
-		'''
-		self.grouped = True
-		return self
-	
-	def __invert__(self):
-		'''
-		Group and logically invert this comparison 
-		expression.
-		'''
-		self.grouped = True
-		self.inverted = True
-		return self
-
-	def __and__(self, other):
-		'''
-		Return a conjunction of this expression and another.
-		'''
-		return _ColumnComparator(self, other, 'AND')
-
-	def __or__(self, other):
-		'''
-		Return a disjunction of this expression and another.
-		'''
-		return _ColumnComparator(self, other, 'OR')
-
-	def __repr__(self):
-		'''
-		Return a debugging representation. 
-		'''
-		return (
-			f'<{self.__class__.__name__}: left={self.left},' 
-			+ f'opr={self.opr}, right={self.right}>'
-		)
-
-class Column:
-	'''
-	The class-level representation of a table column, placed as
-	a class attribute by the `model.schema()` decorator.
-
-	Stores type information and generates SQL-serializable 
-	expression on comparison.
+	Stores type information and generates an SQL-serializable expression 
+	on comparison.
 	'''
 	
 	def __init__(self, type_str, constraints=[], default=None, 
@@ -175,11 +121,10 @@ class Column:
 		Create a new column.
 
 		:type_str A string representation of the column type.
-		:default The default value to populate this column with. 
-			Default values are populated after row insertion since 
-			they may be resolved within Postgres.
-		:primary_key Whether or not this column is the table's
-			primary key.
+		:default The default value to populate this column with. Default 
+			values are populated after row insertion since they may be 
+			resolved within Postgres.
+		:primary_key Whether or not this column is the table's primary key.
 		'''
 		#	Resolve the type string to a type object.
 		self.type = None
@@ -220,11 +165,17 @@ class Column:
 		#	and column name.
 		self.model = None
 		self.name = None
+
+	def serialize(self, values):
+		'''
+		Return an SQL-serialized reference to this column.
+		'''
+		return f'{self.model.__table__}.{self.name}'
 		
 	def get_default(self):
 		'''
-		Return the default value for this column, resolving
-		it if it's callable.
+		Return the default value for this column, resolving it if it's 
+		callable.
 		'''
 		if callable(self.default):
 			#	This is a callable that generates the default
@@ -248,28 +199,41 @@ class Column:
 		'''
 		setattr(model_obj, self.name, value)
 
-	#	Comparisons yield `_ColumnComparator`s
+	#	Comparisons yield `SQLComparison`s
 	def __eq__(self, other):
-		return _ColumnComparator(self, other, '=')
+		return SQLComparison(self, other, '=')
 
 	def __ne__(self, other):
-		return _ColumnComparator(self, other, '<>')
+		return SQLComparison(self, other, '<>')
 
 	def __lt__(self, other):
-		return _ColumnComparator(self, other, '<')
+		return SQLComparison(self, other, '<')
 
 	def __le__(self, other):
-		return _ColumnComparator(self, other, '<=')
+		return SQLComparison(self, other, '<=')
 
 	def __gt__(self, other):
-		return _ColumnComparator(self, other, '>')
+		return SQLComparison(self, other, '>')
 
 	def __ge__(self, other):
-		return _ColumnComparator(self, other, '>=')
+		return SQLComparison(self, other, '>=')
 
+	#	Some builtin function calls yeild `SQLAggregatorCall`s.
+	def __len__(self):
+		return SQLAggregatorCall('COUNT', self)
+
+	#	This one is sneaky...
+	def __iter__(self):
+		return iter([
+			SQLAggregatorCall('MIN', self, weight=0),
+			SQLAggregatorCall('MAX', self)
+		])
+	
 	def __repr__(self):
 		'''
 		Return a debugging representation. 
+
+		::deprecated
 		'''
 		return ( 
 			f'<{self.__class__.__name__}: type={repr(self.type)},'

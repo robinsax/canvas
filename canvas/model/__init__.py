@@ -3,7 +3,8 @@
 ORM class, decorator, and utility definitions. 
 '''
 
-from . import psycopg2_extensions
+#	Initialize type adaption first.
+from .type_adaption import *
 
 from ..exceptions import ColumnDefinitionError
 from ..utils import register
@@ -28,24 +29,25 @@ __all__ = [
 	#	Decorators.
 	'schema',
 	'enum',
+	'adapter',
 	#	Interaction points and utilities.
 	'create_session',
 	'create_everything',
 	'dictize',
 	'dictize_all',
-	#	Session.
-	'session',
-	#	Columns.
+	#	Classes.
+	'Session',
 	'Column',
-	#	Constraints.
 	'Constraint',
 	'RegexConstraint',
 	'UniquenessConstraint',
-	#	Column types.
-	#	Column types.
 	'ColumnType',
 	'ForeignKeyColumnType',
-	'EnumColumnType'
+	'EnumColumnType',
+	'TypeAdapter',
+	'SQLExpression',
+	'SQLComparison',
+	'SQLAggregatorCall'
 ]
 
 #	TODO: Encode column defaults into SQL when possible.

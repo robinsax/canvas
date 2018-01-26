@@ -3,6 +3,8 @@
 Exceptions, because shit happens.
 '''
 
+#	TODO: Seperate model and controller exceptions?
+
 #	Declare exports.
 __all__ = [
 	#	Special exceptions.
@@ -26,7 +28,9 @@ __all__ = [
 	'HeaderKeyError',
 	'APIRouteDefinitionError',
 	'TemplateOverlayError',
-	'UnsupportedEnformentMethod'
+	'UnsupportedEnformentMethod',
+	'InvalidQuery',
+	'UnadaptedType'
 ]
 
 class _Redirect(Exception):
@@ -162,5 +166,18 @@ class UnsupportedEnformentMethod(Exception):
 	'''
 	An exception raised by constraints when an unsupported enforcement
 	method is invoked.
+	'''
+	pass
+
+class InvalidQuery(Exception):
+	'''
+	An exception raised when a `session.query()` is given invalid parameters.
+	'''
+	pass
+
+class UnadaptedType(Exception):
+	'''
+	An exception raised when an unadaptable leaf is reached in an 
+	`SQLExpression`.
 	'''
 	pass
