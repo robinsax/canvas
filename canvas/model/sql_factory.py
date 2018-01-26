@@ -272,7 +272,7 @@ def row_retrieval(model_cls, query, ordering=None):
 	if ordering is not None:
 		column, ascending = ordering
 		order = 'ASC' if ascending else 'DESC'
-		sql = f'{sql} ORDER BY {column.serialize()} {order}'
+		sql = f'{sql} ORDER BY {column.serialize([])} {order}'
 
 	#	Return.
 	return f'{sql};', values
