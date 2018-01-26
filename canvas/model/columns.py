@@ -199,6 +199,12 @@ class Column(SQLExpression):
 		'''
 		setattr(model_obj, self.name, value)
 
+	def is_max(self):
+		return SQLAggregatorCall('MAX', self)
+
+	def is_min(self):
+		return SQLAggregatorCall('MIN', self)
+
 	#	Comparisons yield `SQLComparison`s
 	def __eq__(self, other):
 		return SQLComparison(self, other, '=')
