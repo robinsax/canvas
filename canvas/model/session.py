@@ -207,7 +207,7 @@ class Session:
 		return self
 
 	#	TODO: Redoc.
-	def query(self, model_cls, conditions=True, one=False, order_by=None, ascending=True):
+	def query(self, model_cls, conditions=True, one=False, order_by=None, descending=False):
 		'''
 		Retrieve rows from a table based on some query, then
 		load them as models and return the resulting model
@@ -221,8 +221,8 @@ class Session:
 			if there are not results.
 		'''
 		#	Check if order specified.
-		order = (order_by, ascending) if order_by is not None else None
-
+		order = (order_by, not descending) if order_by is not None else None
+		
 		#	Execute the selection.
 		self.execute(*row_retrieval(model_cls, conditions, order))
 
