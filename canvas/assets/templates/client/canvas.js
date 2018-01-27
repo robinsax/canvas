@@ -325,9 +325,11 @@ function CanvasCore(){
 		}
 		this.page.append(tooltip);
 		var right = pos.x > self.page.size().width/2;
+		//	TODO: This is a hotfix.
+		var scroll = tk('.page-content-wrap').ith(0, true).scrollTop;
 		//	TODO: make right do something
 		tooltip.css({
-			'top': pos.y - 5 + 'px',
+			'top': pos.y - scroll - 5 + 'px',
 			'left': pos.x - 5 + 'px'
 		})
 		.classify('hidden', false)
