@@ -5,29 +5,73 @@ Unit tests on model ORM.
 ::incomplete
 '''
 
-from ..exceptions import ValidationErrors
+from ..exceptions import (
+	ValidationErrors,
+	InvalidSchema
+)
 from .. import model
 from . import *
 
-orm_test = TestSuite('canvas.model')
+model_test = TestSuite('canvas.model')
 
 #	A table name to use for the contained unit tests.
-TEST_TABLE = '__canvas_orm_unit_test__'
+TEST_TABLE = '__canvas_unit__'
+TEST_TABLE_2 = '__canvas_unit_2__'
+TEST_TABLE_3 = '__canvas_unit_3__'
 
-def drop_table(session):
+def reset(session):
 	'''
 	Drop the test table if it exists.
 	'''
-	try:
-		session.execute(f'DROP TABLE {TEST_TABLE};')
-		session.commit()
-	except:
-		session.rollback()
+	drops = [
+		f'DROP TABLE {TEST_TABLE_3};',
+		f'DROP TABLE {TEST_TABLE_2};',
+		f'DROP TABLE {TEST_TABLE};'
+	]
+	for drop in drops:
+		try:
+			session.execute(drop)
+			session.commit()
+		except:
+			session.rollback()
 
-@orm_test('Basic functionality')
+	model._wipe()
+
+@model_test('Foreign keys')
+def test_table_creation_order():
+	session = model.create_session()
+	reset(session)
+
+	subcase('Declaration')
+
+	@model.schema(TEST_TABLE_3, {
+		'id': model.Column('serial', primary_key=True),
+		'pointer': model.Column(f'fk:{TEST_TABLE_2}.id'),
+		'pointer2': model.Column(f'fk:{TEST_TABLE}.id')
+	})
+	class X: pass
+
+	@model.schema(TEST_TABLE_2, {
+		'id': model.Column('serial', primary_key=True),
+		'pointer': model.Column(f'fk:{TEST_TABLE}.id')
+	})
+	class Y: pass
+
+	@model.schema(TEST_TABLE, {
+		'id': model.Column('serial', primary_key=True)
+	})
+	class Z: pass
+
+	subcase('Table ordering and creation')
+	try:
+		model.create_everything()
+	except InvalidSchema:
+		fail('Order not resolved')
+
+@model_test('Basic functionality')
 def basics():
 	session = model.create_session()
-	drop_table(session)
+	reset(session)
 
 	#	Create callback trackers.
 	load_called, create_called = [False], [False]
@@ -106,10 +150,10 @@ def basics():
 		y.a == x.a
 	), 'Primary key updates flushed to disk')
 
-@orm_test('Constraints, accessors, and complex columns')
+@model_test('Constraints, accessors, and complex columns')
 def test_orm():
 	session = model.create_session()
-	drop_table(session)
+	reset(session)
 	
 	#	Create test table.
 	@model.schema(TEST_TABLE, {
@@ -192,6 +236,6 @@ def test_orm():
 	session.save(y)
 	session.commit()
 
-	drop_table(session)
+	reset(session)
 
 	#	TODO: ETC...

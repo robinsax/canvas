@@ -29,6 +29,7 @@ __all__ = [
 	'APIRouteDefinitionError',
 	'TemplateOverlayError',
 	'UnsupportedEnformentMethod',
+	'InvalidSchema',
 	'InvalidQuery',
 	'UnadaptedType'
 ]
@@ -166,6 +167,12 @@ class UnsupportedEnformentMethod(Exception):
 	'''
 	An exception raised by constraints when an unsupported enforcement
 	method is invoked.
+	'''
+	pass
+
+class InvalidSchema(Exception):
+	'''
+	An exception raised when a schema definition is invalid.
 	'''
 	pass
 

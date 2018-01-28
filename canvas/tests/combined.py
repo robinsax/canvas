@@ -66,9 +66,9 @@ def test_basic():
 	)
 
 	check((
-		client.get('/assets/style.css').status_code == 200
-	), 'style.css serves')
+		client.get('/assets/base.css').status_code == 200
+	), 'base.css serves')
 
 	check((
-		client.get('/assets/canvas.js').status_code == 200
-	), 'canvas.js serves')
+		client.get('/assets/core.js').status_code == 200
+	), 'core.js serves')

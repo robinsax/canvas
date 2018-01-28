@@ -6,11 +6,14 @@ ORM class, decorator, and utility definitions.
 #	Initialize type adaption first.
 from .type_adaption import *
 
-from ..exceptions import ColumnDefinitionError
+from ..exceptions import (
+	ColumnDefinitionError,
+	InvalidSchema
+)
 from ..utils import register
 
-#	The name to class mapping of enumerable types
-#	to create and reference in Postgres.
+#	The name to class mapping of enumerable types to create and reference in 
+#	Postgres.
 _all_enum = {}
 
 #	Initialize package.
@@ -97,37 +100,42 @@ class _ColumnIterator:
 
 #	The table name to model class mapping.
 _all_orm = {}
-def schema(table_name, schema, accessors=None, priority=0):
+
+def _wipe():
 	'''
-	The model class mapping and schema declaration 
-	decorator.
+	Wipe the ORM. Should only be called by unit tests.
+	'''
+	global _all_orm
+	_all_orm = {}
 
-	Decorated classes will be added to this package's
-	namespace after pre-initialization.
+def schema(table_name, schema, accessors=None):
+	'''
+	The model class mapping and schema declaration decorator.
 
-	:table_name The name of the SQL table for this model 
-		class.
+	Decorated classes will be added to this package's namespace after 
+	pre-initialization.
+
+	:table_name The name of the SQL table for this model class.
 	:schema A column name to column definition mapping.
-	:accessors A list of column names which are checked for
-		equality by the `get(reference, session)` classmethod.
+	:accessors A list of column names which are checked for equality by the 
+		`get(reference, session)` classmethod.
 	'''
 	def wrap(cls):
-		#	Populate column attributes and add the
-		#	columns to the class.
+		#	Populate column attributes and add the columns to the class.
 		for name, col in schema.items():
 			col.name = name
 			col.model = cls
 			setattr(cls, name, col)
 
-		#	Define placeholder callbacks if real implementations
-		#	aren't present so their existance can be assumed.
+		#	Define placeholder callbacks if real implementations aren't present 
+		#	so their existance can be assumed.
 		if getattr(cls, '__on_load__', None) is None:
 			cls.__on_load__ = lambda self: None
 		if getattr(cls, '__on_create__', None) is None:
 			cls.__on_create__ = lambda self: None
 		
-		#	Assert the existance of a single primary key column
-		#	for this model class and find that column
+		#	Assert the existance of a single primary key column for this model 
+		#	class and find that column
 		primary_key = None
 		for col_name, col_obj in schema.items():
 			if col_obj.primary_key:
@@ -145,14 +153,12 @@ def schema(table_name, schema, accessors=None, priority=0):
 		_all_orm[table_name] = cls
 
 		#	Populate class attributes.
-		cls.__priority__ = priority
 		cls.__table__ = table_name
 		cls.__schema__ = schema
 		#	Define a fixed order on columns for use in SQL serialization.
 		cls.__columns__ = sorted(schema.keys(), key=lambda n: schema[n].primary_key, reverse=True)
 		cls.__primary_key__ = primary_key
-		#	Define a dirty-checking flag for simple pre-insert
-		#	necessity checks.
+		#	Define a dirty-checking flag for simple pre-insert necessity checks.
 		cls.__dirty__ = False
 
 		access = accessors
@@ -160,8 +166,7 @@ def schema(table_name, schema, accessors=None, priority=0):
 			access = [primary_key.name]
 		cls.__accessors__ = [schema[name] for name in access]
 
-		#	Create a `get()` class method for easy single-item 
-		#	retrieval.
+		#	Create a `get()` class method for easy single-item retrieval.
 		def get(cls, val, session):
 			query = (cls.__accessors__[0] == val).group()
 			for accessor in cls.__accessors__[1:]:
@@ -169,9 +174,9 @@ def schema(table_name, schema, accessors=None, priority=0):
 			return session.query(cls, query, one=True)
 		cls.get = classmethod(get)
 
-		#	Wrap initialization so that after instantiation (i.e. 
-		#	when a new instance/row is being created) columns are
-		#	guarenteed to be populated.
+		#	Wrap initialization so that after instantiation (i.e. when a new 
+		#	instance/row is being created) columns are guarenteed to be 
+		#	populated.
 		inner_init = cls.__init__
 		def init(self, *args, **kwargs):
 			for name, column in cls.__schema__.items():
@@ -205,11 +210,10 @@ def enum(name):
 	'''
 	The enumerable type model declaration decorator.
 
-	Decorated enums will be added to this package's
-	namespace after pre-initialization.
+	Decorated enums will be added to this package's namespace after 
+	pre-initialization.
 
-	:name A unique name for the enumerable type declaration
-		in Postgres.
+	:name A unique name for the enumerable type declaration in Postgres.
 	'''
 	def wrap(cls):
 		cls.__type_name__ = name
@@ -221,12 +225,11 @@ def enum(name):
 
 def dictize(model_obj, omit=[]):
 	'''
-	Return a dictionary containing a column name, column 
-	value mapping for `model_obj`.
+	Return a dictionary containing a column name, column value mapping for 
+	`model_obj`.
 
 	:model_obj The model class instance to dictize.
-	:omit A list of columns not to include in the returned
-		dictionary.
+	:omit A list of columns not to include in the returned dictionary.
 	'''
 	return {
 		name: getattr(model_obj, name, None) for name in model_obj.__class__.__columns__ if name not in omit
@@ -234,60 +237,27 @@ def dictize(model_obj, omit=[]):
 
 def dictize_all(model_list, omit=[]):
 	'''
-	Return a list containing dictizations of all the model
-	objects in `model_list`.
+	Return a list containing dictizations of all the model objects in 
+	`model_list`.
 
 	:model_list A list of model class instances to dictize.
-	:omit A list of columns not to include in the returned
-		dictionaries.
+	:omit A list of columns not to include in the returned dictionaries.
 	'''
 	return [dictize(model, omit) for model in model_list]
 	
 def create_session():
 	'''
-	Create a database session. `Session` generation should
-	always use this function to allow future modifications
-	to the `Session` constructor.
+	Create a database session. `Session` generation should always use this 
+	function to allow future modifications to the `Session` constructor.
 	'''
 	return Session()
 
 #	TODO: FK column data storage refactor.
 def create_everything():
 	'''
-	Resolve foreign keys and enum references then issue table 
-	and enumarable type creation SQL.
+	Resolve foreign keys and enum references then issue table and enumarable 
+	type creation SQL.
 	'''
-	#	Order tables.
-	#	TODO: This is a hotfix: resolve FK-enforced order manually.
-	order = sorted([cls for t, cls in _all_orm.items()], key=lambda cls: -cls.__priority__)
-	print(order)
-
-	#	Resolve foreign keys.
-	for model_cls in order:
-		for col_name, col_obj in model_cls.schema_iter():
-			if not isinstance(col_obj.type, ForeignKeyColumnType):
-				#	No foreign key to resolve.
-				continue
-			
-			#	Parse reference.
-			reference = col_obj.type.target_name
-			try:
-				dest_table_name, dest_col_name = reference.split('.')
-			except:
-				raise ColumnDefinitionError(f'Malformed foreign key declaration: {reference}')
-
-			#	Assert reference validity.
-			if dest_table_name not in _all_orm:
-				#	The referenced table does not exist.
-				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such table')
-			dest = _all_orm[dest_table_name]
-			if dest_col_name not in dest.__schema__:
-				#	The referenced column does not exist.
-				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such column')
-
-			#	Store the reference in the column.
-			col_obj.type.target_model = dest
-			col_obj.reference = dest.__schema__[dest_col_name]
 
 	#	Create a database session for table and type creation.
 	session = create_session()
@@ -295,10 +265,61 @@ def create_everything():
 	#	Issue type creation.
 	for name, enum in _all_enum.items():
 		session.execute(*enum_creation(enum))
+
+	#	Create model class state trackers to ensure the foreign key enforced
+	#	ordering is both possible and followed.
+	_created, _started = [], []
+	def create_model_and_table(model_cls):
+		'''
+		Finalize a model class and create the corresponding table.
+		'''
+		if model_cls in _created:
+			#	Already completed foreign key recursion.
+			return
+		elif model_cls in _started:
+			#	A loop occurred.
+			raise InvalidSchema(f'Foreign key back-reference for {model_cls.__name__}')
+		
+		#	Add to started list so reference loops can be caught.
+		_started.append(model_cls)
+
+		#	Resolve foreign keys.
+		for col_name, col_obj in model_cls.schema_iter():
+			if not isinstance(col_obj.type, ForeignKeyColumnType):
+				#	No foreign key to resolve.
+				continue
+			
+			#	Parse reference and assert format.
+			reference = col_obj.type.target_name
+			try:
+				dest_table_name, dest_col_name = reference.split('.')
+			except:
+				raise ColumnDefinitionError(f'Malformed foreign key declaration: {reference}')
+
+			#	Assert table existance.
+			if dest_table_name not in _all_orm:
+				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such table')
+			dest = _all_orm[dest_table_name]
+
+			#	Assert column exists.
+			if dest_col_name not in dest.__schema__:
+				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such column')
+
+			#	Create the target table if it doesn't already exist.
+			create_model_and_table(dest)
+
+			#	Store the reference in the column.
+			col_obj.type.target_model = dest
+			col_obj.reference = dest.__schema__[dest_col_name]
+
+		#	Execute the table creation.
+		session.execute(*table_creation(model_cls))
+
+		#	Mark as finished to allow reference.
+		_created.append(model_cls)
 	
-	#	Issue table creation.
-	for model in order:
-		session.execute(*table_creation(model))
-	
+	for name, model_cls in _all_orm.items():
+		create_model_and_table(model_cls)
+
 	#	Commit the transaction.
 	session.commit()
