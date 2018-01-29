@@ -13,8 +13,13 @@
 	@breakpoint_{{ loop.index }}: {{ px }}px;
 {% endfor %}
 
+{# Create font references. #}
+{% for font_ref, font in config.styling.fonts.items() %}
+	@{{ font_ref }}_font: {{ font }};
+{% endfor %}
+
 {# Add font dependencies. #}
-{% for font_name, font_file in config.dependencies.font_dependencies.items() %}
+{% for font_name, font_file in config.client_dependencies.font_dependencies.items() %}
 	@font-face {
 		font-family: "{{ font_name }}";
 		src: url("{{ h.asset_url('fonts/%s'%font_file) }}");

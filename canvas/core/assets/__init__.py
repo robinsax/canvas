@@ -31,7 +31,7 @@ def render_header():
 	less files.
 	'''
 	global _header
-	_header = render_template('snippets/less_common.less')
+	_header = render_template('snippets/less_definitions.jinja')
 del render_header
 
 def compile_less(source):

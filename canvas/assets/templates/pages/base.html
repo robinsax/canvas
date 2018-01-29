@@ -42,18 +42,21 @@
 			
 			{# Render dependencies. #}
 			{% set page_deps = __page__.collect_dependencies() %}
-			{% macro render_dependencies(deps) %}
+			{% macro render_dependencies(deps, is_lib) %}
 				{% for dep in deps %}
+					{% if is_lib %}
+						{% set dep = 'lib/%s'%dep %}
+					{% endif %}
 					{% if dep.endswith('.css') %}
-						<link rel="stylesheet" type="text/css" href="{{ h.asset_url('lib/%s'%dep) }}">
+						<link rel="stylesheet" type="text/css" href="{{ h.asset_url(dep) }}">
 					{% elif dep.endswith('.js') %}
-						<script type="text/javascript" src="{{ h.asset_url('lib/%s'%dep) }}"></script>
+						<script type="text/javascript" src="{{ h.asset_url(dep) }}"></script>
 					{% endif %}
 				{% endfor %}
 			{% endmacro %}
 			
-			{{ render_dependencies(page_deps[0]) }}
-			{{ render_dependencies(page_deps[1]) }}
+			{{ render_dependencies(page_deps[0], False) }}
+			{{ render_dependencies(page_deps[1], True) }}
 		{% endblock %}
 	</head>
 	<body cv-route="{{ __page__.route }}" {% block body_attributes %}{% endblock %}>
@@ -68,6 +71,14 @@
 				<div class="content">
 					{% block content %}{% endblock %}
 				</div>
+				{# Create flash message. #}
+				{% set flash_message = h.get_flash_message() %}
+				{% set no_flash = flash_message is none %}
+				<aside class="flash-message {% if no_flash %}hidden{% endif %}">
+					{% if not no_flash %}
+						{{ flash_message }}
+					{% endif %}
+				</aside>
 			</div>
 			<div class="meta-body">
 				{#
@@ -80,6 +91,6 @@
 					{% block meta_content %}{% endblock %}
 				{% endblock %}
 			</div>
-		{% block body %}
+		{% endblock %}
 	</body>
 </html>

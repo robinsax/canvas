@@ -5,8 +5,8 @@
 	"debug": true,
 	"client_dependencies": {
 		"dependencies": [
-			"style.css",
-			"canvas.js"
+			"base.css",
+			"core.js"
 		],
 		"library_dependencies": [
 			"line-awesome.min.css",
@@ -38,31 +38,26 @@
 		"palettes": {
 			"base": {
 				"background1": "white",
-				"background2": "white",
-				"theme1": "#FFE5A5",
-				"theme2": "#E8D78A",
-				"theme3": "#FFF698",
-				"highlight": "#6588E3"
+				"background2": "#FFEADA",
+				"theme1": "#63A9B2",
+				"theme2": "#C1F7FF",
+				"theme3": "#C1F7FF",
+				"highlight": "#A55C55"
 			},
 			"text": {
-				"title": "#506BB2",
+				"title": "#63A9B2",
 				"text": "black",
 				"subtext": "grey",
-				"link": "#A5BEFF",
-				"link_clicked": "#A5BEFF"
+				"link": "#4E858C",
+				"link_clicked": "#396166"
 			},
 			"misc": {
-				"background1": "#8C7654",
-				"background2": "#75694C",
-				"text": "white",
-				"misc1": "orange",
-				"misc2": "purple",
-				"misc3": "magenta",
-				"misc4": "lightblue",
-				"misc5": "yellow"
+				"background1": "#B29075",
+				"background2": "#FFDCC1",
+				"text": "black"
 			},
 			"error_level": {
-				"success": "darkgreen",
+				"success": "green",
 				"neutral": "darkgrey",
 				"warning": "orange",
 				"error": "red",

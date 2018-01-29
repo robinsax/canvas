@@ -16,7 +16,7 @@
 	font-size: 12pt;
 }
 
-//	Define primary container layouts.
+//	Primary container layouts.
 html {
 	.container();
 
@@ -25,10 +25,14 @@ html {
 
 		.page {
 			.container();
+			font-family: @content_font;
+			background-color: @base_background2;
+			color: @text_text;
 
 			.content {
 				position: relative;
 				overflow-y: auto;
+				text-align: center;
 			}
 		}
 
@@ -38,619 +42,461 @@ html {
 	}
 }
 
-//	Events should have pointers.
+//	Pointer modifiers.
 [cv-event],
 [cv-mapped-event] {
 	cursor: pointer;
 }
 
-.subtext {
-	color: @text_subtext;
-	font-size: 11pt;
+[cv-tooltip] {
+	cursor: help;
 }
 
-body {
-	
-	& > .page {
-		position: fixed;
-		font-family: default-serif;
-		background-color: @base_background1;
+//	Link styles.
+a {
+	color: @text_link;
 
-		
+	&:visited {
+		color: @text_link_clicked;
+	}
 
-		.subtext {
-			color: @text_subtext;
-			font-size: 11pt;
-		}
+	&.clear {
+		text-decoration: none;
+		color: @text_text;
+	}
+}
 
-		//	Common elements
-		a {
-			color: @text_link;
+//	Paragraph styles.
+p {
+	margin: 15px 0px;
+	font-size: 12pt;
+	line-height: 1.4;
+	color: @text_text;
+}
 
-			&:visited {
-				color: @text_link_clicked;
-			}
+.subtext {
+	color: @text_subtext;
+	font-size: 10pt;
+}
 
-			&.clear {
-				text-decoration: none;
-				color: @text_text;
-			}
-		}
+//	Heading styles.
+h1, h2, h3, h4 {
+	margin: 15px 0px;
+	font-size: 40pt; 
+	font-weight: normal;
+	font-family: @title_font;
+	color: @text_title;
+}
+h2 { font-size: 25pt; }
+h3 { font-size: 18pt; }
+h4 { font-size: 16pt; }
 
-		p {
-			margin: 15px 10px;
-			font-size: 12pt;
-			line-height: 1.4;
-			color: @text_text;
+//	Form styles.
+form {
+	.error-summary {
+		color: @error_level_error;
+	}
 
-			&.subtext {
-				font-size: 10pt;
-				margin: 0px 10px;
-			}
-		}
-		
-		h1, h2, h3, h4 {
-			margin: 15px 0px;
-			font-weight: normal;
-			color: @text_title;
-		}
+	.field {
+		margin-bottom: 20px;
 
-		h1 {
-			font-size: 40pt; 
-		}
-		h2 {
-			font-size: 25pt;
-		}
-		h3 {
-			font-size: 18pt;
-		}
-		h4 {
+		.icon {
+			width: 40px;
+			padding-left: 0px;
+			margin-right: 10px;
 			font-size: 16pt;
 		}
 
-		hr {
-			margin: 20px 10px;
-			color: @text_text;
+		.label {
+			display: inline-block;
+			width: 100px;
+			margin-right: 10px;
+			text-align: left;
+		}
+
+		.error-desc {
+			display: none;
+			margin-top: 5px;
+			max-width: 450px;
+			text-align: left;
+		}
+
+		&.error {
+			margin-bottom: 10px;
+
+			input, textarea {
+				border: 2px solid @error_level_error;
+			}
+
+			.error-desc {
+				display: inline-block;
+			}
 		}
 		
-		form {
-			.error-summary {
-				color: @error_level_error;
-			}
-
-			.field {
-				margin-bottom: 20px;
-
-				.icon {
-					font-size: 16pt;
-					width: 40px;
-					padding-left: 0px;
-					margin-right: 10px;
-				}
-
-				.label {
-					display: inline-block;
-					width: 100px;
-					margin-right: 10px;
-					text-align: left;
-				}
-
-				.error-desc {
-					max-width: 450px;
-					text-align: left;
-					margin-top: 5px;
-					display: none;
-				}
-
-				&.error {
-					margin-bottom: 10px;
-
-					input, textarea {
-						border: 2px solid @error_level_error;
-					}
-
-					.error-desc {
-						display: inline-block;
-					}
-				}
-				
-				&.textarea {
-					.icon, .label {
-						vertical-align: top;
-					}
-				}
-
-				input,
-				select,
-				textarea {
-					outline: none;
-					border: none;
-					font-size: 12pt;
-					vertical-align: top;
-					height: 40px;
-					max-width: 450px;
-					font-family: default-serif;
-					padding: 0px 10px;
-					transition: color .5s, background-color .5s;
-					color: @misc_text;
-					background-color: @misc_background1;
-
-					&.error-highlight {
-						color: @error_level_label;
-						background-color: @error_level_error;
-					}
-
-					&:hover {
-						background-color: @misc_background2;
-					}
-				}
-
-				textarea {
-					padding: 10px;
-					height: 200px;	
-				}
-
-				.checkbox-wrap {
-					display: inline-block;
-					text-align: left;
-					max-width: 450px;
-				}
-
-				input[type="checkbox"] {
-					position: relative;
-					top: 5px;
-					height: 18px;
-					width: 30px;
-					margin: 0px;
-				}
-
-				.form-width {
-					max-width: 450px;
-				}
-
-				.field_variant(@sel, @lwidth){
-					&.@{sel} {
-						input:not([type="checkbox"]), select, textarea, .form-width, .checkbox-wrap {
-							width: e('calc(100% - ')@{lwidth}e('px)');
-						}
-					}
-				}
-
-				.field_variant_error(@sel, @lwidth){
-					&.@{sel} .error-desc {
-						width: e('calc(100% - ')@{lwidth}e('px)');
-						margin-left: @{lwidth}px;
-					}
-				}
-
-				.field_variant('iconed:not(.labeled)', 50);
-				.field_variant_error('iconed.error:not(.labeled)', 54);
-				.field_variant('labeled:not(.iconed)', 130);
-				.field_variant_error('labeled.error:not(.iconed)', 134);
-				.field_variant('iconed.labeled', 180);
-				.field_variant_error('labeled.iconed.error', 184);
+		&.textarea {
+			.icon, .label {
+				vertical-align: top;
 			}
 		}
 
-		.modal {
-			cursor: default !important;
-			position: fixed;
-			top: 0px;
-			background-color: rgba(0, 0, 0, 0.5);
-			width: 100%;
-			height: 100%;
-
-			.panel {
-				cursor: default;
-				background-color: @base_background2;
-				position: relative;
-				top: 50%;
-				left: 50%;
-				//min-width: 500px;
-				transform: translate(-50%, -50%);
-				display: inline-block;
-				padding: 10px;
-
-				.closer {
-					float: right;
-				}
-
-				.confirm-text {
-					margin-bottom: 20px;
-				}
-			}
-
-			.error .error-desc {
-				display: block !important;
-			}
-		}
-
-		//	Visiblity modifiers
-		.invisible {
-			visibility: hidden !important
-		}
-		.hidden {
-			display: none !important;
-		}
-
-		//	Text-alignment modifier
-		.align-right, .align-right * {
-			text-align: right !important;
-		}
-		.align-left, .align-left * {
-			text-align: left !important;
-		}
-		.align-center, .align-center * {
-			text-align: center !important;
-		}
-
-		//	Default mixin classes
-		.inline-block {
-			display: inline-block;
-		}
-
-		.padding {
-			padding: 8px;
-		}
-		.margin {
-			margin: 8px;
-		}
-
-		.sans {
-			font-family: default-sans;
-		}
-		.serif {
-			font-family: default-serif;
-		}
-
-		.indent, .indent-left {
-			margin-left: 15px;
-		}
-		.indent-right {
-			margin-right: 15px;
-		}
-
-		//	Cursor modifiers
-		[cv-tooltip]:hover {
-			cursor: help;
-		}
-		[cv-event]:hover, [cv-mapped-event]:hover {
-			cursor: pointer;
-		}
-
-		//	Buttons
-		.button {
+		input,
+		select,
+		textarea {
 			height: 40px;
-			display: inline-block;
-			margin-right: 10px;
-			line-height: 40px;
-			font-size: 15pt;
-			padding: 0px 15px;
-			vertical-align: middle;
-			text-align: center;
-			text-decoration: none;
-			transition: .1s color;
-			color: @text_text;
-			
-			&.confirm {
-				background-color: @error_level_success;
-			}
-			&.cancel {
+			max-width: 450px;
+			padding: 0px 10px;
+			outline: none;
+			border: none;
+			font-size: 12pt;
+			vertical-align: top;
+			color: @misc_text;
+			background-color: @misc_background1;
+			transition: color .5s, background-color .5s;
+
+			&.error-highlight {
+				color: @error_level_label;
 				background-color: @error_level_error;
 			}
 
-			&.texted:not(.icon-right) .icon {
-				margin-right: 10px;
-			}
-			&.texted.icon-right .icon {
-				margin-left: 10px;
-			}
-
-			&.open {
-				background-color: @base_theme2;
-			}
-			
 			&:hover {
-				cursor: pointer;
-				color: @base_background1;
-				background-color: @base_theme1;
-			}
-			
-			.icon {
-				vertical-align: middle;
+				background-color: @misc_background2;
 			}
 		}
 
-		//	Button groups
-		.control-group, .control-group-left {
-			text-align: left;
-		}
-		.control-group-right {
-			text-align: right;
-
-			.button {
-				margin-left: 0px;
-				margin-right: 10px;
-			}
-		}
-
-		//	Button variants
-		.event-icon {
-			margin: 0px 10px;
-			text-decoration: none;
-			vertical-align: middle;
-			font-size: 12px;
-			transition: color 0.5s;
-			width: 10px;
-			color: @text_subtext;
-
-			&:hover {
-				cursor: pointer;
-				color: @base_highlight;
-			}
-		}
-
-		//	Header
-		.main-header {
-			position: fixed;
-			top: 0px;
-			left: 0px;
-			padding: 0px 20px;
-			width: 100%;
-			transition: 0.5s top;
-			font-family: default-sans;
-			text-align: left;
-			overflow: hidden;
-			z-index: 100;
-			height: @header_height;
-			background-color: @base_theme1;
-
-			&.pulled {
-				top: -@header_height;
-			}
-
-			.component {
-				vertical-align: top;
-				display: inline-block;
-				height: @header_height;
-				color: @base_background1;
-				line-height: @header_height;
-			}
-
-			.component.right {
-				.clearfix();
-				float: right
-			}
-
-			.button {
-				padding-top: 4px;
-				font-size: 13pt;
-				color: @base_background2;
-				background-color: @base_theme1;
-				border-bottom: 4px solid @base_theme1;
-				height: @header_height;
-				line-height: @header_height - 8px;
-
-				&.open {
-					border-bottom: 4px solid @base_theme2;
-				}
-			}
-
-			.button-highlight {
-				display: inline-block;
-				position: absolute;
-				pointer-events: none;
-				opacity: 0;
-				transform: translateX(-50%);
-				transition: width .3s, left .3s, opacity .3s;
-				border-bottom: 4px solid @base_highlight;
-				height: @header_height;
-			}
-		}
-
-		.mobile-menu-modal {
-			position: absolute;
-			width: 100%;
-			height: 100%;
-			background-color: rgba(0, 0, 0, 0.5);
-			z-index: 1000;
-
-			&.open {
-				display: block;
-			}
-
-			.mobile-menu {
-				height: 100%;
-				width: 66.666666%;
-				max-width: 400px;
-				background-color: @base_background2;
-				overflow-x: hidden;
-				overflow-y: auto;
-				transition: width .2s;
-
-				.button {
-					width: e('calc(100% - 19px)');
-					text-align: left;
-					padding-left: 15px;
-					padding-right: 0px;
-					margin: 5px 0px;
-					border-right: 4px solid @base_background2;
-
-					&.open {
-						background-color: @base_background1 !important;
-						color: @text_text !important;
-						border-right: 4px solid @base_theme2 !important;
-					}
-
-					&:hover {
-						border-right: 4px solid @base_theme2 !important;
-					}
-				}
-
-				.component {
-					margin: 0px !important;
-					padding: 0px !important;
-					height: auto;
-					width: 100%;
-
-					&.site {
-						position: absolute;
-						bottom: 0px;
-						left: 0px;
-						width: 66.66666666666%;
-					}
-				}
-			}
-		}
-
-		.page-content {
-			background-color: @base_background1;
-			position: relative;
-			max-width: 1200px;
-			text-align: center;
-			margin: 0px auto;
-
-			.loading-placeholder {
-				margin: 10px auto;
-				color: @base_theme1;
-			}
-
-			.row {
-				position: relative;
-				width: 100%;
-			}
-
-			.component {
-				vertical-align: top;
-				display: inline-block;
-				background-color: @base_background2;
-				overflow-wrap: break-word;
-				padding: 15px;
-				margin: 15px;
-
-				&.flat {
-					background-color: inherit;
-				} 
-
-				&.col-12 {
-					width: e('calc(100% - 30px)');
-				}
-				&.col-9 {
-					width: e('calc(75% - 30px)');
-				}
-				&.col-8 {
-					width: e('calc(66.6666666666% - 30px)');
-				}
-				&.col-6 {
-					width: e('calc(50% - 30px)');
-				}
-				&.col-5 {
-					width: e('calc(41.6666666666% - 30px)');
-				}
-				&.col-4 {
-					width: e('calc(33.333333333333% - 30px)');
-				}
-				&.col-3 {
-					width: e('calc(25% - 30px)');
-				}
-			
-				@media screen and (max-width: @breakpoint_1){
-					&.col-12,
-					&.col-9 {
-						width: e('calc(100% - 30px)');
-					}
-					
-					&.col-6 {
-						width: e('calc(66.66666666% - 30px)');
-					}
-			
-					&.col-4 {
-						width: e('calc(50% - 30px)');
-					}
-					
-					&.col-3 {
-						width: e('calc(33.333333% - 30px)');
-					}
-				}
-			
-				@media screen and (max-width: @breakpoint_2) {
-					&.col-6 {
-						width: e('calc(100% - 30px)');
-					}
-					
-					&.col-3 {
-						width: e('calc(50% - 30px)');
-					}
-				}
-			
-				@media screen and (max-width: @breakpoint_3) {
-					&.col-4,
-					&.col-3 {
-						width: e('calc(100% - 30px)');
-					}
-				}
-			}
-
-			pre {
-				background-color: @misc_background1;
-				text-align: left;
-				overflow-x: auto;
-				padding: 15px;
-		
-				code {
-					display: inline-block;
-					font-size: 10pt;
-					width: 100%;
-				}
-			}
-			code {
-				background-color: @misc_background1;
-			}
-		}
-
-		//	Tooltip
-		.tooltip {
-			display: inline-block;
-			position: absolute;
-			z-index: 1000;
-			font-size: 10pt;
-			transform: translateY(-100%);
-			max-width: 350px;
-			padding: 3px 5px;
-			padding-bottom: 0px;
-			background-color: @base_highlight;
-			color: @base_background2;
-
-			&:after {
-				content: "";
-				display: inherit;
-				position: relative;
-				bottom: -5px;
-				width: 0px; 
-				height: 0px; 
-				line-height: 0px;
-				border-left: 5px solid transparent;
-				border-right: 5px solid transparent;
-				border-top: 5px solid @base_highlight;
-			}
-		}
-
-		//	Message area
-		.flash-message {
-			display: inline-block;
-			position: fixed;
-			bottom: 0px;
-			margin: 20px;
+		//	Field-type specific styles.
+		textarea {
+			height: 200px;
 			padding: 10px;
-			opacity: 1;
-			transition: 1s opacity;
-			background-color: @base_highlight;
-			color: @base_background2;
-			
-			&.hidden {
-				display: inline-block !important;
-				opacity: 0;
+		}
+
+		.checkbox-wrap {
+			display: inline-block;
+			max-width: 450px;
+			text-align: left;
+
+			input[type="checkbox"] {
+				position: relative;
+				top: 5px;
+				height: 18px;
+				width: 30px;
+				margin: 0px;
 			}
+		}
+		
+		.form-width {
+			max-width: 450px;
+		}
+
+		//	Field component scaling mixins based on icon/label/error border
+		//	presence.
+		.field_variant(@sel, @lwidth){
+			&.@{sel} {
+				input:not([type="checkbox"]), select, textarea, .form-width, .checkbox-wrap {
+					width: e('calc(100% - ')@{lwidth}e('px)');
+				}
+			}
+		}
+
+		.field_variant_error(@sel, @lwidth){
+			&.@{sel} .error-desc {
+				width: e('calc(100% - ')@{lwidth}e('px)');
+				margin-left: @{lwidth}px;
+			}
+		}
+
+		.field_variant('iconed:not(.labeled)', 50);
+		.field_variant_error('iconed.error:not(.labeled)', 54);
+		.field_variant('labeled:not(.iconed)', 130);
+		.field_variant_error('labeled.error:not(.iconed)', 134);
+		.field_variant('iconed.labeled', 180);
+		.field_variant_error('labeled.iconed.error', 184);
+	}
+}
+
+//	Modal styles.
+.modal {
+	position: fixed;
+	top: 0px;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	cursor: default !important;
+
+	.panel {
+		display: inline-block;
+		position: relative;
+		padding: 10px;
+		top: 50%;
+		left: 50%;
+		background-color: @base_background2;
+		transform: translate(-50%, -50%);
+		cursor: default;
+
+		.closer {
+			float: right;
+		}
+		
+		.confirm-text {
+			margin-bottom: 20px;
 		}
 	}
+
+	//	TODO: What is this style.
+	.error .error-desc {
+		display: block !important;
+	}
+}
+
+//	Visiblity modifiers.
+.invisible {
+	visibility: hidden !important
+}
+.hidden {
+	display: none !important;
+}
+
+//	Text-alignment modifier.
+.align-right, 
+.align-right * {
+	text-align: right !important;
+}
+.align-left, 
+.align-left * {
+	text-align: left !important;
+}
+.align-center, 
+.align-center * {
+	text-align: center !important;
+}
+
+//	Default mixin classes.
+.inline-block {
+	display: inline-block;
+}
+
+//	Spacing.
+.padding {
+	padding: 8px;
+}
+.margin {
+	margin: 8px;
+}
+
+.indent, 
+.indent-left {
+	margin-left: 15px;
+}
+.indent-right {
+	margin-right: 15px;
+}
+
+//	Buttons and button groups.
+.button {
+	display: inline-block;
+	vertical-align: middle;
+	height: 40px;
+	margin-right: 10px;
+	padding: 0px 15px;
+	font-size: 15pt;
+	line-height: 40px;
+	color: @text_text;
+	transition: .1s color;
+	text-align: center;
+	text-decoration: none;
+	
+	&.confirm {
+		background-color: @error_level_success;
+	}
+	&.cancel {
+		background-color: @error_level_error;
+	}
+
+	&.texted:not(.icon-right) .icon {
+		margin-right: 10px;
+	}
+	&.texted.icon-right .icon {
+		margin-left: 10px;
+	}
+
+	&.open {
+		background-color: @base_theme2;
+	}
+	
+	&:hover {
+		cursor: pointer;
+		color: @base_background1;
+		background-color: @base_theme1;
+	}
+	
+	.icon {
+		vertical-align: middle;
+	}
+}
+
+//	Button groups.
+.control-group,
+.control-group-left {
+	text-align: left;
+}
+.control-group-right {
+	text-align: right;
+
+	.button {
+		margin-left: 0px;
+		margin-right: 10px;
+	}
+}
+
+//	Icon-only buttons.
+.event-icon {
+	width: 10px;
+	vertical-align: middle;
+	margin: 0px 10px;
+	font-size: 12px;
+	text-decoration: none;
+	color: @text_subtext;
+	transition: color 0.5s;
+	
+	&:hover {
+		color: @base_highlight;
+	}
+}
+
+.loading-placeholder {
+	margin: 10px auto;
+	color: @base_theme1;
+}
+
+//	Root page contents.
+.row {
+	width: 100%;
+	position: relative;
+}
+
+.component {
+	display: inline-block;
+	vertical-align: top;
+	padding: 15px;
+	margin: 15px;
+	background-color: @base_background1;
+	overflow-wrap: break-word;
+
+	&.flat {
+		background-color: inherit;
+	}
+
+	&.col-12 {
+		width: e('calc(100% - 30px)');
+	}
+	&.col-9 {
+		width: e('calc(75% - 30px)');
+	}
+	&.col-8 {
+		width: e('calc(66.6666666666% - 30px)');
+	}
+	&.col-6 {
+		width: e('calc(50% - 30px)');
+	}
+	&.col-5 {
+		width: e('calc(41.6666666666% - 30px)');
+	}
+	&.col-4 {
+		width: e('calc(33.333333333333% - 30px)');
+	}
+	&.col-3 {
+		width: e('calc(25% - 30px)');
+	}
+
+	@media screen and (max-width: @breakpoint_1){
+		&.col-12,
+		&.col-9 {
+			width: e('calc(100% - 30px)');
+		}
+		
+		&.col-6 {
+			width: e('calc(66.66666666% - 30px)');
+		}
+
+		&.col-4 {
+			width: e('calc(50% - 30px)');
+		}
+		
+		&.col-3 {
+			width: e('calc(33.333333% - 30px)');
+		}
+	}
+
+	@media screen and (max-width: @breakpoint_2) {
+		&.col-6 {
+			width: e('calc(100% - 30px)');
+		}
+		
+		&.col-3 {
+			width: e('calc(50% - 30px)');
+		}
+	}
+
+	@media screen and (max-width: @breakpoint_3) {
+		&.col-4,
+		&.col-3 {
+			width: e('calc(100% - 30px)');
+		}
+	}
+}
+
+//	Preformatted.
+pre {
+	padding: 15px;
+	text-align: left;
+	overflow-x: auto;
+	color: @misc_text;
+	background-color: @misc_background1;
+
+	code {
+		display: inline-block;
+		font-size: 10pt;
+		width: 100%;
+	}
+}
+
+code {
+	background-color: @misc_background1;
+}
+
+//	Tooltip area.
+.tooltip {
+	display: inline-block;
+	position: absolute;
+	z-index: 1000;
+	font-size: 10pt;
+	max-width: 350px;
+	padding: 3px 5px;
+	padding-bottom: 0px;
+	background-color: @base_highlight;
+	color: @base_background2;
+	transform: translateY(-100%);
+
+	&:after {
+		content: "";
+		display: inherit;
+		position: relative;
+		bottom: -5px;
+		width: 0px; 
+		height: 0px; 
+		line-height: 0px;
+		border-left: 5px solid transparent;
+		border-right: 5px solid transparent;
+		border-top: 5px solid @base_highlight;
+	}
+}
+
+//	Message area.
+.flash-message {
+	display: inline-block;
+	position: fixed;
+	bottom: 0px;
+	margin: 20px;
+	padding: 10px;
+	background-color: @base_highlight;
+	color: @base_background2;
 }

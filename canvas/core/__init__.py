@@ -82,7 +82,7 @@ def flash_message(message):
 	Flash a message the next time a view or view
 	update is sent.
 	'''
-	get_thread_context()['__flash__'] = message
+	get_thread_context()['__flash_message__'] = message
 
 @register.template_helper
 def get_flash_message():
@@ -90,4 +90,4 @@ def get_flash_message():
 	Return the currently queued flash message, or
 	`None` if there isn't one.
 	'''
-	return get_thread_context().get('__flash__', None)
+	return get_thread_context().get('__flash_message__', None)
