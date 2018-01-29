@@ -146,12 +146,11 @@ __TODO__(BP): Side-effect: __all__ list modification
 
 ### markup(text)
 
-Transform the string `text` into markup that is 
-not escaped when rendered in a template.
+Transform the string `text` into markup that is not escaped when rendered 
+in a template.
 
-Available as a template filter.
-
-__Note__: Beware of XSS vulerabilities when using.
+Beware of XSS vulnerabilities when using. In general, client-sourced data
+should always be escaped in templates.
 ### markdown(markdown, return_markup=True)
 + *markdown*:  The string to render as markdown. 
 + *return_markup*:  Whether or not to return a markup object that will not be escaped when rendered.
@@ -160,10 +159,9 @@ Render a string as markdown.
 
 Available as a template filter.
 
-### uri_encode(s)
+### uri_encode(text)
 
-Return `s` encoded as a a URI component.
-### json(o)
+Return `text` encoded as a a URI component.
+### json(obj)
 
-Return the JSON representation of the
-JSON-serializable object `o`.
+Return the JSON representation of the JSON-serializable object `obj`.

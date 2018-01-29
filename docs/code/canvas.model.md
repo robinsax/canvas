@@ -71,15 +71,14 @@ on comparison.
 Create a new column.
 
 
-#### \_\_repr__(self)
-
-Return a debugging representation. 
-
-::deprecated
-
 #### as_condition(self, values)
 
 Return this expression serialized as an SQL query condition.
+
+#### compute_type(self)
+
+Parse the type definition of this column and initialize it 
+appropriatly.
 
 #### get_default(self)
 
@@ -239,7 +238,7 @@ form input type, and default value.
 Column types are transparent to plugins in the majority of
 use cases, but can be assumed stable.
 #### Methods
-#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x000001B226FC8340>)
+#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x0000000003478750>)
 + *sql_type*:  The name of this type in PostgreSQL. 
 + *input_type*:  The type of input to use for this column type if HTML forms. 
 + *default*:  The default value with which to populate attributes in this column.
@@ -369,43 +368,41 @@ Invoke `serialize()` on `SQLExpression`s and serialize leaves
 + *schema*:  A column name to column definition mapping. 
 + *accessors*:  A list of column names which are checked for equality by the `get(reference, session)` classmethod.
 
-The model class mapping and schema declaration 
-decorator.
+The model class mapping and schema declaration decorator.
 
-Decorated classes will be added to this package's
-namespace after pre-initialization.
+Decorated classes will be added to this package's namespace after 
+pre-initialization.
 
 ### enum(name)
 + *name*:  A unique name for the enumerable type declaration in Postgres.
 
 The enumerable type model declaration decorator.
 
-Decorated enums will be added to this package's
-namespace after pre-initialization.
+Decorated enums will be added to this package's namespace after 
+pre-initialization.
 
 ### adapter(cls)
 
 A decorator for `TypeAdapter` actualization.
 ### create_session()
 
-Create a database session. `Session` generation should
-always use this function to allow future modifications
-to the `Session` constructor.
+Create a database session. `Session` generation should always use this 
+function to allow future modifications to the `Session` constructor.
 ### create_everything()
 
-Resolve foreign keys and enum references then issue table 
-and enumarable type creation SQL.
+Resolve foreign keys and enum references then issue table and enumarable 
+type creation SQL.
 ### dictize(model_obj, omit=[])
 + *model_obj*:  The model class instance to dictize. 
 + *omit*:  A list of columns not to include in the returned dictionary.
 
-Return a dictionary containing a column name, column 
-value mapping for `model_obj`.
+Return a dictionary containing a column name, column value mapping for 
+`model_obj`.
 
 ### dictize_all(model_list, omit=[])
 + *model_list*:  A list of model class instances to dictize. 
 + *omit*:  A list of columns not to include in the returned dictionaries.
 
-Return a list containing dictizations of all the model
-objects in `model_list`.
+Return a list containing dictizations of all the model objects in 
+`model_list`.
 

@@ -9,7 +9,7 @@ import uuid
 import datetime as dt
 
 from ..exceptions import ColumnDefinitionError
-from ..utils import call_registered
+from ..utils import callback, call_registered
 
 #	An object used to identify un-initialized columns when issuing row 
 #	creation.
@@ -89,20 +89,23 @@ class EnumColumnType(ColumnType):
 #	to type objects. When a column type string matches the
 #	key regex, the corresponding column type object is used
 #	for that column.
-_column_types = {
-	'int(?:eger)*': ColumnType('INTEGER', 'number'),
-	'real|float': ColumnType('REAL'),
-	'serial': ColumnType('SERIAL'),
-	'(?:long)*text': ColumnType('TEXT'),
-	'json': ColumnType('JSON'),
-	'bool(?:ean)*':	ColumnType('BOOLEAN', 'checkbox'),
-	'uuid': ColumnType('CHAR(32)', default=lambda: uuid.uuid4()),
-	'pw|pass(?:word)*': ColumnType('TEXT', 'password'),
-	'dt|datetime': ColumnType('TIMESTAMP')
-}
+_column_types = {} 
 
-#	Allow plugins to extend the basic column type definitions.
-call_registered('column_types_defined', _column_types)
+@callback.pre_init
+def define_column_types():
+	_column_types.update({
+		'int(?:eger)*': ColumnType('INTEGER', 'number'),
+		'real|float': ColumnType('REAL'),
+		'serial': ColumnType('SERIAL'),
+		'(?:long)*text': ColumnType('TEXT'),
+		'json': ColumnType('JSON'),
+		'bool(?:ean)*':	ColumnType('BOOLEAN', 'checkbox'),
+		'uuid': ColumnType('CHAR(32)', default=lambda: uuid.uuid4()),
+		'pw|pass(?:word)*': ColumnType('TEXT', 'password'),
+		'dt|datetime': ColumnType('TIMESTAMP')
+	})
+	#	Allow plugins to extend the basic column type definitions.
+	call_registered('column_types_defined', _column_types)
 
 class Column(SQLExpression):
 	'''
@@ -124,26 +127,11 @@ class Column(SQLExpression):
 			resolved within Postgres.
 		:primary_key Whether or not this column is the table's primary key.
 		'''
-		#	Resolve the type string to a type object.
-		self.type = None
-		if type_str.startswith('fk:'):
-			self.type = ForeignKeyColumnType(type_str[3:])
-		elif type_str.startswith('enum:'):
-			self.type = EnumColumnType(type_str[5:])
-		else:
-			#	Check against each regular expression key.
-			for regex, typ in _column_types.items():
-				match = re.match(regex, type_str, re.I)
-				if match is not None:
-					#	Matched; use this column type.
-					self.type = typ
-					break
-		
-		#	Assert a column type was found.
-		if self.type is None:
-			raise ColumnDefinitionError(f'Unknown column type {type_str}')
-		
-		#	Popluate constraint attribute and store the list.
+		#	Store attributes used by `compute_type()`.
+		self.type_str = type_str
+		self.default = default
+
+		#	Populate constraint attribute and store the list.
 		if not isinstance(constraints, (list, tuple)):
 			#	The `constraints` parameter was passed a single
 			#	object.
@@ -152,17 +140,41 @@ class Column(SQLExpression):
 			constraint.target_column = self
 		self.constraints = constraints
 
-		#	Find and store the highest-precedence default value.
-		#	Guarenteed to be at least the `_sentinel` object.
-		self.default = default if default is not None else self.type.default
-
 		#	Store primary key flag.
 		self.primary_key = primary_key
 
-		#	Save placeholder values for a model class reference
-		#	and column name.
+		#	Save placeholder values.
+		self.type = None
 		self.model = None
 		self.name = None
+
+	def compute_type(self):
+		'''
+		Parse the type definition of this column and initialize it 
+		appropriatly.
+		'''
+		#	Resolve the type string to a type object.
+		if self.type_str.startswith('fk:'):
+			self.type = ForeignKeyColumnType(self.type_str[3:])
+		elif self.type_str.startswith('enum:'):
+			self.type = EnumColumnType(self.type_str[5:])
+		else:
+			#	Check against each regular expression key.
+			for regex, typ in _column_types.items():
+				match = re.match(regex, self.type_str, re.I)
+				if match is not None:
+					#	Matched; use this column type.
+					self.type = typ
+					break
+		
+		#	Assert a column type was found.
+		if self.type is None:
+			raise ColumnDefinitionError(f'Unknown column type {self.type_str}')
+
+		#	Find and store the highest-precedence default value.
+		#	Guarenteed to be at least the `_sentinel` object.
+		if self.default is None:
+			self.default = self.type.default
 
 	def serialize(self, values):
 		'''
@@ -232,14 +244,3 @@ class Column(SQLExpression):
 			SQLAggregatorCall('MIN', self, weight=0),
 			SQLAggregatorCall('MAX', self)
 		])
-	
-	def __repr__(self):
-		'''
-		Return a debugging representation. 
-
-		::deprecated
-		'''
-		return ( 
-			f'<{self.__class__.__name__}: type={repr(self.type)},'
-			+ f' table={self.model.__table__}>'
-		)

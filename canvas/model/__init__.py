@@ -285,6 +285,8 @@ def create_everything():
 
 		#	Resolve foreign keys.
 		for col_name, col_obj in model_cls.schema_iter():
+			col_obj.compute_type()
+
 			if not isinstance(col_obj.type, ForeignKeyColumnType):
 				#	No foreign key to resolve.
 				continue
