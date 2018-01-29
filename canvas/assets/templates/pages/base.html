@@ -19,11 +19,7 @@
 {% import 'common.jinja' as c with context %}
 {% import 'forms.jinja' as f with context %}
 
-{% block logic %}
-	{# Set default title and description #}
-	{% set title = '%s - %s'%(config.name, __page__.title) %}
-	{% set description = config.description|normalize_whitespace %}
-{% endblock %}
+{% block logic %}{% endblock %}
 
 <!DOCTYPE html>
 <html lang="en" {% block html_attributes %}{% endblock %}>
@@ -36,8 +32,8 @@
 			<meta charset="utf-8">
 			<meta name="viewport" content="width=device-width, initial-scale=1">
 
-			<title>{{ title }}</title>
-			<meta name="description" content="{{ description }}">
+			<title>{{ title|default('%s - %s'%(config.name, __page__.title)) }}</title>
+			<meta name="description" content="{{ description|default(config.description|normalize_whitespace) }}">
 			<link rel="icon" type="image/png" href="{{ h.asset_url('media/site_icon.png') }}"/>
 			
 			{# Render dependencies. #}

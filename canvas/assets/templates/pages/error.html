@@ -4,10 +4,7 @@
 #}
 {% page %}
 
-{% block logic %}
-	{{ super() }}
-	{% set title = '%s - %s'%(config.name, error.code) %}
-{% endblock %}
+{% set title = '%s - %s'%(config.name, error.code) %}
 
 {# Define a route-agnostic styling target. #}
 {% block body_attributes %}{{ super() }} cv-error-page="true"{% endblock %}
