@@ -94,15 +94,15 @@
 #}
 {% macro field(type=None, name=None, placeholder=None, label=None, icon=None, model=None, attr=None, attrs=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
 	{% if (name is none or type is none) and attr is none %}
-		{{ parameter_error('Cannot create field without name and type, or attr') }}
+		{{ h.parameter_error('Cannot create field without name and type, or attr') }}
 	{% endif %}
 	{% if type == 'select' and values is none %}
-		{{ parameter_error('Cannot create select input without values') }}
+		{{ h.parameter_error('Cannot create select input without values') }}
 	{% endif %}
 	{% if attr is not none %}
 		{% if model is none %}
 			{% if form_model is none %}
-				{{ parameter_error('Cannot use attr if model is not specified in arguments or render call') }}
+				{{ h.parameter_error('Cannot use attr if model is not specified in arguments or render call') }}
 			{% else %}
 				{% set model = form_model %}
 			{% endif %}
