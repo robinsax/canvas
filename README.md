@@ -117,8 +117,8 @@ Some existing plugins are:
   <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-deferral.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-deferral)
 * [smtpmail](https://github.com/robinsax/canvas-pl-smtpmail) - Email templating and dispatch via SMTP.
   <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-smtpmail.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-smtpmail)
-* [xml_columns](https://github.com/robinsax/canvas-pl-xml_columns) - LXML-based XML column types.
-  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-xml_columns.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-xml_columns)
+* [xmlcolumns](https://github.com/robinsax/canvas-pl-xmlcolumns) - XML column type/model attribute.
+  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-xmlcolumns.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-xmlcolumns)
 
 To create a plugin in the configured plugin directory, run:
 ```bash
