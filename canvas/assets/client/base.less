@@ -1,38 +1,62 @@
+//	The base style definitions, including helpers for common layout needs.
+//
+//	Specificity is minimized to allow plugin styles to always precedence.
+
+//	Clear margin and padding U.A. styles.
 * {
 	margin: 0px;
 	padding: 0px;
+	box-sizing: border-box;
 }
 
-html, body, body > .page {
+//	Define the container mixin.
+.container(){
 	width: 100%;
 	height: 100%;
 	font-size: 12pt;
 }
 
-.page-content-wrap {
-	height: e('calc(100% - ')@{header_height}e(')');
-	position: relative;
-	top: @header_height;
-	overflow-y: auto;
+//	Define primary container layouts.
+html {
+	.container();
+
+	body {
+		.container();
+
+		.page {
+			.container();
+
+			.content {
+				position: relative;
+				overflow-y: auto;
+			}
+		}
+
+		.meta-page {
+			display: none;
+		}
+	}
 }
 
-* {
-	box-sizing: border-box;
+//	Events should have pointers.
+[cv-event],
+[cv-mapped-event] {
+	cursor: pointer;
+}
+
+.subtext {
+	color: @text_subtext;
+	font-size: 11pt;
 }
 
 body {
-	.meta-page, .cv-templates {
-		display: none;
-	}
 	
 	& > .page {
 		position: fixed;
 		font-family: default-serif;
 		background-color: @base_background1;
 
-		[cv-event], [cv-mapped-event] {
-			cursor: pointer;
-		}
+		
 
 		.subtext {
 			color: @text_subtext;

@@ -1,19 +1,28 @@
 {#
-	The error page, displayed when any error
-	occures during the handling of a non-API
-	GET request.
+	The error page, returned when any error occurres during the handling of a 
+	non-API GET request.
 #}
 {% page %}
 
+{% block logic %}
+	{{ super() }}
+	{% set title = '%s - %s'%(config.name, error.code) %}
+{% endblock %}
+
+{# Define a route-agnostic styling target. #}
+{% block body_attributes %}{{ super() }} cv-error-page="true"{% endblock %}
+
 {% block content %}
-	<div class="component col-8">
-		<h2>{{ error.code }} {{ error.description }}</h2>
-		{% if config.debug %}
-			<h4 class="align-left">Traceback</h4>
-			<pre><code>{{ debug_info.traceback }}</code></pre>
-			<h4 class="align-left">Context</h4>
-			<pre><code>{{ debug_info.context }}</code></pre>
-		{% endif %}
+	<div class="interstitial">
+		<div class="component col-8">
+			<h2>{{ error.code }} {{ error.description }}</h2>
+			{% if config.debug %}
+				<h4 class="align-left">Traceback</h4>
+				<pre><code class="traceback">{{ debug_info.traceback }}</code></pre>
+				<h4 class="align-left">Context</h4>
+				<pre><code class="context">{{ debug_info.context }}</code></pre>
+			{% endif %}
+			</div>
 		</div>
 	</div>
 {% endblock %}

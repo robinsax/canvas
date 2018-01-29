@@ -4,8 +4,8 @@ Utilities present in templates.
 '''
 
 import os
+import re
 import json as jsonlib
-import jinja2
 
 from urllib import parse
 
@@ -17,9 +17,11 @@ from ..exceptions import (
 	UnsupportedEnformentMethod,
 	MarkdownNotFound
 )
-from .registration import register, callback
+from .registration import register
 
+#	Declare exports.
 __all__ = [
+	'normalize_whitespace',
 	'markup',
 	'markdown',
 	'uri_encode',
@@ -27,14 +29,20 @@ __all__ = [
 ]
 
 @register.template_filter
+def normalize_whitespace(text):
+	'''
+	Replace all occurances of whitespace in `text` with a single space.
+	'''
+	return re.sub('\s+', ' ', text)
+
+@register.template_filter
 def markup(text):
 	'''
-	Transform the string `text` into markup that is 
-	not escaped when rendered in a template.
+	Transform the string `text` into markup that is not escaped when rendered 
+	in a template.
 
-	Available as a template filter.
-	
-	__Note__: Beware of XSS vulerabilities when using.
+	Beware of XSS vulnerabilities when using. In general, client-sourced data
+	should always be escaped in templates.
 	'''
 	return Markup(text)
 
@@ -46,8 +54,8 @@ def markdown(markdown, return_markup=True):
 	Available as a template filter.
 
 	:markdown The string to render as markdown.
-	:return_markup Whether or not to return a markup object
-		that will not be escaped when rendered.
+	:return_markup Whether or not to return a markup object that will not be 
+		escaped when rendered.
 	'''
 	rendered = render_markdown(markdown)
 	if return_markup:
@@ -62,10 +70,9 @@ def markdown_file(filename, return_markup=True):
 
 	Available as a template global.
 
-	:filename The name of the markdown file to render,
-		from `/markdown`.
-	:return_markup Whether or not the output should
-		be escaped when rendered in Jinja.
+	:filename The name of the markdown file to render, from `/markdown`.
+	:return_markup Whether or not the output should be escaped when rendered 
+		in Jinja.
 	'''
 	#	TODO: Fix these imports.
 	from ..core.plugins import get_path_occurrences
@@ -96,25 +103,23 @@ def markdown_file(filename, return_markup=True):
 	return rendered
 
 @register.template_filter
-def uri_encode(s):
+def uri_encode(text):
 	'''
-	Return `s` encoded as a a URI component.
+	Return `text` encoded as a a URI component.
 	'''
-	return parse.quote(s)
+	return parse.quote(text)
 
 @register.template_filter
-def json(o):
+def json(obj):
 	'''
-	Return the JSON representation of the
-	JSON-serializable object `o`.
+	Return the JSON representation of the JSON-serializable object `obj`.
 	'''
-	return jsonlib.dumps(o)
+	return jsonlib.dumps(obj)
 
 @register.template_helper
 def parameter_error(msg):
 	'''
-	Raise a `MacroParameterError` from within
-	a template macro call.
+	Raise a `MacroParameterError` from within a template macro call.
 
 	:msg The error message.
 	'''
@@ -124,9 +129,8 @@ del parameter_error
 @register.template_helper
 def get_client_validator(name):
 	'''
-	Return the client-serialized representation of
-	the constraint called `name`, and it's error
-	description.
+	Return the client-serialized representation of the constraint called 
+	`name`, and its error description.
 	'''
 	from ..model import get_constraint
 
@@ -155,9 +159,8 @@ del get_client_validator
 @register.template_helper
 def describe_model_attr(model_cls, attr):
 	'''
-	Return the input type, name, validator name, and
-	a best guess at a label as a dictionary for the model
-	attribute `attr` of the model clas `model_cls`.
+	Return the input type, name, validator name, and a best guess at a label as
+	a dictionary for the model attribute `attr` of the model clas `model_cls`.
 
 	Used for automatic form generation.
 	'''

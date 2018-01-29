@@ -88,7 +88,7 @@ class _ColumnIterator:
 		name = self.model_cls.__columns__[self.i]
 		column = self.model_cls.__schema__[name]
 
-		#	Increment position
+		#	Increment position.
 		self.i += 1
 
 		if self.yield_i:

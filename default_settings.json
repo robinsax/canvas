@@ -11,7 +11,8 @@
 		"library_dependencies": [
 			"line-awesome.min.css",
 			"toolkit.min.js"
-		]
+		],
+		"font_dependencies": {}
 	},
 	"plugins": {
 		"directory": "../canvas_plugins",
@@ -29,11 +30,10 @@
 		"host": "localhost"
 	},
 	"styling": {
-		"header_height": 50,
 		"breakpoints": [850, 675, 450],
-		"font_set": {
-			"sans_serif": "site-sans.otf",
-			"serif": "site-serif.otf"
+		"fonts": {
+			"content": "'Tahoma'",
+			"title": "'Tahoma'"
 		},
 		"palettes": {
 			"base": {
