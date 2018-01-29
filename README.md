@@ -111,12 +111,14 @@ in a shared plugin folder (by default `../canvas_plugins`) and activated in
 configuration.
 
 Some existing plugins are:
-* [users](https://github.com/robinsax/canvas-pl-users) - Extensible skeleton user model with authorization integration. 
+* [users](https://github.com/robinsax/canvas-pl-users) - A basic but extensible user model with authorization integration. 
   <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-users.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-users)
 * [deferral](https://github.com/robinsax/canvas-pl-deferral) - Scheduled and asynchronous code execution.
   <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-deferral.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-deferral)
-* [email](https://github.com/robinsax/canvas-pl-email) - SMTP-based email templating and dispatch.
-  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-email.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-email)
+* [smtpmail](https://github.com/robinsax/canvas-pl-smptmail) - Email templating and dispatch via SMTP.
+  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-email.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-smptmail)
+* [xml_columns](https://github.com/robinsax/canvas-pl-xml_columns) - LXML-based XML column types.
+  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-xml_columns.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-xml_columns)
 
 To create a plugin in the configured plugin directory, run:
 ```bash

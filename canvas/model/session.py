@@ -164,6 +164,8 @@ class Session:
 			raise ValidationErrors({
 				constraint.target_column.name: constraint.error_message
 			})
+		
+		return self
 
 	def save(self, model):
 		'''
