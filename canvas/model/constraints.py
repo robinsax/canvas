@@ -21,52 +21,59 @@ __all__ = [
 	'NotNullConstraint'
 ]
 
-#	The constraint name to constraint object mapping used
-#	for lookup in native-evaluation and for-client 
-#	serialization.
+#	The constraint name to constraint object mapping used for lookup in 
+#	native-evaluation and serialization for client side evaluation.
 _constraint_map = {}
 
 def get_constraint(name):
 	'''
-	Return the constraint object with name `name`, or 
-	`None` if there isn't one.
+	Return the constraint object with name `name`, or `None` if there isn't 
+	one.
 	'''
 	return _constraint_map.get(name, None)
 
 class Constraint:
 	'''
-	Base constraint class enforces a name, error message,
-	and placeholder evaluation methods.
+	Base constraint class enforces a name, error message and placeholder 
+	evaluation methods.
 	'''
 
-	def __init__(self, name, error_message):
+	#	TODO: A class attribute might be better for name_postfix.
+	def __init__(self, name_postfix, error_message):
 		'''
 		Define a new constraint type.
 
-		:name A unique name for this constraint.
-		:error_message A human-readable error message to 
-			provide when this constraint is violated.
+		:name_postfix A unique name postfix for the overriding constraint type.
+		:error_message A human-readable error message to provide when this 
+			constraint is violated.
 		'''
-		self.name, self.error_message = name, error_message
+		self.name_postfix, self.error_message = name_postfix, error_message
 
-		#	Store a placeholder value for the targeted column
-		#	object.
+		#	Store placeholder values.
 		self.target_column = None
+		self.name = None
 
-		#	Add to the constraint name to constraint object 
-		#	mapping.
-		_constraint_map[name] = self
+	#	TODO: Should only need column
+	def resolve_onto(self, model_cls, column):
+		'''
+		Resolve this constraint as belonging to `column`.
+		'''
+		#	Store the column.
+		self.target_column = column
+		#	Populate the name.
+		self.name = f'{model_cls.__table__}_{column.name}_{self.name_postfix}'
+
+		#	Register self for created the name.
+		_constraint_map[self.name] = self
 	
 	def as_client_parsable(self):
 		'''
-		Return a client-parsable representation of this
-		constraint for client-side validation.
+		Return a client-parsable representation of this constraint for 
+		client-side validation.
 
-		The representation should be of the format 
-		`type_name:representation`.
+		The representation should be of the format `type_name:representation`.
 
-		A front-end validation method must then exist for 
-		`type_name`.
+		A front-end validation method must then exist for `type_name`.
 		'''
 		raise UnsupportedEnformentMethod()
 
@@ -78,11 +85,11 @@ class Constraint:
 
 	def check(self, model, value):
 		'''
-		Return whether or not the constraint is met by the
-		given input, or raise an `UnsupportedEnforcementMethod`.
+		Return whether or not the constraint is met by the given input, or 
+		raise an `UnsupportedEnforcementMethod`.
 		
-		Implementing this method allows a single catch-all validation
-		as opposed to the one-at-a-time validation of Postgres.
+		Implementing this method allows a single catch-all validation as 
+		opposed to the one-at-a-time validation of Postgres.
 
 		:model The model object to which the check applies.
 		:value The value to check, for convience.
@@ -91,12 +98,11 @@ class Constraint:
 
 	def check_with_throw(self, model, value):
 		'''
-		Call `check()` and raise a `ValidationErrors` if the check 
-		fails. Will raise an `UnsupportedEnforcementMethod` if 
-		`check()` is not implemented.
+		Call `check()` and raise a `ValidationErrors` if the check fails. Will 
+		raise an `UnsupportedEnforcementMethod` if `check()` is not implemented.
 
-		Note a `ValidationErrors` will cause a canonical failure 
-		response to be sent to the client.
+		Note a `ValidationErrors` will cause a canonical failure response to be 
+		sent to the client.
 		'''
 		if not self.check(model, value):
 			raise ValidationErrors({
@@ -108,11 +114,10 @@ class RegexConstraint(Constraint):
 	A regular expression constraint on textual columns.
 	'''
 
-	def __init__(self, name, error_message, regex, ignore_case=False, negative=False):
+	def __init__(self, error_message, regex, ignore_case=False, negative=False):
 		'''
 		Create a new regular expression constraint.
 
-		:name A unique name for this constraint.
 		:error_message A human-readable error message to 
 			provide when this constraint is violated.
 		:regex The regular expression which the column values
@@ -122,14 +127,14 @@ class RegexConstraint(Constraint):
 		:negative Whether this constraint enforces the column
 			value does *not* match `regex`.
 		'''
-		super().__init__(name, error_message)
+		super().__init__('format', error_message)
 		self.regex = regex
 		self.ignore_case, self.negative = ignore_case, negative
 
 	def as_client_parsable(self):
 		'''
-		Return a client parsable representation of this
-		regular expression constraint.
+		Return a client parsable representation of this regular expression 
+		constraint.
 		'''
 		as_flag = lambda b: '1' if b else '0'
 
@@ -137,8 +142,7 @@ class RegexConstraint(Constraint):
 	
 	def as_sql(self):
 		'''
-		Return an SQL representation of this regular
-		expression.
+		Return an SQL representation of this regular expression constraint.
 		'''
 		opr = '~'
 		if self.negative:
@@ -150,8 +154,7 @@ class RegexConstraint(Constraint):
 
 	def check(self, model, value):
 		'''
-		Evaluate whether `value` satisfies this regular 
-		expression constraint.
+		Evaluate whether `value` satisfies this regular expression constraint.
 		'''
 		flags = re.I if self.ignore_case else 0
 		return re.match(self.regex, value, flags=flags) is not None
@@ -159,22 +162,20 @@ class RegexConstraint(Constraint):
 class RangeConstraint(Constraint):
 	'''
 	A range constraint on numerical columns.
-
-	TODO: Support all permutation of above and below
-		constraint presence on the client side.
 	'''
+	#	TODO: Support all permutation of above and below constraint presence on the 
+	#	client side.
 
-	def __init__(self, name, error_message, max_value=None, min_value=None):
+	def __init__(self, error_message, max_value=None, min_value=None):
 		'''
 		Create a new regular expression constraint.
 
-		:name A unique name for this constraint.
-		:error_message A human-readable error message to 
-			provide when this constraint is violated.
+		:error_message A human-readable error message to provide when this 
+			constraint is violated.
 		:max_value The maximum value enforced by this constraint.
 		:min_value The minimum value enforced by this constraint.
 		'''
-		super().__init__(name, error_message)
+		super().__init__('range', error_message)
 		
 		#	Assert range validity.
 		if max_value is None and min_value is None:
@@ -187,8 +188,7 @@ class RangeConstraint(Constraint):
 
 	def as_client_parsable(self):
 		'''
-		Return a client parsable representation of this 
-		numerical constraint.
+		Return a client parsable representation of this numerical constraint.
 		'''
 		max_ = 'null' if self.max_value is None else self.max_value
 		min_ = 'null' if self.min_value is None else self.min_value
@@ -196,8 +196,7 @@ class RangeConstraint(Constraint):
 
 	def as_sql(self):
 		'''
-		Return an SQL representation of this numerical
-		constraint.
+		Return an SQL representation of this numerical constraint.
 		'''
 		#	Create the column reference SQL.
 		col_ref = f'{self.target_column.model.__table__}.{self.target_column.name}'
@@ -214,18 +213,22 @@ class RangeConstraint(Constraint):
 
 class UniquenessConstraint(Constraint):
 	'''
-	A constraint that enforces column value 
-	uniqueness.
+	A constraint that enforces column value uniqueness.
 	'''
+
+	def __init__(self, error_message):
+		super().__init__('uniqueness', error_message)
 
 	def as_sql(self):
 		return 'UNIQUE'
 
 class NotNullConstraint(Constraint):
 	'''
-	A constraint that enforces non-null column
-	value.
+	A constraint that enforces non-null column value.
 	'''
+
+	def __init__(self, error_message):
+		super().__init__('existance', error_message)
 
 	def as_sql(self):
 		return 'NOT NULL'

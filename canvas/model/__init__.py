@@ -166,6 +166,11 @@ def schema(table_name, schema, accessors=None):
 			access = [primary_key.name]
 		cls.__accessors__ = [schema[name] for name in access]
 
+		#	Allow constraints to resolve.
+		for col_name, col_obj in schema.items():
+			for constraint in col_obj.constraints:
+				constraint.resolve_onto(cls, col_obj)
+
 		#	Create a `get()` class method for easy single-item retrieval.
 		def get(cls, val, session):
 			query = (cls.__accessors__[0] == val).group()

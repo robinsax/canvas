@@ -21,7 +21,7 @@ __all__ = [
 	'SQLAggregatorCall',
 	#	Functions - package internal.
 	'table_creation',
-	'row_retrieval',
+	'retrieval',
 	'row_creation',
 	'row_update',
 	'row_deletion'
@@ -243,11 +243,12 @@ def table_creation(model_cls):
 	#	Return formatted statement.
 	return f'CREATE TABLE IF NOT EXISTS {model_cls.__table__} ({col_defns});', ()
 
-def row_retrieval(model_cls, query, ordering=None):
+#	TODO: Finish allowing scalar to tuple retrieval.
+def retrieval(target, query, ordering=None):
 	'''
-	Serialize a row retrieval based on some query expression.
-
-	:model_cls The targeted model class.
+	Serialize a retrieval based on some query condition.
+	
+	:target The .
 	:query The query. Either a primitive value or a 
 		model-class-level column comparison.
 	'''
@@ -263,7 +264,7 @@ def row_retrieval(model_cls, query, ordering=None):
 	else:
 		raise InvalidQuery(f'Bad type {type(query)}')
 
-	sql = f'SELECT {_column_ordering(model_cls)} FROM {model_cls.__table__}'
+	sql = f'SELECT {_column_ordering(target)} FROM {target.__table__}'
 
 	#	Maybe add condition.
 	if condition is not None:

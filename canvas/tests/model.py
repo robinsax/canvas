@@ -133,7 +133,7 @@ def basics():
 	check((
 		y is None
 	), 'Non-matching simple single query returns None')
-
+	
 	session = model.create_session()
 
 	new_pk = 'a'*32
@@ -159,7 +159,7 @@ def test_orm():
 	@model.schema(TEST_TABLE, {
 		'a': model.Column('serial', primary_key=True),
 		'b': model.Column('text', constraints=[
-			model.RegexConstraint('my_constraint', 'Something happened', '^\w{5,}$')
+			model.RegexConstraint('Something happened', '^\w{5,}$')
 		]),
 		'c': model.Column('json')
 	}, accessors=['a'])

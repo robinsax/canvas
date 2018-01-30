@@ -133,11 +133,8 @@ class Column(SQLExpression):
 
 		#	Populate constraint attribute and store the list.
 		if not isinstance(constraints, (list, tuple)):
-			#	The `constraints` parameter was passed a single
-			#	object.
+			#	The `constraints` parameter was passed a single object.
 			constraints = (constraints,)
-		for constraint in constraints:
-			constraint.target_column = self
 		self.constraints = constraints
 
 		#	Store primary key flag.
