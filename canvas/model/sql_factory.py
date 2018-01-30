@@ -252,15 +252,16 @@ def row_retrieval(model_cls, query, ordering=None):
 		model-class-level column comparison.
 	'''
 	#	Serialize and prepare the query.
-	#	TODO: Feels janky.
 	values = []
-	#	Handle the case where no query conditions are supplied.
+	
+	#	Handle the case where a boolean condition is supplied (if the query is
+	#	literally `False`, this function will never be invoked).
 	if query is True:
 		condition = None
 	elif isinstance(query, SQLExpression):
 		condition = query.as_condition(values)
 	else:
-		raise InvalidQuery('Bad type')
+		raise InvalidQuery(f'Bad type {type(query)}')
 
 	sql = f'SELECT {_column_ordering(model_cls)} FROM {model_cls.__table__}'
 

@@ -209,35 +209,48 @@ class Session:
 		return self
 
 	#	TODO: Redoc.
-	def query(self, model_cls, conditions=True, one=False, order_by=None, descending=False):
+	def query(self, target, conditions=True, one=False, order_by=None, descending=False):
 		'''
 		Retrieve rows from a table based on some query, then
 		load them as models and return the resulting model
 		list.
 
-		:model_cls The model class (must have been decorated
+		:target The model class (must have been decorated
 			with `model.schema()`).
 		:conditions A primitive type or comparison on class-level
 			column attributes.
 		:one Whether to return the first result only, or `None`
 			if there are not results.
 		'''
+		#	Handle a contradiction as the condition.
+		if conditions is False:
+			return None if one else []
+		
 		#	Check if order specified.
 		order = (order_by, not descending) if order_by is not None else None
 		
 		#	Execute the selection.
-		self.execute(*row_retrieval(model_cls, conditions, order))
+		if hasattr(target, '__schema__'):
+			#	Return model objects.
+			self.execute(*row_retrieval(target, conditions, order))
 
-		if one:
-			#	Return the first entry or `None`.
-			row = self.cursor.fetchone()
-			if row is None:
-				return None
+			if one:
+				#	Return the first entry or `None`.
+				row = self.cursor.fetchone()
+				if row is None:
+					return None
 
-			return self._load_model(model_cls, row)
+				return self._load_model(target, row)
+			else:
+				#	Return a list containing all entries.
+				return [self._load_model(target, row) for row in self.cursor]
+		elif isinstance(target, SQLExpression):
+			#	Return a scalar.
+			#	TODO: Improve the condition + finish.
+			raise NotImplemented()
+			self.execute(*column_retrieval(target, conditions, order))
 		else:
-			#	Return a list containing all entries.
-			return [self._load_model(model_cls, row) for row in self.cursor]
+			raise InvalidQuery('Bad query target')
 
 	def commit(self):
 		'''

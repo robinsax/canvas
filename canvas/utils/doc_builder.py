@@ -112,8 +112,6 @@ def function_doc(func, small=False):
 	#	Normalize triple+ newlines and return.
 	return re.sub('\n\n+', '\n\n', f'{prefix}{func_name}({arg_fmt})\n{arg_descs}\n{doc_str}\n')
 
-#	TODO: Provide plugin interface
-
 def build_docs(package):
 	'''
 	Generate a Markdown file for each package in the __documented__ list in
