@@ -213,7 +213,7 @@ class UniquenessConstraint(Constraint):
 	A constraint that enforces column value uniqueness.
 	'''
 
-	def __init__(self, error_message):
+	def __init__(self, error_message='Must be unique'):
 		super().__init__('uniqueness', error_message)
 
 	def as_sql(self):
@@ -224,7 +224,7 @@ class NotNullConstraint(Constraint):
 	A constraint that enforces non-null column value.
 	'''
 
-	def __init__(self, error_message):
+	def __init__(self, error_message='Required'):
 		super().__init__('existance', error_message)
 
 	def as_sql(self):
