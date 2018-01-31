@@ -328,8 +328,7 @@ def row_update(model):
 
 def row_creation(model):
 	'''
-	Serialize a row insertion based on a constructed 
-	model object.
+	Serialize a row insertion based on a constructed model object.
 	'''
 	model_cls = model.__class__
 
@@ -353,8 +352,7 @@ def row_creation(model):
 
 def row_deletion(model):
 	'''
-	Delete the corresponding row for the given
-	model object
+	Delete the corresponding row for the given model object
 	'''
 	model_cls = model.__class__
 

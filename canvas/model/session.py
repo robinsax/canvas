@@ -170,6 +170,7 @@ class Session:
 
 		#	Populate the model object with the returned, default-populated row.
 		self._map_model(model, self.cursor.fetchone())
+		
 		#	Clear the dirty flag, which was set by the mapping, since the model
 		#	is row-synced
 		model.__dirty__ = False

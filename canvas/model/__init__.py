@@ -217,9 +217,9 @@ def schema(table_name, schema, accessors=None):
 			inner_set(self, attr, val)
 		cls.__setattr__ = set_with_check
 
-		#	Add the model class to the global object to table mapping.
+		#	Add to the global object to table mapping.
 		_all_orm[table_name] = cls
-		#	Register the model class for access by namespace management.
+		#	Register for access by namespace management.
 		register.model(cls)
 
 		return cls

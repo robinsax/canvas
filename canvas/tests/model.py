@@ -249,11 +249,13 @@ def non_model_queries():
 
 	model.create_everything()
 
+	#	Save instances.
 	session.save(X('aaaa'))
 	for i in range(5):
 		session.save(X('hello'))
 	session.save(X('hi')).commit()
 
+	#	Test.
 	check((
 		session.query(X.id.count()) == 7
 	), 'Unconditioned count aggregator')

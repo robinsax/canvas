@@ -117,14 +117,13 @@ class RegexConstraint(Constraint):
 		'''
 		Create a new regular expression constraint.
 
-		:error_message A human-readable error message to 
-			provide when this constraint is violated.
-		:regex The regular expression which the column values
-			must match.
-		:ignore_case Whether the regular expression should be
+		:error_message A human-readable error message to provide when this 
+			constraint is violated.
+		:regex The regular expression which the column values must match.
+		:ignore_case Whether the regular expression should be 
 			case-insensitive.
-		:negative Whether this constraint enforces the column
-			value does *not* match `regex`.
+		:negative Whether this constraint enforces the column value does *not* 
+			match `regex`.
 		'''
 		super().__init__('format', error_message)
 		self.regex = regex

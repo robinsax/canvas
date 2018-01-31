@@ -256,12 +256,21 @@ class Column(SQLExpression):
 
 	#	Some builtin function calls yeild `SQLAggregatorCall`s.
 	def count(self):
+		'''
+		Return the COUNT of this column when queried.
+		'''
 		return SQLAggregatorCall('COUNT', self)
 
 	def is_max(self):
+		'''
+		Return a query condition that this column is maximal.
+		'''
 		return SQLAggregatorCall('MAX', self)
 
 	def is_min(self):
+		'''
+		Return a query condition that this column is minimal.
+		'''
 		return SQLAggregatorCall('MIN', self)
 
 	#	This one is sneaky...
