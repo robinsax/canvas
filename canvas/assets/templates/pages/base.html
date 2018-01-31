@@ -50,9 +50,9 @@
 					{% endif %}
 				{% endfor %}
 			{% endmacro %}
-			
-			{{ render_dependencies(page_deps[0], False) }}
+
 			{{ render_dependencies(page_deps[1], True) }}
+			{{ render_dependencies(page_deps[0], False) }}
 		{% endblock %}
 	</head>
 	<body cv-route="{{ __page__.route }}" {% block body_attributes %}{% endblock %}>
