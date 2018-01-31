@@ -43,7 +43,7 @@ def serve(port):
 	'''
 	from .. import application
 
-	run_simple('localhost', port, application)
+	run_simple('0.0.0.0', port, application)
 
 class WrappedDict(dict):
 	'''

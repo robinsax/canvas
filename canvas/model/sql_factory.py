@@ -142,7 +142,19 @@ class SQLComparison(SQLExpression):
 		'''
 		return SQLComparison(self, other, 'AND')
 
+	def __rand__(self, other):
+		'''
+		Return a conjunction of this expression and another.
+		'''
+		return SQLComparison(other, self, 'AND')
+
 	def __or__(self, other):
+		'''
+		Return a disjunction of this expression and another.
+		'''
+		return SQLComparison(self, other, 'OR')
+
+	def __ror__(other, self):
 		'''
 		Return a disjunction of this expression and another.
 		'''
