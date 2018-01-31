@@ -1,7 +1,9 @@
 #   Full configuration for hosting with uWSGI + nginx. Takes <user> <domain>.
 #   Install dependencies.
+apt-get update
 /usr/bin/yes | apt-get install python3-pip nginx postgresql
 /usr/bin/yes | pip3 install -r requirements.txt
+/usr/bin/yes | pip3 install uwsgi
 
 #   Configure Postgres.
 python3 ./scripts/write_setup_sql.py | sudo -u postgres psql
