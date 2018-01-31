@@ -196,7 +196,7 @@ class RangeConstraint(Constraint):
 		Return an SQL representation of this numerical constraint.
 		'''
 		#	Create the column reference SQL.
-		col_ref = self.column.serialize()
+		col_ref = self.column.serialize([])
 		
 		#	Create comparison SQL.
 		ends = []
