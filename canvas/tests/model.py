@@ -1,8 +1,6 @@
 #	coding utf-8
 '''
-Unit tests on model ORM.
-
-::incomplete
+Unit tests on the canvas model package.
 '''
 
 from ..exceptions import (
@@ -36,37 +34,6 @@ def reset(session):
 			session.rollback()
 
 	model._wipe()
-
-@model_test('Foreign keys')
-def test_table_creation_order():
-	session = model.create_session()
-	reset(session)
-
-	subcase('Declaration')
-
-	@model.schema(TEST_TABLE_3, {
-		'id': model.Column('serial', primary_key=True),
-		'pointer': model.Column(f'fk:{TEST_TABLE_2}.id'),
-		'pointer2': model.Column(f'fk:{TEST_TABLE}.id')
-	})
-	class X: pass
-
-	@model.schema(TEST_TABLE_2, {
-		'id': model.Column('serial', primary_key=True),
-		'pointer': model.Column(f'fk:{TEST_TABLE}.id')
-	})
-	class Y: pass
-
-	@model.schema(TEST_TABLE, {
-		'id': model.Column('serial', primary_key=True)
-	})
-	class Z: pass
-
-	subcase('Table ordering and creation')
-	try:
-		model.create_everything()
-	except InvalidSchema:
-		fail('Order not resolved')
 
 @model_test('Basic functionality')
 def basics():
@@ -150,6 +117,7 @@ def basics():
 		y.a == x.a
 	), 'Primary key updates flushed to disk')
 
+#	TODO: Rats nest.
 @model_test('Constraints, accessors, and complex columns')
 def test_orm():
 	session = model.create_session()
@@ -214,8 +182,7 @@ def test_orm():
 	y.b = 'foobar2'
 	session.commit()
 	
-	session.delete(y)
-	session.commit()
+	session.delete(y).commit()
 	check((
 		len(session.query(Y, Y.b == 'foobar2')) == 0
 	), 'Deletion')
@@ -225,17 +192,76 @@ def test_orm():
 		y is x
 	), 'Class accessor get yields already-mapped model')
 
-	session.delete(y)
-	session.commit()
+	session.delete(y).commit()
 	all_y = session.query(Y)
 	check((
 		len(all_y) == 0
 	), 'Multiple-reference deletion')
 
 	y = Y('foobar', [1, 2, 3])
-	session.save(y)
-	session.commit()
+	session.save(y).commit()
 
+@model_test('Foreign keys')
+def test_table_creation_order():
+	session = model.create_session()
 	reset(session)
 
-	#	TODO: ETC...
+	subcase('Declaration')
+
+	@model.schema(TEST_TABLE_3, {
+		'id': model.Column('serial', primary_key=True),
+		'pointer': model.Column(f'fk:{TEST_TABLE_2}.id'),
+		'pointer2': model.Column(f'fk:{TEST_TABLE}.id')
+	})
+	class X: pass
+
+	@model.schema(TEST_TABLE_2, {
+		'id': model.Column('serial', primary_key=True),
+		'pointer': model.Column(f'fk:{TEST_TABLE}.id')
+	})
+	class Y: pass
+
+	@model.schema(TEST_TABLE, {
+		'id': model.Column('serial', primary_key=True)
+	})
+	class Z: pass
+
+	subcase('Table ordering and creation')
+	try:
+		model.create_everything()
+	except InvalidSchema:
+		fail('Order not resolved')
+
+@model_test('Non-model queries')
+def non_model_queries():
+	session = model.create_session()
+	reset(session)
+
+	#	Set up.
+	@model.schema(TEST_TABLE, {
+		'id': model.Column('serial', primary_key=True),
+		'text': model.Column('text')
+	})
+	class X:
+		
+		def __init__(self, text):
+			self.text = text
+
+	model.create_everything()
+
+	session.save(X('aaaa'))
+	for i in range(5):
+		session.save(X('hello'))
+	session.save(X('hi')).commit()
+
+	check((
+		session.query(X.id.count()) == 7
+	), 'Unconditioned count aggregator')
+
+	check((
+		session.query(X.id.count(), X.text == 'hello') == 5
+	), 'Conditioned count aggregator')
+
+	check((
+		session.query(min(X.text)) == 'aaaa'
+	), 'Unconditioned min aggregator')

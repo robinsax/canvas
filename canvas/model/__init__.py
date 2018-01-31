@@ -3,18 +3,30 @@
 ORM class, decorator, and utility definitions. 
 '''
 
-#	Initialize type adaption first.
-from .type_adaption import *
-
 from ..exceptions import (
 	ColumnDefinitionError,
 	InvalidSchema
 )
 from ..utils import register
 
+#	Initialize type adaption first.
+from .type_adaption import *
+
+##########################
+#	TODO: Refactor.
 #	The name to class mapping of enumerable types to create and reference in 
 #	Postgres.
 _all_enum = {}
+#	The table name to model class mapping.
+_all_orm = {}
+
+#	An exception used by foreign key columns to cause another table to be 
+#	resolved first. Not exposed.
+class _PushResolveNow(Exception):
+
+	def __init__(self, table):
+		self.table = table
+###########################
 
 #	Initialize package.
 from .columns import (
@@ -59,8 +71,7 @@ class _ColumnIterator:
 	'''
 	An ordered iterator on the columns of a model class.
 	
-	The nature of this object is not exposed outside of 
-	this package.
+	The nature of this object is not exposed outside of this package.
 	'''
 
 	def __init__(self, model_cls, yield_i):
@@ -68,8 +79,8 @@ class _ColumnIterator:
 		Create a column iterator.
 
 		:model_cls The mapped model class.
-		:yield_i Whether the current index should be included 
-			in the yielded tuple as a third argument.
+		:yield_i Whether the current index should be included in the yielded 
+			tuple as a third argument.
 		'''
 		self.model_cls = model_cls
 		self.yield_i = yield_i
@@ -98,9 +109,6 @@ class _ColumnIterator:
 			#	Yield without index.
 			return name, column
 
-#	The table name to model class mapping.
-_all_orm = {}
-
 def _wipe():
 	'''
 	Wipe the ORM. Should only be called by unit tests.
@@ -121,21 +129,24 @@ def schema(table_name, schema, accessors=None):
 		`get(reference, session)` classmethod.
 	'''
 	def wrap(cls):
-		#	Populate column attributes and add the columns to the class.
+		#	Place columns.
 		for name, col in schema.items():
+			#	Populate column attributes.
 			col.name = name
 			col.model = cls
+			#	Add the column as a model class attribute.
 			setattr(cls, name, col)
 
-		#	Define placeholder callbacks if real implementations aren't present 
+		#	Attach placeholder callbacks if real implementations aren't present 
 		#	so their existance can be assumed.
-		if getattr(cls, '__on_load__', None) is None:
-			cls.__on_load__ = lambda self: None
-		if getattr(cls, '__on_create__', None) is None:
-			cls.__on_create__ = lambda self: None
+		eat_call = lambda s: None
+		if not hasattr(cls, '__on_load__'):
+			cls.__on_load__ = eat_call
+		if not hasattr(cls, '__on_create__'):
+			cls.__on_create__ = eat_call
 		
 		#	Assert the existance of a single primary key column for this model 
-		#	class and find that column
+		#	class and find that column.
 		primary_key = None
 		for col_name, col_obj in schema.items():
 			if col_obj.primary_key:
@@ -144,70 +155,73 @@ def schema(table_name, schema, accessors=None):
 					raise ColumnDefinitionError(f'Multiple primary keys for table {table_name}')
 				#	Save the column object.
 				primary_key = col_obj
-
 		if primary_key is None:
 			#	No primary key specified.
 			raise ColumnDefinitionError(f'No primary key for table {table_name}')
 		
-		#	Add the model class to the global ORM mapping.
-		_all_orm[table_name] = cls
-
 		#	Populate class attributes.
 		cls.__table__ = table_name
 		cls.__schema__ = schema
+		cls.__primary_key__ = primary_key
 		#	Define a fixed order on columns for use in SQL serialization.
 		cls.__columns__ = sorted(schema.keys(), key=lambda n: schema[n].primary_key, reverse=True)
-		cls.__primary_key__ = primary_key
-		#	Define a dirty-checking flag for simple pre-insert necessity checks.
+		#	Initialize the rapid dirty-checking flag.
 		cls.__dirty__ = False
+		#	Initialize the table-existance flag
+		cls.__created__ = False
 
-		access = accessors
-		if access is None:
-			access = [primary_key.name]
-		cls.__accessors__ = [schema[name] for name in access]
-
-		#	Allow constraints to resolve.
-		for col_name, col_obj in schema.items():
-			for constraint in col_obj.constraints:
-				constraint.resolve_onto(cls, col_obj)
+		if accessors is None:
+			#	Make the primary key the sole accessor
+			cls.__accessors__ = primary_key
+		else:
+			cls.__accessors__ = [schema[name] for name in accessors]
 
 		#	Create a `get()` class method for easy single-item retrieval.
 		def get(cls, val, session):
+			#	Create query.
 			query = (cls.__accessors__[0] == val).group()
 			for accessor in cls.__accessors__[1:]:
 				query = query | (accessor == val).group()
+
+			#	Execute and return.
 			return session.query(cls, query, one=True)
 		cls.get = classmethod(get)
+
+		#	Create an ordered shema iterator as a class method.
+		def schema_iter(cls, i=False):
+			return _ColumnIterator(cls, i)
+		cls.schema_iter = classmethod(schema_iter)
 
 		#	Wrap initialization so that after instantiation (i.e. when a new 
 		#	instance/row is being created) columns are guarenteed to be 
 		#	populated.
 		inner_init = cls.__init__
 		def init(self, *args, **kwargs):
-			for name, column in cls.__schema__.items():
-				setattr(self, name, column.get_default())
+			#	Invoke standard init.
 			inner_init(self, *args, **kwargs)
+
+			#	Populate unset fields.
+			for name, column in cls.schema_iter():
+				if isinstance(getattr(self, name), Column):
+					setattr(self, name, column.get_default())
 		cls.__init__ = init
 
-		#	Override `__setattr__` to set the `__dirty__` flag 
-		#	when a column value is set.
+		#	Override `__setattr__` to set the `__dirty__` flag when a column 
+		#	value is set.
 		inner_set = cls.__setattr__
 		def set_with_check(self, attr, val):
 			if attr in self.__columns__:
-				#	This attribute is mapped to a column; in-memory
-				#	version is now dirty.
+				#	This attribute is mapped to a column; in-memory version is 
+				#	now dirty.
 				inner_set(self, '__dirty__', True)
 			inner_set(self, attr, val)
 		cls.__setattr__ = set_with_check
 
-		#	Create a ordered column iterator class method.
-		def schema_iter(cls, i=False):
-			return _ColumnIterator(cls, i)
-		cls.schema_iter = classmethod(schema_iter)
-
-		#	Register the model class for namespace management.
+		#	Add the model class to the global object to table mapping.
+		_all_orm[table_name] = cls
+		#	Register the model class for access by namespace management.
 		register.model(cls)
-		
+
 		return cls
 	return wrap
 
@@ -257,7 +271,6 @@ def create_session():
 	'''
 	return Session()
 
-#	TODO: FK column data storage refactor.
 def create_everything():
 	'''
 	Resolve foreign keys and enum references then issue table and enumarable 
@@ -273,57 +286,34 @@ def create_everything():
 
 	#	Create model class state trackers to ensure the foreign key enforced
 	#	ordering is both possible and followed.
-	_created, _started = [], []
+	_started = []
 	def create_model_and_table(model_cls):
 		'''
 		Finalize a model class and create the corresponding table.
 		'''
-		if model_cls in _created:
-			#	Already completed foreign key recursion.
+		if model_cls.__created__:
+			#	Already created.
 			return
 		elif model_cls in _started:
 			#	A loop occurred.
-			raise InvalidSchema(f'Foreign key back-reference for {model_cls.__name__}')
+			raise InvalidSchema(f'Dependency back-reference for {model_cls.__name__}')
 		
 		#	Add to started list so reference loops can be caught.
 		_started.append(model_cls)
 
-		#	Resolve foreign keys.
+		#	Resolve columns.
 		for col_name, col_obj in model_cls.schema_iter():
-			col_obj.compute_type()
-
-			if not isinstance(col_obj.type, ForeignKeyColumnType):
-				#	No foreign key to resolve.
-				continue
-			
-			#	Parse reference and assert format.
-			reference = col_obj.type.target_name
 			try:
-				dest_table_name, dest_col_name = reference.split('.')
-			except:
-				raise ColumnDefinitionError(f'Malformed foreign key declaration: {reference}')
-
-			#	Assert table existance.
-			if dest_table_name not in _all_orm:
-				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such table')
-			dest = _all_orm[dest_table_name]
-
-			#	Assert column exists.
-			if dest_col_name not in dest.__schema__:
-				raise ColumnDefinitionError(f'Invalid foreign key {reference}: No such column')
-
-			#	Create the target table if it doesn't already exist.
-			create_model_and_table(dest)
-
-			#	Store the reference in the column.
-			col_obj.type.target_model = dest
-			col_obj.reference = dest.__schema__[dest_col_name]
+				col_obj.resolve(model_cls)
+			except _PushResolveNow as recurser:
+				create_model_and_table(recurser.table)
+				col_obj.resolve(model_cls)
 
 		#	Execute the table creation.
 		session.execute(*table_creation(model_cls))
 
 		#	Mark as finished to allow reference.
-		_created.append(model_cls)
+		model_cls.__created__ = True
 	
 	for name, model_cls in _all_orm.items():
 		create_model_and_table(model_cls)

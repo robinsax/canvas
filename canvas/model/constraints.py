@@ -51,18 +51,16 @@ class Constraint:
 		self.name_postfix, self.error_message = name_postfix, error_message
 
 		#	Store placeholder values.
-		self.target_column = None
-		self.name = None
+		self.column, self.name = (None,)*2
 
-	#	TODO: Should only need column
-	def resolve_onto(self, model_cls, column):
+	def resolve(self, column):
 		'''
-		Resolve this constraint as belonging to `column`.
+		Resolve this constraint as belonging to `Column`.
 		'''
 		#	Store the column.
-		self.target_column = column
+		self.column = column
 		#	Populate the name.
-		self.name = f'{model_cls.__table__}_{column.name}_{self.name_postfix}'
+		self.name = f'{column.model.__table__}_{column.name}_{self.name_postfix}'
 
 		#	Register self for created the name.
 		_constraint_map[self.name] = self
@@ -107,7 +105,7 @@ class Constraint:
 		'''
 		if not self.check(model, value):
 			raise ValidationErrors({
-				self.target_column.name: self.error_message
+				self.column.name: self.error_message
 			})
 
 class RegexConstraint(Constraint):
@@ -150,8 +148,7 @@ class RegexConstraint(Constraint):
 			opr = f'!{opr}'
 		if self.ignore_case:
 			opr = f'{opr}*'
-		col_ref = f'{self.target_column.model.__table__}.{self.target_column.name}'
-		return f'CHECK ({col_ref} {opr} \'{self.regex}\')'
+		return f'CHECK ({self.column.serialize([])} {opr} \'{self.regex}\')'
 
 	def check(self, model, value):
 		'''
@@ -200,7 +197,7 @@ class RangeConstraint(Constraint):
 		Return an SQL representation of this numerical constraint.
 		'''
 		#	Create the column reference SQL.
-		col_ref = f'{self.target_column.model.__table__}.{self.target_column.name}'
+		col_ref = self.column.serialize()
 		
 		#	Create comparison SQL.
 		ends = []

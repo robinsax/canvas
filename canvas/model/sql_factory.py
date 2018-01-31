@@ -123,16 +123,14 @@ class SQLComparison(SQLExpression):
 
 	def group(self):
 		'''
-		*Group* this comparison expression to give it 
-		precedence.
+		Group this comparison expression to give it precedence.
 		'''
 		self.grouped = True
 		return self
 	
 	def __invert__(self):
 		'''
-		Group and logically invert this comparison 
-		expression.
+		Group and logically invert this comparison expression.
 		'''
 		self.grouped = True
 		self.inverted = True
@@ -155,24 +153,24 @@ class SQLAggregatorCall(SQLExpression):
 	An SQL aggregator function call expression.
 	'''
 
-	def __init__(self, func, col, weight=1):
+	def __init__(self, func, column, weight=0):
 		#	TODO: Refactor this import.
 		from .columns import Column
 
 		#	Assert parameter is a column.
-		if not isinstance(col, Column):
+		if not isinstance(column, Column):
 			raise InvalidQuery('Aggregator parameter is not a column')
 
-		self.func, self.col = func, col
+		self.func, self.column = func, column
 
 		#	Weight is used for the `max()` and `min()` trick.
 		self.weight = weight
 
 	def as_condition(self, values):
-		return f'WHERE {self.col.name} = (SELECT {self.serialize(values)} FROM {self.col.model.__table__})'
+		return f'WHERE {self.column.name} = (SELECT {self.serialize(values)} FROM {self.column.model.__table__})'
 
 	def serialize(self, values):
-		return f'{self.func}({self.serialize_node(self.col, values)})'
+		return f'{self.func}({self.serialize_node(self.column, values)})'
 
 	def __gt__(self, other):
 		return self.weight > other.weight
@@ -185,8 +183,8 @@ def _column_ordering(model_cls):
 
 def enum_creation(enum_cls):
 	'''
-	In-Postgres enumerable type creation. Complicated by the 
-	lack of an IF NOT EXISTS option.
+	In-Postgres enumerable type creation. Complicated by the lack of an 
+	`IF NOT EXISTS` option.
 	'''
 	#	Get the in-Postgres type name.
 	name = enum_cls.__type_name__
@@ -202,8 +200,8 @@ def enum_creation(enum_cls):
 
 def table_creation(model_cls):
 	'''
-	Serialize a table creation with IF NOT EXISTS option since 
-	table creation is issued every time canvas is initialized.
+	Serialize a table creation with IF NOT EXISTS option since table creation 
+	is issued every time canvas is initialized.
 	'''
 	#	TODO: Refactor this import.
 	from .columns import ForeignKeyColumnType
@@ -212,7 +210,6 @@ def table_creation(model_cls):
 		'''
 		Serialize a column generation.
 		'''
-		#	TODO: Foreign key logic improvement.
 		#	Create definition base; name and type.
 		col_sql = f'{col.name} {col.type.sql_type}'
 
@@ -222,8 +219,8 @@ def table_creation(model_cls):
 
 		#	Add foreign key target if applicable.
 		if isinstance(col.type, ForeignKeyColumnType):
-			target = col.type.target_model
-			col_sql = f'{col.name} {col.reference.type.sql_type} REFERENCES {target.__table__}({col.reference.name})'
+			target = col.reference
+			col_sql = f'{col.name} {target.type.sql_type} REFERENCES {target.model.__table__}({target.name})'
 		
 		#	Add all constraints that support SQL serialization.
 		for constr in col.constraints:
@@ -248,23 +245,42 @@ def retrieval(target, query, ordering=None):
 	'''
 	Serialize a retrieval based on some query condition.
 	
-	:target The .
-	:query The query. Either a primitive value or a 
-		model-class-level column comparison.
+	:target The retrieval target.
+	:query The query condition.
 	'''
+	#	TODO: Refactor this import.
+	from .columns import Column
+
 	#	Serialize and prepare the query.
 	values = []
 	
-	#	Handle the case where a boolean condition is supplied (if the query is
-	#	literally `False`, this function will never be invoked).
+	#	Parse query.
 	if query is True:
+		#	No condition.
 		condition = None
 	elif isinstance(query, SQLExpression):
+		#	Serialize the condition.
 		condition = query.as_condition(values)
 	else:
-		raise InvalidQuery(f'Bad type {type(query)}')
+		raise InvalidQuery(f'Bad query condition {repr(query)}')
 
-	sql = f'SELECT {_column_ordering(target)} FROM {target.__table__}'
+	#	Parse selection.
+	if hasattr(target, '__schema__'):
+		#	Full-model retrieval.
+		selection = _column_ordering(target)
+		table = target.__table__
+	elif isinstance(target, SQLExpression):
+		#	Aggregation or column retrieval.
+		selection = target.serialize([])
+
+		#	Get table.
+		if isinstance(target, SQLAggregatorCall):
+			target = target.column
+		table = target.model.__table__
+	else:
+		raise InvalidQuery(f'Bad query selection {repr(query)}')
+
+	sql = f'SELECT {selection} FROM {table}'
 
 	#	Maybe add condition.
 	if condition is not None:
@@ -332,13 +348,8 @@ def row_creation(model):
 	assignments = ', '.join(['%s' for x in order])
 	order = ', '.join(order)
 
-	#	Caller is going to read primary key from cursor
-	#	to obtain a row reference in the case of SERIAL
-	#	and other in-SQL defaulted primary key values.
-	pk_col = model_cls.__primary_key__.name
-
 	#	Return formatted statement.
-	return f'INSERT INTO {model_cls.__table__} ({order}) VALUES ({assignments}) RETURNING {pk_col};', values
+	return f'INSERT INTO {model_cls.__table__} ({order}) VALUES ({assignments}) RETURNING {_column_ordering(model_cls)};', values
 
 def row_deletion(model):
 	'''

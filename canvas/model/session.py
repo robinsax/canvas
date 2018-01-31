@@ -150,7 +150,7 @@ class Session:
 			constraint = get_constraint(e.diag.constraint_name)
 			#	Raise a validation error containing the constraint info.
 			raise ValidationErrors({
-				constraint.target_column.name: constraint.error_message
+				constraint.column.name: constraint.error_message
 			})
 		
 		return self
@@ -168,14 +168,7 @@ class Session:
 		#	Perform the insertion.
 		self.execute(*row_creation(model))
 
-		#	SQL factory has the insert returning the primary key value so we 
-		#	have a reference in the case of in-SQL column defaults.
-		ref = self.cursor.fetchone()[0]
-
-		#	Retrieve the row we just inserted so we can see populated defaults.
-		self.execute(*retrieval(model_cls, model_cls.__primary_key__ == ref))
-
-		#	Populate the model object with the retrieved row.
+		#	Populate the model object with the returned, default-populated row.
 		self._map_model(model, self.cursor.fetchone())
 		#	Clear the dirty flag, which was set by the mapping, since the model
 		#	is row-synced
@@ -215,11 +208,11 @@ class Session:
 		#	Check if order specified.
 		order = (order_by, not descending) if order_by is not None else None
 		
-		#	Execute the selection.
+		#	Execute the retrieval.
+		self.execute(*retrieval(target, conditions, order))
+
 		if hasattr(target, '__schema__'):
 			#	Return model objects.
-			self.execute(*retrieval(target, conditions, order))
-
 			if one:
 				#	Return the first entry or `None`.
 				row = self.cursor.fetchone()
@@ -230,11 +223,15 @@ class Session:
 			else:
 				#	Return a list containing all entries.
 				return [self._load_model(target, row) for row in self.cursor]
-		elif isinstance(target, SQLAggregatorCall):
-			#	Return a scalar aggregator result.
-			self.execute(*retrieval(target, conditions, order))
 		else:
-			raise InvalidQuery('Bad query target')
+			if isinstance(target, SQLAggregatorCall):
+				#	Must be one.
+				one = True
+			
+			if one:
+				return self.cursor.fetchone()[0]
+			else:
+				return [r[0] for r in self.cursor.fetchall()]
 
 	def commit(self):
 		'''
