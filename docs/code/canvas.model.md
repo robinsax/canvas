@@ -5,8 +5,7 @@ ORM class, decorator, and utility definitions.
 
 ## Classes
 ### Session(object)
-The `Session` object maintains a consecutive set 
-of database transactions.
+The `Session` object manages database interaction and relational mapping.
 #### Methods
 #### \_\_del__(self)
 
@@ -29,17 +28,17 @@ Delete the row mapped to a loaded model.
 
 #### execute(self, sql, values=())
 
-Execute SQL with debug logging, throwing a `ValidationError` 
-when an integrity check fails.
+Execute SQL with debug logging, raising a `ValidationErrors` when an 
+integrity check fails.
 
-#### query(self, model_cls, conditions=True, one=False, order_by=None, descending=False)
-+ *model_cls*:  The model class (must have been decorated with `model.schema()`). 
-+ *conditions*:  A primitive type or comparison on class-level column attributes. 
+#### query(self, target, conditions=True, one=False, order_by=None, descending=False)
++ *target*:  The model class (must have been decorated with `model.schema()`). 
++ *conditions*:  A query condition. 
 + *one*:  Whether to return the first result only, or `None` if there are not results.
 
-Retrieve rows from a table based on some query, then
-load them as models and return the resulting model
-list.
+Query the table mapped to or including `target`, returning mapped 
+models if `target` is a model class, scalar values if the it was a
+single column, and tuples if it was a tuple of columns
 
 
 #### reset(self)
@@ -63,7 +62,7 @@ attribute by the `model.schema()` decorator.
 Stores type information and generates an SQL-serializable expression 
 on comparison.
 #### Methods
-#### \_\_init__(self, type_str, constraints=[], default=None, primary_key=False)
+#### \_\_init__(self, type_str, constraints=[], default=<object object at 0x0000000003478750>, primary_key=False)
 + *type_str*:  A string representation of the column type. 
 + *default*:  The default value to populate this column with. Default values are populated after row insertion since they may be resolved within Postgres. 
 + *primary_key*:  Whether or not this column is the table's primary key.
@@ -75,15 +74,26 @@ Create a new column.
 
 Return this expression serialized as an SQL query condition.
 
-#### compute_type(self)
+#### count(self)
 
-Parse the type definition of this column and initialize it 
-appropriatly.
+Return the COUNT of this column when queried.
 
 #### get_default(self)
 
 Return the default value for this column, resolving it if it's 
 callable.
+
+#### is_max(self)
+
+Return a query condition that this column is maximal.
+
+#### is_min(self)
+
+Return a query condition that this column is minimal.
+
+#### resolve(self, model)
+
+Resolve this column, including its type and constraints.
 
 #### serialize(self, values)
 
@@ -107,11 +117,11 @@ Return the value of this column for the given
 model object.
 
 ### Constraint(object)
-Base constraint class enforces a name, error message,
-and placeholder evaluation methods.
+Base constraint class enforces a name, error message and placeholder 
+evaluation methods.
 #### Methods
-#### \_\_init__(self, name, error_message)
-+ *name*:  A unique name for this constraint. 
+#### \_\_init__(self, name_postfix, error_message)
++ *name_postfix*:  A unique name postfix for the overriding constraint type. 
 + *error_message*:  A human-readable error message to provide when this constraint is violated.
 
 Define a new constraint type.
@@ -119,14 +129,12 @@ Define a new constraint type.
 
 #### as_client_parsable(self)
 
-Return a client-parsable representation of this
-constraint for client-side validation.
+Return a client-parsable representation of this constraint for 
+client-side validation.
 
-The representation should be of the format 
-`type_name:representation`.
+The representation should be of the format `type_name:representation`.
 
-A front-end validation method must then exist for 
-`type_name`.
+A front-end validation method must then exist for `type_name`.
 
 #### as_sql(self)
 
@@ -136,27 +144,29 @@ Return an SQL serialization of this constraint.
 + *model*:  The model object to which the check applies. 
 + *value*:  The value to check, for convience.
 
-Return whether or not the constraint is met by the
-given input, or raise an `UnsupportedEnforcementMethod`.
+Return whether or not the constraint is met by the given input, or 
+raise an `UnsupportedEnforcementMethod`.
 
-Implementing this method allows a single catch-all validation
-as opposed to the one-at-a-time validation of Postgres.
+Implementing this method allows a single catch-all validation as 
+opposed to the one-at-a-time validation of Postgres.
 
 
 #### check_with_throw(self, model, value)
 
-Call `check()` and raise a `ValidationErrors` if the check 
-fails. Will raise an `UnsupportedEnforcementMethod` if 
-`check()` is not implemented.
+Call `check()` and raise a `ValidationErrors` if the check fails. Will 
+raise an `UnsupportedEnforcementMethod` if `check()` is not implemented.
 
-Note a `ValidationErrors` will cause a canonical failure 
-response to be sent to the client.
+Note a `ValidationErrors` will cause a canonical failure response to be 
+sent to the client.
+
+#### resolve(self, column)
+
+Resolve this constraint as belonging to `Column`.
 
 ### RegexConstraint(Constraint)
 A regular expression constraint on textual columns.
 #### Methods
-#### \_\_init__(self, name, error_message, regex, ignore_case=False, negative=False)
-+ *name*:  A unique name for this constraint. 
+#### \_\_init__(self, error_message, regex, ignore_case=False, negative=False)
 + *error_message*:  A human-readable error message to provide when this constraint is violated. 
 + *regex*:  The regular expression which the column values must match. 
 + *ignore_case*:  Whether the regular expression should be case-insensitive. 
@@ -167,76 +177,67 @@ Create a new regular expression constraint.
 
 #### as_client_parsable(self)
 
-Return a client parsable representation of this
-regular expression constraint.
+Return a client parsable representation of this regular expression 
+constraint.
 
 #### as_sql(self)
 
-Return an SQL representation of this regular
-expression.
+Return an SQL representation of this regular expression constraint.
 
 #### check(self, model, value)
 
-Evaluate whether `value` satisfies this regular 
-expression constraint.
+Evaluate whether `value` satisfies this regular expression constraint.
 
 #### check_with_throw(self, model, value)
 
-Call `check()` and raise a `ValidationErrors` if the check 
-fails. Will raise an `UnsupportedEnforcementMethod` if 
-`check()` is not implemented.
+Call `check()` and raise a `ValidationErrors` if the check fails. Will 
+raise an `UnsupportedEnforcementMethod` if `check()` is not implemented.
 
-Note a `ValidationErrors` will cause a canonical failure 
-response to be sent to the client.
+Note a `ValidationErrors` will cause a canonical failure response to be 
+sent to the client.
+
+#### resolve(self, column)
+
+Resolve this constraint as belonging to `Column`.
 
 ### UniquenessConstraint(Constraint)
-A constraint that enforces column value 
-uniqueness.
+A constraint that enforces column value uniqueness.
 #### Methods
-#### \_\_init__(self, name, error_message)
-+ *name*:  A unique name for this constraint. 
-+ *error_message*:  A human-readable error message to provide when this constraint is violated.
-
-Define a new constraint type.
-
-
 #### as_client_parsable(self)
 
-Return a client-parsable representation of this
-constraint for client-side validation.
+Return a client-parsable representation of this constraint for 
+client-side validation.
 
-The representation should be of the format 
-`type_name:representation`.
+The representation should be of the format `type_name:representation`.
 
-A front-end validation method must then exist for 
-`type_name`.
+A front-end validation method must then exist for `type_name`.
 
 #### check(self, model, value)
 + *model*:  The model object to which the check applies. 
 + *value*:  The value to check, for convience.
 
-Return whether or not the constraint is met by the
-given input, or raise an `UnsupportedEnforcementMethod`.
+Return whether or not the constraint is met by the given input, or 
+raise an `UnsupportedEnforcementMethod`.
 
-Implementing this method allows a single catch-all validation
-as opposed to the one-at-a-time validation of Postgres.
+Implementing this method allows a single catch-all validation as 
+opposed to the one-at-a-time validation of Postgres.
 
 
 #### check_with_throw(self, model, value)
 
-Call `check()` and raise a `ValidationErrors` if the check 
-fails. Will raise an `UnsupportedEnforcementMethod` if 
-`check()` is not implemented.
+Call `check()` and raise a `ValidationErrors` if the check fails. Will 
+raise an `UnsupportedEnforcementMethod` if `check()` is not implemented.
 
-Note a `ValidationErrors` will cause a canonical failure 
-response to be sent to the client.
+Note a `ValidationErrors` will cause a canonical failure response to be 
+sent to the client.
+
+#### resolve(self, column)
+
+Resolve this constraint as belonging to `Column`.
 
 ### ColumnType(object)
-A column type definition class enforcing and SQL type name,
-form input type, and default value.
-
-Column types are transparent to plugins in the majority of
-use cases, but can be assumed stable.
+`ColumnType`s are attributes of `Column`s that store information about the
+SQL representation of the type.
 #### Methods
 #### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x0000000003478750>)
 + *sql_type*:  The name of this type in PostgreSQL. 
@@ -246,13 +247,22 @@ use cases, but can be assumed stable.
 Define a new column type.
 
 
+#### resolve(self, owner_column)
+
+Resolve this column type given the owner column.
+
 ### ForeignKeyColumnType(ColumnType)
 A foreign key column type with target column reference.
 #### Methods
-#### \_\_init__(self, target_name)
+#### \_\_init__(self, reference_str)
 
-Create a new foreign key column type referencing the
-table and column specified in `target_name`.
+Create a new foreign key column type referencing the table and column 
+specified in `reference_str`.
+
+#### resolve(self, owner_column)
+
+Mixin a `reference` attribute to `owner_column` referencing the target
+column.
 
 ### EnumColumnType(ColumnType)
 An enumerable type column type.
@@ -263,6 +273,10 @@ An enumerable type column type.
 Create a enum column type targeting the enum 
 registered as `enum_name`.
 
+
+#### resolve(self, owner_column)
+
+Resolve this column type given the owner column.
 
 ### TypeAdapter(object)
 The base type adaption class.
@@ -324,8 +338,7 @@ using the SQL operator `operator`.
 
 #### \_\_invert__(self)
 
-Group and logically invert this comparison 
-expression.
+Group and logically invert this comparison expression.
 
 #### \_\_or__(self, other)
 
@@ -337,8 +350,7 @@ Return this expression serialized as an SQL query condition.
 
 #### group(self)
 
-*Group* this comparison expression to give it 
-precedence.
+Group this comparison expression to give it precedence.
 
 #### serialize(self, values)
 
