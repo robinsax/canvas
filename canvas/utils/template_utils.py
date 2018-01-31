@@ -14,7 +14,7 @@ from markdown import markdown as render_markdown
 
 from ..exceptions import (
 	MacroParameterError, 
-	UnsupportedEnformentMethod,
+	UnsupportedEnforcementMethod,
 	MarkdownNotFound
 )
 from .registration import register
@@ -144,7 +144,7 @@ def get_client_validator(name):
 				'repr': origin.as_client_parsable(),
 				'error': origin.error_message
 			}
-		except UnsupportedEnformentMethod:
+		except UnsupportedEnforcementMethod:
 			#	The constraint called `name` doesn't
 			#	support client-serialization.
 			pass

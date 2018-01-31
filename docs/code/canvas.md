@@ -56,7 +56,7 @@ prefixed with `api/`.
 ### TemplateOverlayError(Exception)
 An exception raised when the `{% overlay %}` Jinja tag is used in a
 bottom-level template.
-### UnsupportedEnformentMethod(Exception)
+### UnsupportedEnforcementMethod(Exception)
 An exception raised by constraints when an unsupported enforcement
 method is invoked.
 

@@ -68,7 +68,7 @@ __all__ = [
 	'HeaderKeyError',
 	'APIRouteDefinitionError',
 	'TemplateOverlayError',
-	'UnsupportedEnformentMethod'
+	'UnsupportedEnforcementMethod'
 ]
 
 #	Where am I?

@@ -9,7 +9,7 @@ from psycopg2 import (
 )
 
 from ..exceptions import (
-	UnsupportedEnformentMethod, 
+	UnsupportedEnforcementMethod, 
 	ValidationErrors
 )
 from ..utils import logger
@@ -97,7 +97,7 @@ class Session:
 						#	Add this error and stop inspecting this column.
 						error_dict[name] = constr.error_message
 						break
-				except UnsupportedEnformentMethod: 
+				except UnsupportedEnforcementMethod: 
 					#	Column didn't implement the `check()` method.
 					pass
 		

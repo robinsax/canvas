@@ -4,7 +4,7 @@ SQL serialization.
 '''
 
 from ..exceptions import (
-	UnsupportedEnformentMethod,
+	UnsupportedEnforcementMethod,
 	InvalidQuery,
 	UnadaptedType
 )
@@ -226,7 +226,7 @@ def table_creation(model_cls):
 		for constr in col.constraints:
 			try:
 				col_sql = f'{col_sql} CONSTRAINT {constr.name} {constr.as_sql()}'
-			except UnsupportedEnformentMethod:
+			except UnsupportedEnforcementMethod:
 				#	This constraint isn't representable in SQL.
 				pass
 		

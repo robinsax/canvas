@@ -9,7 +9,7 @@ from urllib.parse import quote
 
 from ..exceptions import (
 	ColumnDefinitionError, 
-	UnsupportedEnformentMethod,
+	UnsupportedEnforcementMethod,
 	ValidationErrors
 )
 
@@ -74,13 +74,13 @@ class Constraint:
 
 		A front-end validation method must then exist for `type_name`.
 		'''
-		raise UnsupportedEnformentMethod()
+		raise UnsupportedEnforcementMethod()
 
 	def as_sql(self):
 		'''
 		Return an SQL serialization of this constraint.
 		'''
-		raise UnsupportedEnformentMethod()
+		raise UnsupportedEnforcementMethod()
 
 	def check(self, model, value):
 		'''
@@ -93,7 +93,7 @@ class Constraint:
 		:model The model object to which the check applies.
 		:value The value to check, for convience.
 		'''
-		raise UnsupportedEnformentMethod()
+		raise UnsupportedEnforcementMethod()
 
 	def check_with_throw(self, model, value):
 		'''

@@ -28,7 +28,7 @@ __all__ = [
 	'HeaderKeyError',
 	'APIRouteDefinitionError',
 	'TemplateOverlayError',
-	'UnsupportedEnformentMethod',
+	'UnsupportedEnforcementMethod',
 	'InvalidSchema',
 	'InvalidQuery',
 	'UnadaptedType'
@@ -163,7 +163,7 @@ class TemplateOverlayError(Exception):
 	'''
 	pass
 
-class UnsupportedEnformentMethod(Exception):
+class UnsupportedEnforcementMethod(Exception):
 	'''
 	An exception raised by constraints when an unsupported enforcement
 	method is invoked.
