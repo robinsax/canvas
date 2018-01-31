@@ -1,4 +1,4 @@
-#	Package install script for Ubuntu 14.04 LTS
+#	Package install script for Ubuntu 14.04 LTS.
 
 echo "Installing Python 3.6 and Pip"
 #   Add the Python 3.6 backport repository (Thanks Jon.).
