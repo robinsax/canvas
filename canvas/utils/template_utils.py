@@ -167,10 +167,20 @@ def describe_model_attr(model_cls, attr):
 	#	Retrieve the column object.
 	col = model_cls.__schema__[attr]
 
+	#	Find a validator.
+	#	TODO: Triggers Jinja round-trip.
+	validator = None
+	for constraint in col.constraints:
+		try:
+			constraint.as_client_parsable()
+			validator = constraint.name
+			break
+		except UnsupportedEnforcementMethod: pass
+
 	return {
 		'type': col.type.input_type,
 		'name': attr,
 		'label': ' '.join(attr.split('_')).title(),
-		'validator': None if len(col.constraints) == 0 else col.constraints[0].name
+		'validator': validator
 	}
 del describe_model_attr
