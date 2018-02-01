@@ -16,5 +16,12 @@ cat ./docs/templates/uwsgi_config.conf | sed "s/@user/$1/g" > /etc/init/canvas.c
 cat ./docs/templates/nginx_config | sed "s/@user/$1/g" | sed "s/@domain/$2/g" > /etc/nginx/sites-available/canvas
 ln -s /etc/nginx/sites-available/canvas /etc/nginx/sites-enabled
 
+mkdir /var/log/uwsgi
+touch /var/log/uwsgi/all.log
+#   Setup uWSGI logging.
+chmod a+w /var/log/uwsgi/all.log
+
 #   Start nginx.
 /etc/init.d/nginx start
+
+#TODO: Run uwsgi as service.
