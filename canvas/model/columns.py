@@ -136,7 +136,9 @@ def define_column_types():
 		'bool(?:ean)*':	ColumnType('BOOLEAN', 'checkbox'),
 		'uuid': ColumnType('CHAR(32)', default=lambda: uuid.uuid4()),
 		'pw|pass(?:word)*': ColumnType('TEXT', 'password'),
-		#	TODO: Better input.
+		#	TODO: Better date inputs.
+		'date': ColumnType('DATE', 'date'),
+		'time': ColumnType('TIME', 'time'),
 		'dt|datetime': ColumnType('TIMESTAMP', 'datetime-local'),
 		'fk:(.+)': lambda *args: ForeignKeyColumnType(*args),
 		'enum:(.+)': lambda *args: EnumColumnType(*args),
