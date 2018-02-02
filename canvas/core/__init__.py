@@ -5,6 +5,7 @@ plugin management, and asset management.
 '''
 
 import json
+import datetime as dt
 
 from ..exceptions import _Redirect
 from ..utils.registration import register
@@ -36,17 +37,29 @@ def create_json(status_str, *data, status=200, headers={}, default_serializer=No
 	:default_serializer A fallback serialization function for 
 		complex objects.
 	'''
+	def default_impl(value):
+		if isinstance(value, dt.datetime):
+			#	TODO: Configured.
+			return value.strftime('%Y-%m-%dT%H:%M:%S')
+		elif isinstance(value, dt.date):
+			return value.strftime('%Y-%M-%d')
+		elif isinstance(value, dt.time):
+			return value.strftime('%H:%M:%S')
+		elif default_serializer is not None:
+			return default_serializer(value)
+		raise TypeError(f'{str(value)} is not JSON serializable.')
+
 	if len(data) > 0:
 		#	Include a data package.
 		return json.dumps({
 			'status': status_str,
 			'data': data[0]
-		}, default=default_serializer), status, headers, 'application/json'
+		}, default=default_impl), status, headers, 'application/json'
 	else:
 		#	Don't include a data package.
 		return json.dumps({
 			'status': status_str
-		}, default=default_serializer), status, headers, 'application/json'
+		}, default=default_impl), status, headers, 'application/json'
 
 #	`create_json()` is required by the 
 #	request handler.
