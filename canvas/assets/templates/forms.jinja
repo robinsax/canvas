@@ -192,7 +192,7 @@
 	:cls Additional button classes
 #}
 {% macro submit_button(text=None, icon='arrow-right', cls='', action=None) %}
-	<div class="align-right">
+	<div class="align-right form-width">
 		{{ c.button(text=text, icon=icon, cls=cls, event='submit', attrs='' if action is none else 'cv-send-action="%s"'%action) }}
 	</div>
 {% endmacro %}

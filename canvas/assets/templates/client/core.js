@@ -8,7 +8,7 @@
 //	Create the canvas toolkit instance.
 var tk = createToolkit({
 		debug: '{{ config.debug }}' == 'True',
-		templateContainer: '.cv-templates',
+		templateContainer: '.meta-body .templates',
 		dataPrefix: 'cv',
 		globalTemplateFunctions: {
 			//	Common template functions
@@ -156,6 +156,9 @@ function CanvasCore(){
 		return neg != obj.test(val);
 	}, 'regex');
 	this.validator(function(repr, val){
+		if (val == '' || val == null || val == undefined){
+			return false;
+		}
 		repr = repr.split(',')
 		var min = null, max = null;
 		if (repr[0] != 'null'){
@@ -166,6 +169,11 @@ function CanvasCore(){
 		}
 		return (min == null || val >= min) && (max == null || val <= max);
 	}, 'range');
+	this.validator(function(repr, val){
+		if (repr == 'any'){
+			return val != '' && val != null && val != undefined;
+		}
+	}, 'option');
 	this.validator(function(){
 		return true;
 	}, 'none');
@@ -192,7 +200,7 @@ function CanvasCore(){
 
 	this.openModal = function(template, data, functions){
 		//	TODO: Hold page-content-wrap
-		tk.map(data, template, tk('.page-content-wrap'), functions);
+		tk.map(data, template, tk('.page'), functions);
 	}
 
 	this.closeModal = this.event(function(e){
@@ -333,7 +341,7 @@ function CanvasCore(){
 		this.page.append(tooltip);
 		var right = pos.x > self.page.size().width/2;
 		//	TODO: This is a hotfix.
-		var scroll = tk('.page-content-wrap').ith(0, true).scrollTop;
+		var scroll = tk('.page').ith(0, true).scrollTop;
 		//	TODO: make right do something
 		tooltip.css({
 			'top': pos.y - scroll - 5 + 'px',

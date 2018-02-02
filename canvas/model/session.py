@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-The `Session` object definition.
+The `_Session` object definition.
 '''
 
 from psycopg2 import (
@@ -22,9 +22,9 @@ log = logger()
 
 #	TODO: Allow primary key modification.
 
-class Session:
+class _Session:
 	'''
-	The `Session` object manages database interaction and relational mapping.
+	The `_Session` object manages database interaction and relational mapping.
 	'''
 
 	def __init__(self):

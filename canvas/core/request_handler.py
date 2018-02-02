@@ -216,7 +216,7 @@ def _handle_controller_request(req, cookie):
 		#	Check if the request as addressed to a component of
 		#	the controller, then either invoke the controller or
 		#	that component.
-		addressed = params.get('__component__', None)
+		addressed = params.pop('__component__') if '__component__' in params else None
 		if addressed is not None :
 			#	Request was addressed to a component.
 			component = controller.components[addressed]

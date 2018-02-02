@@ -36,27 +36,27 @@ html {
 			}
 		}
 
-		.meta-page {
+		.meta-body {
 			display: none;
 		}
 	}
 }
 
 //	Pointer modifiers.
+[cv-tooltip]:not([cv-event]):not([cv-mapped-event]) {
+	cursor: help;
+}
+
 [cv-event],
 [cv-mapped-event] {
 	cursor: pointer;
-}
-
-[cv-tooltip] {
-	cursor: help;
 }
 
 //	Link styles.
 a {
 	color: @text_link;
 
-	&:visited {
+	&:not(.button):visited {
 		color: @text_link_clicked;
 	}
 
@@ -98,7 +98,7 @@ form {
 	}
 
 	.field {
-		margin-bottom: 20px;
+		margin-bottom: 34px;
 
 		.icon {
 			width: 40px;
@@ -172,6 +172,7 @@ form {
 		.checkbox-wrap {
 			display: inline-block;
 			max-width: 450px;
+			height: 40px;
 			text-align: left;
 
 			input[type="checkbox"] {
@@ -299,7 +300,9 @@ form {
 	padding: 0px 15px;
 	font-size: 15pt;
 	line-height: 40px;
-	color: @text_text;
+	color: @base_background1;
+	background-color: @base_theme1;
+	border-bottom: 4px solid @base_theme1;
 	transition: .1s color;
 	text-align: center;
 	text-decoration: none;
@@ -324,8 +327,13 @@ form {
 	
 	&:hover {
 		cursor: pointer;
-		color: @base_background1;
-		background-color: @base_theme1;
+		border-bottom: 4px solid @base_theme2;
+	}
+
+	&.small {
+		height: 25px;
+		font-size: 10pt;
+		line-height: 25px;
 	}
 	
 	.icon {

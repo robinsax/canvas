@@ -36,7 +36,7 @@ from .columns import (
 	EnumColumnType
 )
 from .constraints import *
-from .session import Session
+from .session import _Session
 from .sql_factory import *
 
 #	Declare exports.
@@ -51,7 +51,7 @@ __all__ = [
 	'dictize',
 	'dictize_all',
 	#	Classes.
-	'Session',
+	'_Session',
 	'Column',
 	'Constraint',
 	'RegexConstraint',
@@ -172,7 +172,7 @@ def schema(table_name, schema, accessors=None):
 
 		if accessors is None:
 			#	Make the primary key the sole accessor
-			cls.__accessors__ = primary_key
+			cls.__accessors__ = [primary_key]
 		else:
 			cls.__accessors__ = [schema[name] for name in accessors]
 
@@ -266,10 +266,10 @@ def dictize_all(model_list, omit=[]):
 	
 def create_session():
 	'''
-	Create a database session. `Session` generation should always use this 
-	function to allow future modifications to the `Session` constructor.
+	Create a database session. `_Session` generation should always use this 
+	function to allow future modifications to the `_Session` constructor.
 	'''
-	return Session()
+	return _Session()
 
 def create_everything():
 	'''
