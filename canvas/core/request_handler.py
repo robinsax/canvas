@@ -1,11 +1,11 @@
 #	coding utf-8
 '''
-The WSGI application definition.
+Base request handling logic and the WSGI application definition.
 '''
 
 import os
-import json
 
+from json.decoder import JSONDecodeError
 from platform import python_version
 from mimetypes import types_map
 from pprint import pformat
@@ -24,39 +24,47 @@ from ..exceptions import (
 from ..utils import (
 	WrappedDict,
 	register,
+	get_registered,
 	logger,
-	call_registered, 
-	format_traceback
+	call_registered,
+	format_traceback,
+	deserialize_json,
+	serialize_json
 )
-
 from ..model import create_session
 from ..controllers import Page, get_controller
 from .. import __version__ as canvas_version, config
 from .thread_context import *
-from .assets import get_client_asset, render_template
+from .assets import (
+	get_client_asset, 
+	render_template
+)
+from .cache_control import *
 from . import create_json
 
-log = logger()
+#	Create a logger.
+log = logger(__name__)
 
+#	Declare exports.
 __all__ = [
 	'handle_request'
 ]
 
-#	The server identifier string for the `Server`
-#	header.
+#	Create the server identifier string provided in the `Server` header.
 SERVER_IDENTIFIER = ' '.join([
 	f'Python/{python_version()}',
 	f'Werkzeug/{werkzeug_version}', 
 	f'Canvas/{canvas_version}'
 ])
+#	The key under which the cookie session is stored.
+COOKIE_KEY = 'canvas_session'
 
 def handle_request(environ, start_response):
 	'''
-	The WSGI application, exported to the root package
-	as `application`.
+	The callable WSGI application.
 
-	Invokes either the controller or asset request handler,
-	expecting them to return a tuple containing:
+	Invokes either the controller or asset request handler, expecting them to 
+	return a tuple containing:
 	```
 	response, status, headers, mimetype
 	```
@@ -65,18 +73,20 @@ def handle_request(environ, start_response):
 	cookie = None
 
 	#	Invoke pre-handling callbacks.
-	call_registered('request_recieved', req)
+	call_registered('request_received', req)
 
 	try:
 		if req.path.startswith('/assets/'):
 			#	Serve an asset.
 			response = _handle_asset_request(req)
 		else:
+			#	Dispatch a controller.
+
 			#	Encode the configured secret key to bytes.
 			secret_key = config['cookie_secret_key'].encode('utf-8')
 
-			#	Get the cookie if there is one.
-			cookie_data = req.cookies.get('canvas_session', None)
+			#	Retrieve the cookie if there is one.
+			cookie_data = req.cookies.get(COOKIE_KEY, None)
 			if cookie_data is None:
 				#	Create an empty cookie.
 				cookie = SecureCookie(secret_key=secret_key)
@@ -84,21 +94,21 @@ def handle_request(environ, start_response):
 				#	Parse the cookie data.
 				cookie = SecureCookie.unserialize(cookie_data, secret_key)
 
-			#	Invoke controller dispatch.
+			#	Invoke controller dispatcher.
 			response = _handle_controller_request(req, cookie)
 	except BaseException as e:
-		#	We can't serve at all. A common cause is an
-		#	error in the base template.
-		_log_error(req, e, dict(), level=log.critical)
+		#	We can't serve at all. A common cause is an error in the base 
+		#	template.
+		_on_error(req, e, {}, level=log.critical)
 		response = ('Internal Server Error', 500, {}, 'text/plain')
 
-	#	Delete the thread-id to request context mapping.
+	#	Delete the request context to thread ID mapping if there is one.
 	remove_thread_context()
 
-	#	Unpack response.
+	#	Unpack the response.
 	data, status, headers, mimetype = response
 
-	#	Add identification header.
+	#	Add the `Server` authentication header.
 	headers['Server'] = SERVER_IDENTIFIER
 
 	#	Create the response object.
@@ -111,18 +121,19 @@ def handle_request(environ, start_response):
 
 	if cookie is not None and cookie.should_save:
 		#	Set the cookie.
-		response_obj.set_cookie('canvas_session', cookie.serialize())
+		response_obj.set_cookie(COOKIE_KEY, cookie.serialize())
 	
-	call_registered('response_dispatch', response_obj)
+	call_registered('pre_response_dispatch', response_obj)
 
-	#	Invoke the response object.
+	#	Invoke the response callable.
 	return response_obj(environ, start_response)
 
-def _log_error(req, error, ctx, level=log.error):
+def _on_error(req, error, ctx, level=log.error):
 	'''
-	Log a request error and return the traceback
-	string to be sent to the client if debug mode
-	is enabled.
+	Log a request error and invoke the error callback.
+	
+	Return the traceback string to be sent to the client if debug mode is 
+	enabled.
 	'''
 	#	Remove shortcuts from context.
 	remove = []
@@ -131,6 +142,15 @@ def _log_error(req, error, ctx, level=log.error):
 			remove.append(k)
 	for k in remove:
 		del ctx[k]
+
+	#	Invoke callbacks individually with error protection.
+	for callback in get_registered('request_error'):
+		try:
+			callback(error, ctx)
+		except BaseException as e:
+			#	That's too bad.
+			log.critical(f'Request error callback {callback.__name__} failed: '
+					+ f'{e.__class__.__name__}: {str(e)}')
 
 	#	Format and log.
 	tb_str = format_traceback(error)
@@ -150,11 +170,18 @@ def _handle_asset_request(req):
 	'''
 	Handle an asset retrieval request.
 	'''
+	#	Assert asset must be served.
+	if not config['debug'] and 'If-Modified-Since' in req.headers:
+		if is_cache_valid(req.headers['If-Modified-Since']):
+			#	Return a `Not Modified` status.
+			return '', 304, {}, 'text/plain'
+
 	#	Remove the `/asset/` prefix.
 	path = req.path[8:]
 
-	#	Get the asset contents.
+	#	Retrieve the asset.
 	data = get_client_asset(path)
+
 	#	Assert existance.
 	if data is None:
 		return 'Not Found', 404, {}, 'text/plain'
@@ -162,8 +189,8 @@ def _handle_asset_request(req):
 	#	Evaluate the mimetype.
 	mimetype = types_map.get('.' + path.split('.')[-1], 'text/plain')
 
-	#	TODO: Cache control
-	return data, 200, {}, mimetype
+	#	TODO: Test cache control.
+	return data, 200, get_cache_control_headers(), mimetype
 
 def _handle_controller_request(req, cookie):
 	#	Parse request context.
@@ -174,20 +201,23 @@ def _handle_controller_request(req, cookie):
 	if is_get:
 		params = req.args
 	else:
-		try:
-			params = json.loads(req.get_data(as_text=True))
-		except:
-			#	TODO: Better.
+		body = req.get_data(as_text=True)
+		if len(body) == 0:
 			params = {}
+		else:
+			try:
+				params = deserialize_json(body)
+			except JSONDecodeError:
+				return 'Expecting JSON', 400, {}, 'text/plain'
 	params = WrappedDict(params, RequestParamError)
 
-	#	Create database session.
+	#	Create a database session.
 	session = create_session()
 	
-	#	Wrap headers.
+	#	Wrap the headers dictionary.
 	headers = WrappedDict(req.headers, HeaderKeyError)
 
-	#	Create request context.
+	#	Create the request context.
 	ctx = {
 		'cookie': cookie,
 		'session': session,
@@ -195,60 +225,44 @@ def _handle_controller_request(req, cookie):
 		'headers': headers,
 		'big_3': (params, cookie, session)
 	}
-	#	Allow callbacks to modify the context.
-	call_registered('context_create', ctx)
+	#	Allow callbacks to modify.
+	call_registered('context_created', ctx)
 
-	#	Add the thread-id, request context mapping.
+	#	Add the thread ID request context mapping entry.
 	register_thread_context(ctx)
 
 	try:
-		#	Retrieve the controller
+		#	Retrieve the controller.
 		controller = get_controller(req.path)
-		if isinstance(controller, Page):
-			#	The template reads this to populate the `title`
-			#	tag so to allow it to be set dynamically.
-			ctx['page_title'] = controller.title
 
-		#	Allow callbacks to raise exceptions if there
-		#	is something wrong with the context.
+		#	Allow callbacks to raise exceptions if there is something wrong 
+		#	with the context.
 		call_registered('pre_controller_dispatch', controller, ctx)
 
-		#	Check if the request as addressed to a component of
-		#	the controller, then either invoke the controller or
-		#	that component.
-		addressed = params.pop('__component__') if '__component__' in params else None
-		if addressed is not None :
-			#	Request was addressed to a component.
-			component = controller.components[addressed]
+		#	Dispatch controller.
+		response = controller.get(ctx) if is_get else controller.post(ctx)
 
-			#	Allow callbacks to raise exceptions if there
-			#	is something wrong with the context.
-			call_registered('pre_component_dispatch', component, ctx)
-
-			#	Dispatch component.
-			response = component.handle_get(ctx) if is_get else component.handle_post(ctx)
-		else:
-			#	Dispatch controller.
-			response = controller.get(ctx) if is_get else controller.post(ctx)
-
-		#	Controllers won't nessesarily return a complete 
-		#	response tuple. Populate with defaults if they dont.
+		#	Controllers won't nessesarily return a complete response tuple. 
+		#	Populate with defaults if they dont.
 		if not isinstance(response, (tuple, list)):
-			response = (response,)
+			response = [response,]
+		else:
+			response = list(response)
+		
 		if len(response) == 4:
 			return response
 		elif len(response) == 3:
-			return response + ('text/html',)
+			return response + ['text/plain']
 		elif len(response) == 2:
-			return response + ({}, 'text/html')
+			return response + [{}, 'text/plain']
 		else:
-			return response + (200, {}, 'text/html')
+			return response + [200, {}, 'text/plain']
 
 	except _Redirect as e:
 		#	A redirection occured.
 		if headers.get('X-Canvas-View-Request', None) == '1':
-			#	This request was an in-browser AJAX so a normal
-			#	redirect won't work; invoke a core action.
+			#	This request was an in-browser AJAX so a normal redirect won't 
+			#	work; invoke a core action.
 			return create_json('success', {
 				'action': 'redirect',
 				'url': e.target
@@ -259,11 +273,7 @@ def _handle_controller_request(req, cookie):
 				'Location': e.target
 			}, ''
 	except ValidationErrors as e:
-		#	A model constraint was violated.
-		_log_error(req, e, ctx)
-
-		#	Return the canonical model-constraint-violation
-		#	response.
+		#	Return the canonical model-constraint-violation response.
 		return create_json('failure', {
 			'errors': e.error_dict
 		}, status=422)
@@ -274,25 +284,24 @@ def _handle_controller_request(req, cookie):
 		#	An unexpected exception was raised.
 		error, error_desc, error_code = (e, 'Internal Server Error', 500)
 	
-	#	Create the error data
+	#	Create the error data.
 	error_data = {
 		'code': error_code,
 		'description': error_desc
 	}
-	#	...and add to context.
+	#	...and add it to context.
 	ctx['error'] = error_data
 	
 	#	Log the error and retrieve the traceback string.
-	tb_str = _log_error(req, error, ctx)
+	tb_str = _on_error(req, error, ctx)
 	
 	#	TODO: This dictionary is out of control.
 
 	if is_api_request or not is_get:
 		#	Client is expecting JSON.
 		if config['debug']:
-			#	We are going to send the context as part
-			#	of the error data, remove the reference
-			#	to prevent a circular reference.
+			#	We are going to send the context as part of the error data, 
+			#	remove the reference to prevent a circular reference.
 			del ctx['error']
 
 			#	Add the debug information to the error response.
@@ -303,11 +312,10 @@ def _handle_controller_request(req, cookie):
 		return create_json('error', error_data, **{
 			'status': error_code,
 			#	This will guarenteed serialize anything.
-			'default_serializer': lambda o: o.__repr__()
+			'fallback_serializer': lambda o: o.__repr__()
 		})
 	else:
-		#	Client is expecting a page; render the 
-		#	error template.
+		#	Client is expecting a page; render the error template.
 		return render_template('pages/error.html', response=True, template_params={
 			**ctx,
 			**{
@@ -317,12 +325,10 @@ def _handle_controller_request(req, cookie):
 				},
 				#	Emulate a page for the base template.
 				'__page__': {
-					'collect_dependencies': lambda *args: (
-						config['client_dependencies']['dependencies'],
-						config['client_dependencies']['library_dependencies']
-					),
-					'description': config['description']
-				},
-				'page_title': error_code
+					**config['client_dependencies'],
+					**{
+						'description': config['description']
+					}
+				}
 			}
 		}, status=error_code)

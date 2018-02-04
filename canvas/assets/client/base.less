@@ -17,29 +17,24 @@
 }
 
 //	Primary container layouts.
-html {
+html, body {
 	.container();
+}
 
-	body {
-		.container();
+.page {
+	.container();
+	font-family: @content_font;
+	background-color: @base_background2;
+	color: @text_text;
 
-		.page {
-			.container();
-			font-family: @content_font;
-			background-color: @base_background2;
-			color: @text_text;
-
-			.content {
-				position: relative;
-				overflow-y: auto;
-				text-align: center;
-			}
-		}
-
-		.meta-body {
-			display: none;
-		}
+	& > .content {
+		position: relative;
+		overflow-y: auto;
 	}
+}
+
+.meta-body {
+	display: none;
 }
 
 //	Pointer modifiers.
@@ -334,10 +329,6 @@ form {
 		height: 25px;
 		font-size: 10pt;
 		line-height: 25px;
-	}
-	
-	.icon {
-		vertical-align: middle;
 	}
 }
 

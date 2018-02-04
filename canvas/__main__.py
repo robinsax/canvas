@@ -6,8 +6,8 @@ The intended command line invocation entry point.
 import os
 import sys
 
-#	Register the current working directory to
-#	allow the canvas package to be imported.
+#	Register the current working directory to allow the `canvas` package to be 
+#	imported.
 sys.path.insert(0, '.')
 
 from canvas.utils.registration import get_registered
@@ -34,12 +34,13 @@ except:
 	#	Invalid mode argument; unable to perform an operation.
 	usage_failure()
 
-#	Iterate launch mode handlers.
+#	Search launch mode handlers.
 for mode_obj in launch_modes:
 	if mode_obj.mode == mode:
-		#	Applicable handler found, invoke and exit 
-		#	appropriately.
+		#	Applicable handler found, invoke it.
 		if not mode_obj.launch(sys.argv[2:]):
+			#	The handler didn't understand the provided parameters, provide 
+			#	them.
 			usage_failure()
 		#	Success.
 		sys.exit(0)

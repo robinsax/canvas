@@ -10,8 +10,6 @@ import sys
 import pprint
 import inspect
 
-#	TODO: Core versus utils packaging.
-
 #	Declare documentation targets.
 __documented__ = [
 	'canvas',
@@ -71,15 +69,18 @@ __all__ = [
 	'UnsupportedEnforcementMethod'
 ]
 
-#	Where am I?
-CANVAS_HOME = os.path.abspath(os.path.dirname(os.path.dirname(inspect.getfile(sys.modules[__name__]))))
+#	Retrieve an absolute path to the canvas root directory.
+CANVAS_HOME = os.path.abspath(
+	os.path.dirname(
+		os.path.dirname(inspect.getfile(sys.modules[__name__]))
+	)
+)
 
 #	Populate namespace with exceptions and utilities.
 from .exceptions import *
 from .utils import *
 
-#	Load configuration and create the root configuration
-#	storage object, `config`.
+#	Load configuration and create the root configuration storage object.
 from . import configuration
 config = configuration.load()
 
@@ -87,57 +88,52 @@ config = configuration.load()
 log = logger()
 log.info(f'Initializing...')
 
-#	We don't import the `core.plugins` object as it will 
-#	override the canvas.plugins psuedo-module through
-#	which loaded plugins are accessed.
+#	Carefully import components of the `core.plugins` module to perserve the 
+#	`canvas.plugins` psuedo-module which loaded plugins are accessed.
 from .core.plugins import load_all_plugins
 
-#	Allow plugins to update configuration and finalize.
+#	Update the configuration object with plugin configurations and wrap it for
+#	better key error readback.
 config = configuration.finalize(config)
 log.debug(f'Runtime configuration: {pprint.pformat(config)}')
 
-#	`canvas.core` and `canvas.launch` only export a subset
-#	of their contents through `__all__`, import those to
-#	the root namespace.
+#	`canvas.core` and `canvas.launch` only export a subset of their contents 
+#	through `__all__`, import those into the `canvas` namespace.
 from .core import *
 from .launch import *
 
-#	Import the model and controllers packages for
-#	initialization.
+#	Import the model and controllers packages for initialization.
 from . import model, controllers
 
-#	Load all plugins. Has the side effect of populating
-#	the `canvas.plugins` namespace.
+#	Load all plugins. Has the side effect of populating the `canvas.plugins` 
+#	namespace.
 load_all_plugins()
 
-#	Invoke pre-initialization callbacks. These should be used 
-#	to set up the context for initialization, and can only 
-#	assume the core to be initialized.
+#	Invoke pre-initialization callbacks. These are used to prepare for 
+#	initialization, and can only assume the core to be initialized.
 call_registered('pre_init')
 
-#	Populate the `canvas.model` and `canvas.controllers` 
-#	namespaces with all registered models, enums, and controllers.
-#	This allows plugins to have have `model` and `controllers`
-#	modules or packages without complicating their imports.
+#	Populate the `canvas.model` and `canvas.controllers` namespaces with all 
+#	registered models, enums, and controllers. This simplifies plugin packaging
+#	by allowing them to have `model` and `controllers` modules without confict,
+#	since they can access the contents through the core instances of those
+#	namespaces.
 place_registered_on('canvas.model', 'model')
 place_registered_on('canvas.model', 'enum')
 place_registered_on('canvas.controllers', 'controller')
 
-#	Create all singleton objects and perform database
-#	initialization.
+#	Initialize the `model` and `controllers` packages.
 model.create_everything()
 controllers.create_everything()
 
 #	Invoke initialization callbacks.
 call_registered('init')
 
-#	Invoke post-initialization callbacks. These can assume
-#	the execution context to be identical to that of 
-#	a request handling.
+#	Invoke post-initialization callbacks. These can assume that initialization
+#	is completed. 
 call_registered('post_init')
 
-log.info('Initialized')
+log.info(f'canvas {__version__} initialized')
 
-#	Populate the namespace with the application to be
-#	exported to the WSGI server.
+#	Canonically provide the WSGI application.
 application = core.handle_request

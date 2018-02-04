@@ -1,11 +1,11 @@
 {#
-	TODO
+	Form generation macros.
 #}
 
 {#
-	Create a form header containing the error
-	summary placeholder
-	:title The form title
+	Create a form header containing the error summary placeholder.
+
+	:title The form title.
 #}
 {% macro header(title=None) %}
 	{% if title is not none %}
@@ -15,90 +15,91 @@
 {% endmacro %}
 
 {#
-	Create the area to display errors
+	Create the area to display errors.
 #}
 {% macro error_area() %}
 	<p class="error-summary hidden"></p>
 {% endmacro %}
 
 {#
-	Add set of attributes that represent a `form` parameter (`data-param`
-	and `data-value`). When the `form` containing the element with these 
-	attributes is submitted, `param` and `value` are included in the request
-	as a key, value pair.
-	:param The parameter key
-	:value The parameter value
+	Add set of attributes that represent a `form` parameters (`cv-param` and 
+	`cv-value`). When the `form` containing the element with these attributes 
+	is submitted, `param` and `value` are included in the request as a key, 
+	value pair.
+	
+	:param The parameter key.
+	:value The parameter value.
 #}
 {% macro parameter(param, value) %}
 	cv-param="{{ param }}={{ value }}"
 {% endmacro %}
 
 {#
-	Add an attribute that causes requests fired from below this point in the
-	DOM who don't have an `action` specified yet to have their `event` property
-	set
-	:action The name of the action to set
+	Add an attribute that causes requests fired from below this point in the DOM 
+	who don't have an `action` specified yet to have their `event` property set.
+
+	:action The name of the action to set.
 #}
 {% macro send_action(action) %}
 	cv-send-action="{{ action }}"
 {% endmacro %}
 
 {#
-	Create a form field, either with specific information
-	or based on some attribute of a model class. Any specified 
-	values will override the defaults from the model class attribute.
-	The first validator for the given model class attribute or specified 
-	name that is supported by the view will be sent there for user
-	convience. 
+	Create a form field, either with specific parameters or based on some 
+	attribute of a model class (or both). Any specified values will override 
+	the defaults from the model class attribute.
 	
-	Basic usage follows the pattern
+	Basic usage follows the pattern:
 	```
 	{{ f.field(type='text', name='username', placeholder='jsmith', label='Username', validator='username') }}
 	```
-	Or, with icons instead of labels
+
+	Or, with icons instead of labels:
 	```
 	{{ f.field(type='password', name='password', placeholder='Password', icon='lock', validator='password') }}
 	```
 
-	To set `type`, `name`, `label`, `placeholder`, and `validator` based the
-	the schema associated with some model class attribute
+	To set `type`, `name`, `label`, `placeholder`, and `validator` based the 
+	schema associated with some model class attribute:
 	```
 	{{ f.field(attr='password') }}
 	```
-	The above requires the `form_model` keyword argument to be set in the
-	call to `render_template` or `render_form`. If this isn't the case, or your
-	template is referencing multiple models this way, you can alternatively use
+
+	The above requires a model class parameter named `form_model` to be provided. 
+	If this isn't the case, or your template is referencing multiple models 
+	this way, you can specify the model class in the call:
 	```
 	{{ f.field(model=User, attr='password') }}
 	```
-	Where `User` is a model class passed to your template
+	Where `User` is a model class passed to your template.
 
-	:type The input type (will override `attr` default)
-	:name The form parameter name (will override `attr` default)
-	:placeholder The placeholder text
-	:icon The form icon to be used in replacement of, or 
-		together with, a label
-	:model The model class whose attributes will be used to populate 
-		other parameters (redundant if the render call specified `form_model`)
-	:attr The name of the model attribute to use for this field
-	:icon_only Whether the model object attribute should avoid setting
-		the label (e.g. You set `attr` but don't want a label)
+	:type The input type (will override `attr` default).
+	:name The form parameter name (will override `attr` default).
+	:placeholder The placeholder text.
+	:icon The form icon to be used instead of, or together with, a label.
+	:model The model class whose attributes will be used to populate other 
+		parameters.
+	:attr The name of the model attribute to use for this field.
+	:icon_only Whether the model object attribute should avoid setting the 
+		label (e.g. You set `attr` but don't want a label).
 	:default_placeholder Whether to use the label from `attr` as a
-		default placeholder
-	:cls Additional field classes
-	:validator The name of the validator(s) to use if any are supported
-		by the view
-	:value The initial value
+		default placeholder.
+	:cls Additional field classes.
+	:validator The name of the validator(s) to use if any are supported by 
+		the view.
+	:value The initial value.
 	:values A list of `name, value` pairs to use if this is a select
-		input
+		input.
 #}
 {% macro field(type=None, name=None, placeholder=None, label=None, icon=None, model=None, attr=None, attrs=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
+	{# Assert parameters are valid #}
 	{% if (name is none or type is none) and attr is none %}
 		{{ h.parameter_error('Cannot create field without name and type, or attr') }}
 	{% endif %}
 	{% if type == 'select' and values is none %}
 		{{ h.parameter_error('Cannot create select input without values') }}
 	{% endif %}
+	
 	{% if attr is not none %}
 		{% if model is none %}
 			{% if form_model is none %}
@@ -124,6 +125,7 @@
 			{% set placeholder = model_attr.label %}
 		{% endif %}
 	{% endif %}
+
 	{% if label is not none %}
 		{% set cls = 'labeled %s'%cls %}
 	{% endif %}
@@ -133,6 +135,7 @@
 	{% if placeholder is none %}
 		{% set placeholder = '' %}
 	{% endif %}
+
 	{% if type == 'textarea' %}
 		{% set cls = 'textarea %s'%cls %}
 	{% endif %}
@@ -177,19 +180,10 @@
 {% endmacro %}
 
 {#
-	Creates a basic form given the current form target TODO: Doc and improve
-#}
-{% macro quick_form() %}
-	{% for col in form_model.__columns__ %}
-		{{ field(attr=col) }}
-	{% endfor %}
-{% endmacro %}
-
-{#
-	Create a basic submit button
-	:text The button text
-	:icon The button icon
-	:cls Additional button classes
+	Create a basic form submission button.
+	:text The button text.
+	:icon The button icon.
+	:cls Additional classes.
 #}
 {% macro submit_button(text=None, icon='arrow-right', cls='', action=None) %}
 	<div class="align-right form-width">

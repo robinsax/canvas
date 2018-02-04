@@ -1,7 +1,6 @@
 #	coding utf-8
 '''
-Request-context is mapped to thread id to allow
-a cleaner interface for certain methods.
+Request context to thread ID mapping.
 '''
 
 from threading import Lock, get_ident
@@ -12,20 +11,16 @@ __all__ = [
 	'remove_thread_context'
 ]
 
-#	The dictionary for mapping the request
-#	context for each thread.
+#	The request context to thread ID mapping.
 _thread_contexts = {}
 
-#	Although setting, deleting, and retrieving 
-#	items is atomic in CPython, it isn't part of 
-#	specification. Additionally, the introduced 
-#	locking overhead is minimal
+#	Although performed operations are atomic in CPython, that behaviour isn't
+#	guarenteed, so the small locking overhead is prefered for stability.
 _thread_contexts_lock = Lock()
 
 def register_thread_context(ctx):
 	'''
-	Adds `ctx` as the per-thread request context 
-	for the current thread.
+	Maps `ctx` to the current thread.
 	'''
 	_thread_contexts_lock.acquire()
 	_thread_contexts[get_ident()] = ctx
@@ -33,9 +28,8 @@ def register_thread_context(ctx):
 
 def get_thread_context():
 	'''
-	Retrieve the per-thread request context for 
-	the current thread, or `None` if there
-	isn't one.
+	Retrieve the request context mapped to the current thread, or `None` if 
+	there isn't one.
 	'''
 	_thread_contexts_lock.acquire()
 	try:
@@ -48,8 +42,7 @@ def get_thread_context():
 
 def remove_thread_context():
 	'''
-	Remove the per-thread request context for 
-	the current thread.
+	Remove the request context mapped to the current thread.
 	'''
 	_thread_contexts_lock.acquire()
 	try:

@@ -1,10 +1,9 @@
 {#
-	Common HTML macros, available in any `page` or `component` 
-	template as `c`.
+	Common HTML macros, available in any `page` template as `c`.
 #}
 
 {#
-	Create an icon that triggers an event TODO: Doc and attrs as dict
+	Create an icon that triggers an event or is a link.
 #}
 {% macro icon(icon=None, event=None, mapped_event=None, href=None, cls='', tooltip=None, attrs='') %}
 	{% if event is not none and href is not none %}
@@ -16,25 +15,23 @@
 
 {#
 	Create a button or link. One of `text` or `icon` is required. 
-	`event` and `submit` are mutually exclusive with `href`
-	:text The button text
-	:icon The name of the FontAwesome icon to use (without the `fa-`
-		prefix)
-	:id The buttons `id` attribute value
-	:cls Additional button classes
-	:tooltip The tooltip text for the button
-	:fancy_tooltip Whether to use a quicksite tooltip rather than the 
-		`title` attribute
-	:event The event this button represents. Used to identify form
-		submission type among other things
-	:href The href target of this button. Setting causes an `a` tag to be used
-	:submit Whether this button should cause its containing form to 
-		be submitted
-	:attrs Additional button attributes
+		
+	:text The button text.
+	:icon The name of the Font- or LineAwesome icon to use (without the `fa-` 
+		prefix).
+	:id The `id` attribute value.
+	:cls Additional classes.
+	:tooltip The tooltip text.
+	:fancy_tooltip Whether to use a styled tooltip rather than the `title` 
+		attribute.
+	:event The event to fire when this button is pressed.
+	:href The `href` target of this button. Supplying this parameter causes an 
+		`a` tag to be used.
+	:attrs Additional button attributes.
 	:protected Whether this button should be protected by a 'Confirm'/'Cancel' 
-		layer. Doesn't work on links
+		layer. Doesn't work on links.
 #}
-{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, event=None, bind=None, mapped_event=None, view_fn=None, onto=None, href=None, attrs='', protected=False) %}
+{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, span=False, event=None, bind=None, mapped_event=None, view_fn=None, onto=None, href=None, attrs='', protected=False) %}
 	{% set icon_span = '' %}
 	
 	{# Get tag #}
@@ -88,6 +85,10 @@
 	{% if onto is not none %}
 		{% set map_attrs = '%s cv-onto="%s"'%(map_attrs, onto) %}
 	{% endif %}
+
+	{% if span %}
+		{% set text = ('<span class="text">%s</span>'%text)|markup %}
+	{% endif %}
 	
 	{#
 		Build
@@ -102,45 +103,4 @@
 			{{ button(text='Confirm', icon='check', event='__confirm__', cls='confirm hidden') }}
 		</span>
 	{% endif %}
-{% endmacro %}
-
-{#
-	Helper macro for toolkit binding
-#}
-{% macro bind(target, onto=None, view_fn=None, event=None, mapped_event=None) %}
-	cv-bind="{{ target }}"{% if onto is not none %} cv-onto="{{ onto }}"{% endif %}{% if view_fn is not none %} cv-view-fn="{{ view_fn }}"{% endif %}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if mapped_event is not none %} cv-mapped-event="{{ mapped_event }}{% endif %}
-{% endmacro %}
-
-{#
-	Create a basic loading placeholder for AJAX-populated components
-	:size The size of the placeholder, in pixels
-	:cls Additional classes
-#}
-{% macro loading_placeholder(size=40, cls='') %}
-	{% set c = '%spx'%size %}
-	<div class="loading-placeholder {{ cls }}" cv-tooltip="Getting it ready..." style="width: {{ c }}; height: {{ c }}; line-height: {{ c }};">
-		<div class="fa fa-gear fa-spin" style="font-size: {{ c }};"></div>
-	</div>
-{% endmacro %}
-
-{% macro modal_head(template_name) %}
-	<div cv-template="{{ template_name }}">
-		<div class="modal" cv-event="closeModal">
-			<form class="panel" cv-event="stopPropagation">
-				<i class="fa fa-close closer" cv-event="closeModal"></i>
-{% endmacro %}
-
-{% macro modal_foot() %}
-			</form>
-		</div>
-	</div>
-{% endmacro %}
-
-{% macro confirm_modal_template() %}
-	{{ modal_head('confirmModal') }}
-		<h4 class="align-center" cv-bind="title"></h4>
-		<p class="align-center confirm-text subtext" cv-bind="text"></p>
-		{{ button(text='Confirm', attrs='cv-mapped-event="confirm"') }}
-		{{ button(text='Cancel', event='closeModal') }}
-	{{ modal_foot() }}
 {% endmacro %}

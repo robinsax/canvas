@@ -3,8 +3,6 @@
 Exceptions, because shit happens.
 '''
 
-#	TODO: Seperate model and controller exceptions?
-
 #	Declare exports.
 __all__ = [
 	#	Special exceptions.
@@ -16,9 +14,7 @@ __all__ = [
 	'RequestParamError',
 	'UnknownAction',
 	'NotFound',
-	'ComponentNotFound',
 	#	Other exceptions.
-	'Unavailable',
 	'TemplateNotFound',
 	'ColumnDefinitionError',
 	'MacroParameterError',
@@ -31,7 +27,8 @@ __all__ = [
 	'UnsupportedEnforcementMethod',
 	'InvalidSchema',
 	'InvalidQuery',
-	'UnadaptedType'
+	'UnadaptedType',
+	'Unrecognized'
 ]
 
 class _Redirect(Exception):
@@ -84,14 +81,6 @@ class NotFound(HTTPException):
 	def __init__(self, key):
 		super().__init__(key, 404, 'Not Found')
 
-class ComponentNotFound(HTTPException):
-	'''
-	An error used internally when an unavailable component is addressed.
-	'''
-
-	def __init__(self, component):
-		super().__init__(component, 454, 'Component Not Found: %s'%component)
-
 class UnsupportedMethod(HTTPException):
 	'''
 	An error used internally when an unsupported request method is used.
@@ -99,12 +88,6 @@ class UnsupportedMethod(HTTPException):
 
 	def __init__(self):
 		super().__init__('', 405, 'Unsupported Request Method')
-
-class Unavailable(Exception):
-	'''
-	An error to be raised by components who do not want to be available for the
-	handling of the current request.
-	'''
 
 class ColumnDefinitionError(Exception):
 	'''
@@ -114,8 +97,8 @@ class ColumnDefinitionError(Exception):
 
 class MacroParameterError(Exception):
 	'''
-	An exception raised by Jinja macros when they are supplied an invalid set of 
-	parameters.
+	An exception raised by Jinja macros when they are supplied an invalid set 
+	of parameters.
 	'''
 	pass
 
@@ -186,5 +169,12 @@ class UnadaptedType(Exception):
 	'''
 	An exception raised when an unadaptable leaf is reached in an 
 	`SQLExpression`.
+	'''
+	pass
+
+class Unrecognized(Exception):
+	'''
+	An exception raised by `JSONSerializer`s when they are unable to 
+	deserialize a value.
 	'''
 	pass

@@ -60,40 +60,9 @@ def test_controllers():
 	), 'Controller retrieval corrects route')
 
 	check((
-		'fake.txt' in inst.collect_dependencies()[0]
+		'fake.txt' in inst.dependencies
 	), 'Dependency collection')
 
 	check_throw((
 		lambda: inst.get({})
 	), cv.TemplateNotFound, 'Page tries to render')
-
-@controller_test('Components')
-def test_components():
-	'''
-	Unit tests on components. Relies on the preceding test.
-	'''
-	
-	@cv.register.component
-	class TestComponent(controllers.Component):
-
-		def __init__(self):
-			super().__init__('test_component', [
-				'/api/test'
-			])
-
-		def check(self, ctx):
-			if 'no' in ctx:
-				raise cv.Unavailable()
-
-	controllers.create_everything()
-
-	controller = controllers.get_controller('/api/test')
-	components = controller.get_components({})
-	check((
-		len(components) == 1 and
-		components[0].__class__ is TestComponent
-	), 'Get component retrieval: component accepts')
-
-	check((
-		len(controller.get_components({'no': True})) == 0
-	), 'Get component retrieval: component rejects')

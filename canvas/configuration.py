@@ -18,7 +18,7 @@ __all__ = [
 	'write'
 ]
 
-#	The configuration file name.
+#	The name of the configuration file.
 CONFIG_FILE = 'settings.json'
 #	Allowed values of the `log_level` configuration entry.
 LOG_LEVELS = [
@@ -28,8 +28,8 @@ LOG_LEVELS = [
 	'error',
 	'critical'
 ]
-#	Root configuration entries which plugins are not allowed to modify 
-#	(because they have already been read).
+#	Root configuration entries which plugins are not allowed to modify (because 
+#	they have already been read).
 ILLEGAL_OVERRIDES = [
 	'active', 
 	'logging',
@@ -63,7 +63,7 @@ def load():
 def finalize(config):
 	'''
 	Update a configuration object with plugin-overridden values and wrap to 
-	replace `KeyError` with a more specific error.
+	replace `KeyError` with an object-specific error.
 	'''
 	#	This import is only safe after the core has been initialized, which 
 	#	happens after this module is imported.
@@ -82,8 +82,14 @@ def finalize(config):
 				#	Plugins need to register their client dependencies without 
 				#	considering other loaded plugins (or the core). Therefore 
 				#	the global dependency lists are configured additively.
-				config['client_dependencies']['dependencies'] += val['dependencies']
-				config['client_dependencies']['library_dependencies'] += val['library_dependencies']
+				if 'dependencies' in val:
+					config['client_dependencies']['dependencies'] += val['dependencies']
+				if 'library_dependencies' in val:
+					config['client_dependencies']['library_dependencies'] += val['library_dependencies']
+				if 'font_dependencies' in val:
+					config['client_dependencies']['font_dependencies'].update(val['font_dependencies'])
+				if 'icon_dependency' in val:
+					config['client_dependencies']['icon_dependency'] = val['icon_dependency']
 				continue
 			if not key in target:
 				#	Not overriding, update normally.
@@ -111,11 +117,11 @@ def write(config):
 	'''
 	Write the configuration file. 
 	
-	Should not be called in a production environment (the server user shouldn't 
-	have the required permissions).
+	Should not be called in a production environment (the serving user 
+	shouldn't have the required permissions anyway).
 	'''
 	#	Read the configuration file.
 	config_path = os.path.join(CANVAS_HOME, CONFIG_FILE)
 	with open(config_path, 'w') as f:
-		#	Use tabs!
+		#	Use tabs you barbarian!
 		f.write(json.dumps(config, indent=4).replace('    ', '\t'))

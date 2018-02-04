@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-Asset management.
+Asset management, retrieval, and rendering.
 '''
 
 import re
@@ -10,51 +10,59 @@ from io import StringIO
 from lesscpy.exceptions import CompilationError
 from lesscpy import compile as lessc
 
-from ...utils import logger
 from ...utils.registration import callback
+from .jinja_extensions import *
 from .templates import *
 
-log = logger()
-
-#	TODO: Populate appropriately.
 __all__ = [
+	#	Common.
+	'CanvasJinjaEnvironment',
+	'DeepFileSystemLoader',
+	'ExtendsAlias',
+	'get_client_asset',
+	#	Jinja.
 	'render_template',
+	#	Less.
 	'compile_less'
 ]
 
-_header = None
+#	The common `less` definitions storage object.
+_less_defns = None
+
 @callback.init
-def render_header():
+def render_common_less_defns():
 	'''
-	Renders the less file common definitions, which make
-	configured style properties available in all rendered
-	less files.
+	Render the common `less` variable definitions to make configured style 
+	properties available in all rendered `less` files.
 	'''
-	global _header
-	_header = render_template('snippets/less_definitions.jinja')
-del render_header
+	global _less_defns
+	_less_defns = render_template('snippets/less_definitions.jinja')
+del render_common_less_defns
 
 def compile_less(source):
 	'''
-	Compile less source with the common definitions prepended.
+	Compile `less` source with the common definitions prepended.
+
+	:source A string containing the source `less` to be compiled.
 	'''
 	#	Prepend the common definitions.
-	source = _header + source
-	#	Render the less.
+	source = _less_defns + source
+
+	#	Compile.
 	try:
 		return lessc(StringIO(source), minify=not config['debug'])
-	except CompilationError as e:
-		#	Try to get the error line since definition insertion 
-		#	makes line number meaningless.
+	except CompilationError as ex:
+		#	Try to get the error line since definition insertion makes line 
+		#	number less useful.
 		try:
-			line_match = re.search('line: ([0-9]+)', str(e))
-			line = source.split('\n')[int(line_match.group(1))]
-			#	TODO: Insert into traceback
-			log.error(f'Less compilation failed on: {line}')
+			line_no = int(re.search('line: ([0-9]+)', str(e)).group(1))
+			line = source.split('\n')[line_no]
+			#	TODO: Insert into traceback.
+			ex = CompilationError(f'Less compilation failed: {line} (line {line_no})')
 		except:
 			#	Fuck.
 			pass
-		raise e
+		raise ex
 
-#	The client submodule imports compile less.
+#	The `client` submodule imports `compile_less()`.
 from .client import *

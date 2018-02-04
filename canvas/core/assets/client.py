@@ -6,22 +6,22 @@ Client asset rendering and retrieval.
 import os
 
 from ...exceptions import TemplateNotFound
-from ...utils import logger
+from ... import config
 from ..plugins import get_path_occurrences
 from .templates import render_template
 from . import compile_less
-from ... import config
-
-log = logger()
-
-#	TODO: Refactor to have a get_asset function too.
 
 #	The asset cache for storing rendered assets.
 _asset_cache = {}
+
 def get_client_asset(path, _recall=False):
 	'''
-	Return the asset at `path`, or `None` if there
-	isn't one.
+	Return the asset at `path`, or `None` if there isn't one. Besides searching
+	the `client` directory, also:
+
+	* Searches `templates/client`, giving assets found here prescedence.
+	* Searches for `.less` versions of non-existant `.css` files, compiling and
+		returning them if found.
 	'''
 	if path in _asset_cache:
 		#	Retrieve cache entry.
@@ -31,21 +31,18 @@ def get_client_asset(path, _recall=False):
 		#	Jinja templates have priority.
 		asset = render_template(os.path.join('client', path), response=False)
 	except TemplateNotFound:
-		#	No template for this asset, retrieve non-template
-		#	occurences.
+		#	No template for this asset, retrieve non-template occurences.
 		occurrences = get_path_occurrences(os.path.join('assets', 'client', path))
 		if len(occurrences) == 0:
 			#	No occurences found.
 			if path.endswith('.css'):
-				#	`.less` files requested as `.css` are returned 
-				#	compiled, check for a `.less` instance for 
-				#	this asset
+				#	Check for a `.less` instance of this stylesheet.
 				asset = get_client_asset(path.replace('.css', '.less'), _recall=True)
 
 				if not config['debug']:
-					#	Don't cache assets in debug mode so changes
-					#	can be viewed without server restart. Cache
-					#	`None` to avoid re-performing this logic.
+					#	Don't cache assets in debug mode so changes can be 
+					#	viewed without server restart. Cache even if `None` to 
+					#	avoid re-performing this logic.
 					_asset_cache[path] = asset
 				return asset
 			
@@ -57,13 +54,13 @@ def get_client_asset(path, _recall=False):
 			asset = f.read()
 
 	if path.endswith('.less') and _recall:
-		#	Compile the `.less` asset since it was requested as css.
+		#	Compile the `.less` asset since it was requested as `.css`.
 		if not isinstance(asset, str):
 			asset = asset.decode()
 		asset = compile_less(asset)
 
 	if not config['debug']:
-		#	Don't cache assets in debug mode so changes
-		#	can be viewed without server restart.
+		#	Don't cache assets in debug mode so changes can be viewed without 
+		#	server restart.
 		_asset_cache[path] = asset
 	return asset

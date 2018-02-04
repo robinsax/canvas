@@ -1,14 +1,14 @@
 #	coding utf-8
 '''
-Core functionality including request handling,
-plugin management, and asset management.
+Core functionality including request handling, plugin management, and asset 
+management.
 '''
 
-import json
 import datetime as dt
 
 from ..exceptions import _Redirect
 from ..utils.registration import register
+from ..utils.json_serializers import *
 
 from .thread_context import get_thread_context
 from .assets import *
@@ -25,52 +25,37 @@ __all__ = [
 	'compile_less'
 ]
 
-def create_json(status_str, *data, status=200, headers={}, default_serializer=None):
+def create_json(status_str, *data, status=200, headers={}, fallback_serializer=None):
 	'''
 	Create a JSON response tuple in the canonical format.
 
-	:status_str The status string. Should be one of: `'success'`, 
-		`'failure'`, or `'error'`.
+	:status_str The status string. Should be one of: `'success'`, `'failure'`, 
+		or `'error'`.
 	:data (Optional) A data package.
 	:status The HTTP status code for the response.
 	:headers A dictionary of headers for the response.
-	:default_serializer A fallback serialization function for 
-		complex objects.
+	:fallback_serializer A fallback serialization function for complex objects.
 	'''
-	def default_impl(value):
-		if isinstance(value, dt.datetime):
-			#	TODO: Configured.
-			return value.strftime('%Y-%m-%dT%H:%M:%S')
-		elif isinstance(value, dt.date):
-			return value.strftime('%Y-%M-%d')
-		elif isinstance(value, dt.time):
-			return value.strftime('%H:%M:%S')
-		elif default_serializer is not None:
-			return default_serializer(value)
-		raise TypeError(f'{str(value)} is not JSON serializable.')
-
 	if len(data) > 0:
 		#	Include a data package.
-		return json.dumps({
+		return serialize_json({
 			'status': status_str,
 			'data': data[0]
-		}, default=default_impl), status, headers, 'application/json'
+		}, fallback_serializer), status, headers, 'application/json'
 	else:
 		#	Don't include a data package.
-		return json.dumps({
+		return serialize_json({
 			'status': status_str
-		}, default=default_impl), status, headers, 'application/json'
+		}, fallback_serializer), status, headers, 'application/json'
 
-#	`create_json()` is required by the 
-#	request handler.
+#	`create_json()` is required by the request handler.
 from .request_handler import handle_request
 
 @register.template_helper
 def asset_url(rel_path):
 	'''
-	Return the URL relative to domain root for an asset. 
-	This message should always be called for asset 
-	retrieval to allow for forwards-compatability.
+	Return the URL relative to domain root for an asset. This method should 
+	always be called for asset retrieval to allow for forwards-compatability.
 	'''
 	if rel_path.startswith('/'):
 		return f'/assets{rel_path}'
@@ -78,29 +63,27 @@ def asset_url(rel_path):
 
 def redirect_to(target, code=302):
 	'''
-	Redirect the view to `target`. Does not return
-	a value. When called, flow control is halted.
+	Redirect the view to `target`. Does not return a value. When called, flow 
+	control is halted.
 
-	`code` will be ignored if an AJAX POST request
-	is being handled; The redirection will be formulated
-	as a view action (it wouldn't work otherwise).
+	`code` will be ignored if an AJAX POST request is being handled; The 
+	redirection will be formulated as a view action (it wouldn't work 
+	otherwise).
 
 	:target The URL to redirect to.
-	:code The HTTP redirect code. Must be 3xx.
+	:code The HTTP redirect code. Must be `3xx`.
 	'''
 	raise _Redirect(target, code)
 
 def flash_message(message):
 	'''
-	Flash a message the next time a view or view
-	update is sent.
+	Flash a message the next time a view or view update is sent.
 	'''
 	get_thread_context()['__flash_message__'] = message
 
 @register.template_helper
 def get_flash_message():
 	'''
-	Return the currently queued flash message, or
-	`None` if there isn't one.
+	Return the currently queued flash message, or `None` if there isn't one.
 	'''
 	return get_thread_context().get('__flash_message__', None)

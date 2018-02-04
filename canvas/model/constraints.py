@@ -59,7 +59,7 @@ class Constraint:
 		'''
 		#	Store the column.
 		self.column = column
-		#	Populate the name.
+		#	Populate name.
 		self.name = f'{column.model.__table__}_{column.name}_{self.name_postfix}'
 
 		#	Register self for created the name.

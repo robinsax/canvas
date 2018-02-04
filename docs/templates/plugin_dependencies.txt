@@ -1,2 +1,0 @@
-#	The list of other canvas plugins required 
-#	by this plugin.

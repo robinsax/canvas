@@ -3,6 +3,7 @@
 Utilities for the canvas core and plugins.
 '''
 
+import time
 import inspect
 import logging
 import traceback as tb
@@ -11,6 +12,7 @@ from werkzeug.serving import run_simple
 
 #	Import subpackage to namespace.
 from .registration import *
+from .json_serializers import *
 from .template_utils import *
 
 #	Declare exports.
@@ -19,6 +21,7 @@ __all__ = [
 	'serve',
 	'format_traceback',
 	'logger',
+	'current_time',
 	#	Subpackage functions - registration.
 	'register',
 	'callback',
@@ -31,6 +34,10 @@ __all__ = [
 	'markdown',
 	'uri_encode',
 	'json',
+	#	Subpackage functions - json_serializers.
+	'JSONSerializer',
+	'serialize_json',
+	'deserialize_json',
 	#	Classes.
 	'WrappedDict'
 ]
@@ -105,3 +112,9 @@ def logger(name=None):
 	
 	#	Create and return logger.
 	return logging.getLogger(name)
+
+def current_time():
+	'''
+	Return the current time in milliseconds.
+	'''
+	return int(time.time()*1000)

@@ -7,51 +7,45 @@
 */
 //	Create the canvas toolkit instance.
 var tk = createToolkit({
-		debug: '{{ config.debug }}' == 'True',
-		templateContainer: '.meta-body .templates',
-		dataPrefix: 'cv',
-		globalTemplateFunctions: {
-			//	Common template functions
-			'hiddenIf': function(v){ return v ? 'hidden' : ''; },
-			'hiddenIfNot': function(v){ return v ? '' : 'hidden'; },
-			'hiddenIfNull': function(v){ return v == null ? 'hidden' : ''; },
-			'hiddenIfNotNull': function(v){ return v == null ? '' : 'hidden'; }
+	debug: '{{ config.debug }}' == 'True',
+	dataPrefix: 'cv',
+	callbacks: {
+		preXHR: function(req){
+			//	Inform controllers they need to use action-based redirects.
+			req.setRequestHeader('X-Canvas-View-Request', '1');
 		}
-	})
-	.request.processor(function(r){
-		r.setRequestHeader('X-Canvas-View-Request', '1');
-	});
-//	Resolve the -event name conflict
-tk.attrNames.event = 'cv-mapped-event';
+	},
+	requests: {
+		defaultResponseParser: JSON.parse
+	}
+});
 
-//	Create canvas core object
-//	TODO: Packaging (scope this tighter)
+//	Create and assign canvas core.
 function CanvasCore(){
 	'use strict';
 	var INPUT_SELECTOR = 'input, textarea, select';
 
-	//	Scoping helper
+	//	Alias self for scoping.
 	var self = this;
 
-	//	Insert configured style properties
-	//	for reference
+	//	Insert configured style properties for reference.
 	this.palettes = JSON.parse('{{ config.styling.palettes|json }}');
 	this.breakpoints = JSON.parse('{{ config.styling.breakpoints|json }}');
 
-	//	To contain the query string
+	//	To contain the query string.
 	this.query = {};
-	//	To contain current route (although redundant 
-	//	to canonical implementations)
+	//	To contain current route (although redundant to canonical 
+	//	implementations).
 	this.route = null;
 
-	//	To contain the meta page element
+	//	To contain the meta page element.
 	this.metaPage = null;
-	//	To contain the root page element
+	//	To contain the root page element.
 	this.page = null;
-	//	To contain the root header element
+	//	To contain the root header element.
 	this.header = null;
 
-	//	Containers
+	//	Create containers.
 	var initFns = [],
 		bindFns = [],
 		validators = {},
@@ -59,13 +53,12 @@ function CanvasCore(){
 		events = {};
 
 	/* -- Plugin interface -- */
-	//	List of loaded plugins
+	//	List of loaded plugins.
 	this.plugins = [];
-	//	Internal list of plugins to load when
-	//	loadPlugins() called
+	//	Internal list of plugins to load when `loadPlugins()` called.
 	var unloadedPlugins = [];
 
-	//	Function decorators
+	//	Define function decorators.
 	function stored(map, fn, name){
 		if (name === undefined){
 			var declaration = fn.toString().match(/^function\s*([^\s(]+)/);
@@ -79,20 +72,14 @@ function CanvasCore(){
 		map[name] = fn;
 		return fn;
 	}
-	this.action = function(fn, name){
-		return stored(actions, fn, name);
-	}
-	this.event = function(fn, name){
-		return stored(events, fn, name);
-	}
-	this.validator = function(fn, name){
-		return stored(validators, fn, name);
-	}
-	this.mappedEvent = function(fn, name){
-		return stored(tk.config.globalTemplateFunctions, fn, name);
-	}
-	
-	//	Primary plugin interface
+	//	Decorates controller-invokable actions.
+	this.action = function(fn, name){ return stored(actions, fn, name); }
+	//	Decorates user-triggerable events.
+	this.event = function(fn, name){ return stored(events, fn, name); }
+	//	Decorates live validator implementations.
+	this.validator = function(fn, name){ return stored(validators, fn, name); }
+
+	//	The primary plugin interface.
 	this.plugin = function(PluginClass){
 		var cond = tk.varg(arguments, 1, true),
 			condT = tk.typeCheck(cond, ['string', 'function', 'boolean']);
@@ -101,8 +88,7 @@ function CanvasCore(){
 		]);
 	}
 
-	//	Expose this in case plugins are loaded
-	//	deferred
+	//	Expose this in case plugins are loaded deferred.
 	this.loadPlugins = function(){
 		tk.iter(unloadedPlugins, function(packed){
 			var plugin = packed[0], cond = packed[1],
@@ -127,16 +113,18 @@ function CanvasCore(){
 					inst = plugin;
 				}
 				tk.debug('Loading plugin:', inst);
-				//	Grab relevent methods
+				//	Grab relevent methods.
 				var prop = tk.prop.on(inst);
 				if (prop('init')){
-					initFns.push(inst.init);
+					initFns.push(function(){
+						inst.init.apply(inst);
+					});
 				}
 				if (prop('bind')){
 					bindFns.push(inst.bind);
 				}
 				
-				//	Catch deferred declarations
+				//	Catch deferred declarations.
 				for (var pName in inst){
 					var val = inst[pName];
 					if (tk.prop(val, '__canvasAddTo')){
@@ -148,7 +136,7 @@ function CanvasCore(){
 		unloadedPlugins = [];
 	}
 
-	//	Base validator definitions
+	//	Base validator definitions.
 	this.validator(function(repr, val){
 		repr = repr.split(':');
 		var obj = new RegExp(decodeURIComponent(repr[0]), repr[1] == '1' ? 'i' : ''),
@@ -178,18 +166,16 @@ function CanvasCore(){
 		return true;
 	}, 'none');
 
-	//	Base event definitions
+	//	Base event definitions.
 	this.event(function(src){
-		//	Invoked by confirm being selected for a 
-		//	protected button
+		//	Invoked by confirm being selected for a protected button.
 		var group = src.parents('.condom').ith(0).children('.button');
 		var original = group.reduce('.protected');
 		events[original.attr('cv-event')](original);
 		group.classify('hidden', function(e){ return !e.is('.protected'); });
 	}, '__confirm__');
 	this.event(function(src){
-		//	Invoked by cancel being selected for a
-		//	protected button
+		//	Invoked by cancel being selected for protected button.
 		src.parents('.condom').ith(0)
 			.children('.button')
 			.classify('hidden', function(e){ return !e.is('.protected'); });
@@ -198,31 +184,21 @@ function CanvasCore(){
 		evt.stopPropagation();
 	}, 'stopPropagation');
 
-	this.openModal = function(template, data, functions){
-		//	TODO: Hold page-content-wrap
-		tk.map(data, template, tk('.page'), functions);
-	}
-
-	this.closeModal = this.event(function(e){
-		e.extend(e.parents('.modal')).reduce('.modal').remove();
-	}, 'closeModal');
-
-	//	Core action definitions
+	//	Core action definitions.
 	this.action(function(data){
 		window.location.href = data.url;
 	}, 'redirect');
 	this.action(function(data){
-		//	Refresh page and prevent caching
+		//	Refresh page and prevent caching.
 		var refresh = 1;
 		var currentRefresh = self.query['refresh'];
 		if (currentRefresh != null){
 			refresh = (+currentRefresh) + 1;
 		}
-		//	TODO: Handle edge cases
 		window.location.href = window.location.pathname + '?refresh=' + refresh;
 	}, 'refresh');
 	
-	//	Sub-controller checking
+	//	Sub-controller checking.
 	this.componentFor = function(loc){
 		loc = loc.extend(loc.parents()).reduce('[cv-component]');
 		if (!loc.empty){
@@ -231,7 +207,7 @@ function CanvasCore(){
 		return null;
 	}
 
-	//	Forms
+	//	Forms.
 	this.validateField = function(field){
 		var input;
 		if (field.is(INPUT_SELECTOR)){
@@ -263,20 +239,20 @@ function CanvasCore(){
 	}
 	this.submitForm = this.event(function(src){
 		src = src.extend(src.parents());
-		//	Find form
+		//	Find form.
 		var form = src.reduce('form', 1);
 		if (form.empty){
 			throw 'No form here';
 		}
 
-		//	Get action
+		//	Get action.
 		var data = {};
 		var actionSet = src.reduce('[cv-send-action]');
 		if (!actionSet.empty){
 			data.action = actionSet.attr('cv-send-action');
 		}
 
-		//	Validate
+		//	Validate fields.
 		var errors = false;
 		form.children(INPUT_SELECTOR).iter(function(e){
 			if (self.validateField(e)){
@@ -290,16 +266,16 @@ function CanvasCore(){
 			return;
 		}
 
-		//	Collect more parameters
+		//	Collect on-DOM parameters.
 		src.reduce('[cv-param]').iter(function(e){
-			//	Iterate each whitespace seperated pair
+			//	Iterate each whitespace seperated pair.
 			tk.iter(e.attr('cv-param').split(/\s+/g), function(p){
 				var p = p.split('=');
 				data[p[0]] = p[1];
 			});
 		});
 
-		//	Send
+		//	Send.
 		self.request(data, form, function(data){
 			var summary = tk.prop(data, 'error_summary', null);
 			if (summary != null){
@@ -336,7 +312,7 @@ function CanvasCore(){
 		var pos = target.offset();
 		var tooltip = tk.varg(arguments, 2, null);
 		if (tooltip == null){
-			tooltip = tk.e('div', 'tooltip', text);
+			tooltip = tk.tag('div', 'tooltip', text);
 		}
 		this.page.append(tooltip);
 		var right = pos.x > self.page.size().width/2;
@@ -353,46 +329,14 @@ function CanvasCore(){
 	}
 	this.createTooltip = this.event(createTooltip);
 
-	//	Canonical AJAX requests
-	//	::argspec data, src, url, method, success, failure
+	//	toolkit AJAX with defaults.
 	this.request = function(){
 		var varg = tk.varg.on(arguments);
-		var data = varg(0, {}, true),
-			src = varg(1, null),
-			success = varg(2, null),
-			url = varg(3, window.location.href, true),
-			method = varg(4, 'POST', true),
-			failure = varg(5, self.flashError, true);
-		
-		if (src != null){
-			data.__component__ = self.componentFor(src);
-		}
-
-		tk.debug('Sent (' + url + ', ' + method + '):', data);
-
-		function handleResponse(response){
-			tk.debug('Recieved:', response);
-			
-			var status = response.status, 
-				data = tk.prop(response, 'data', {});
-			if (status == 'error'){
-				self.flashError();
-			}
-			else {
-				if (success != null){
-					success(data)
-				}
-				if (tk.prop(data, 'action')){
-					actions[data.action](data);
-				}
-			}
-		}
-
-		tk.request(url, method, data, handleResponse);
+		return tk.request(varg(0, 'POST'), varg(1, window.location.href));
 	}
 
 	function bind(root){
-		//	Bind callbacks
+		//	Bind callbacks.
 		root.children('[cv-tooltip]').iter(function(e){
 			var tooltip = null;
 			e.on({
@@ -474,63 +418,41 @@ function CanvasCore(){
 		tk.iter(bindFns, function(f){ f(); })
 	}
 
-	function init(){
+	
+	tk.init(function(){
 		self.route = tk('body').attr('cv-route');
 
-		//	Highlight open header button if present
-		tk('.main-header .button').classify('open', function(e){
+		//	Highlight open buttons.
+		tk('.button').classify('open', function(e){
 			return e.attr('href') == window.location.pathname;
 		});
 
-		//	Parse query string
+		//	Parse query string.
 		tk.iter(window.location.search.substring(1).split('&'), function(p){
 			p = p.split('=');
 			self.query[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
 		});
 
-		//	Grab elements
+		//	Grab elements.
 		self.page = tk('body > .page');
-		self.meta = tk('.meta-page');
-		self.header = self.page.children('header.main-header');
+		self.meta = tk('.meta-body');
+		self.header = self.page.children('header.header');
 		flashArea = self.page.children('.flash-message')
 
-		self.headerHighlight = function(e){
-			var w = e.size().width;
-			highlighter.css({
-				'opacity': 1,
-				'width': w + 'px',
-				'left': e.offset().x + w/2 + 'px'
-			});
-		}
-
-		//	Create header highlighter
-		//	TODO: packaging
-		//	TODO: Bring .common to core
-		var highlighter = self.header.children('.button-highlight');
-		self.header.children('.button:not(.common)').on({
-			'mouseover': self.headerHighlight,
-			'mouseleave': function(e){
-				highlighter.css('opacity', 0);
-			}
-		});
-
-		//	Flash initial
+		//	Flash initial.
 		var initial = self.meta.children('.init-message');
 		if (!initial.empty){
 			self.flash(initial.text());
 		}
 
-		//	Load plugins
+		//	Load plugins.
 		self.loadPlugins();
 
-		//	Apply bindings
+		//	Apply bindings.
 		bind(tk('body'));
-		tk.config.bindFunction = bind;
-
-		tk.iter(initFns, function(f){
-			f(self);
-		});
-	}
-	tk.init(init);
+		tk.config.callbacks.preInsert = bind;
+		
+		tk.iter(initFns, function(f){ f(self); });
+	});
 }
 var core = new CanvasCore();

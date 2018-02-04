@@ -37,7 +37,6 @@
 			<link rel="icon" type="image/png" href="{{ h.asset_url('media/site_icon.png') }}"/>
 			
 			{# Render dependencies. #}
-			{% set page_deps = __page__.collect_dependencies() %}
 			{% macro render_dependencies(deps, is_lib) %}
 				{% for dep in deps %}
 					{% if is_lib %}
@@ -51,8 +50,10 @@
 				{% endfor %}
 			{% endmacro %}
 
-			{{ render_dependencies(page_deps[1], True) }}
-			{{ render_dependencies(page_deps[0], False) }}
+			{{ render_dependencies(__page__.library_dependencies, True) }}
+			{{ render_dependencies(__page__.dependencies, False) }}
+			{# Render icon dependency. #}
+			<link rel="stylesheet" type="text/css" href="{{ h.asset_url('lib/%s'%config.client_dependencies.icon_dependency) }}">
 		{% endblock %}
 	</head>
 	<body cv-route="{{ __page__.route }}" {% block body_attributes %}{% endblock %}>
@@ -78,14 +79,9 @@
 			</div>
 			<div class="meta-body">
 				{#
-					The meta-body including Toolkit templates.
+					The meta-body.
 				#}
-				{% block meta_body %}
-					<div class="templates">
-						{% block templates %}{% endblock %}
-					</div>
-					{% block meta_content %}{% endblock %}
-				{% endblock %}
+				{% block meta_body %}{% endblock %}
 			</div>
 		{% endblock %}
 	</body>

@@ -9,9 +9,9 @@
 			"core.js"
 		],
 		"library_dependencies": [
-			"line-awesome.min.css",
 			"toolkit.min.js"
 		],
+		"icon_dependency": "line-awesome.min.css",
 		"font_dependencies": {}
 	},
 	"plugins": {
@@ -28,6 +28,14 @@
 		"user": "testuser",
 		"password": "backendpls",
 		"host": "localhost"
+	},
+	"datetime_interface": {
+		"datetime_format": "%Y-%m-%dT%H:%M:%S",
+		"datetime_matcher": "[0-9\\-]{10}T[0-9:]{8}",
+		"date_format": "%Y-%M-%d",
+		"date_matcher": "[0-9\\-]{10}",
+		"time_format": "%H:%M:%S",
+		"time_matcher": "[0-9:]{8}"
 	},
 	"styling": {
 		"breakpoints": [850, 675, 450],
