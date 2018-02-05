@@ -91,7 +91,7 @@
 	:values A list of `name, value` pairs to use if this is a select
 		input.
 #}
-{% macro field(type=None, name=None, placeholder=None, label=None, icon=None, model=None, attr=None, attrs=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
+{% macro field(type=None, name=None, label=None, icon=None, placeholder=None, model=None, attr=None, attrs=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
 	{# Assert parameters are valid #}
 	{% if (name is none or type is none) and attr is none %}
 		{{ h.parameter_error('Cannot create field without name and type, or attr') }}

@@ -335,6 +335,38 @@ function CanvasCore(){
 		return tk.request(varg(0, 'POST'), varg(1, window.location.href));
 	}
 
+	this.Modal = function(){
+		var self = this;
+		this.element = null;
+
+		this.createPanel = function(){
+			throw 'Not implemented.'
+		}
+
+		this.open = function(){
+			this.element = tk('.page').append(
+				tk.tag('div').classify('modal')
+					.on('click', this.close)
+					.append(
+						tk.tag('div').classify('panel')
+							.on('click', function(e, evt){ evt.stopPropagation() })
+							.append(
+								tk.tag('i')
+									.classify('fa fa-times closer')
+									.on('click', this.close)
+							)
+							.back().append(this.createPanel())
+						.back()
+					)
+				.back()
+			);
+		}
+
+		this.close = function(){
+			self.element.remove();
+		}
+	}
+
 	function bind(root){
 		//	Bind callbacks.
 		root.children('[cv-tooltip]').iter(function(e){

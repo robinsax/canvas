@@ -60,8 +60,8 @@
 				"link_clicked": "#396166"
 			},
 			"misc": {
-				"background1": "#B29075",
-				"background2": "#FFDCC1",
+				"background1": "lightgrey",
+				"background2": "grey",
 				"text": "black"
 			},
 			"error_level": {
