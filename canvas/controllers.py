@@ -19,7 +19,6 @@ from .utils import (
 )
 from .core.thread_context import get_thread_context
 from .core.assets import render_template
-from .core import redirect_to
 from . import config
 
 #	Declare exports.
@@ -180,9 +179,11 @@ class Redirector(Controller):
 		self.code = 302
 
 	def get(self, ctx):
+		from .core import redirect_to
 		redirect_to(self.target_route, self.code)
 	
 	def post(self, ctx):
+		from .core import redirect_to
 		redirect_to(self.target_route, self.code)
 
 @register.template_helper
