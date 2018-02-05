@@ -16,6 +16,11 @@ var tk = createToolkit({
 		}
 	},
 	requests: {
+		defaultSuccess: function(data){
+			if (tk.prop(data, 'data') && tk.prop(data.data, 'action')){
+				core.actions[data.data.action](data);
+			}
+		},
 		defaultResponseParser: JSON.parse
 	}
 });
@@ -51,6 +56,9 @@ function CanvasCore(){
 		validators = {},
 		actions = {},
 		events = {};
+
+	//	TODO: Better.
+	this.actions = actions;
 
 	/* -- Plugin interface -- */
 	//	List of loaded plugins.
@@ -104,7 +112,7 @@ function CanvasCore(){
 					break;
 			}
 			if (cond){
-				//	Create the instance
+				//	Create the instance.
 				var inst;
 				if (typeof plugin == 'function'){
 					inst = new plugin();
@@ -186,7 +194,7 @@ function CanvasCore(){
 
 	//	Core action definitions.
 	this.action(function(data){
-		window.location.href = data.url;
+		window.location.href = data.data.url;
 	}, 'redirect');
 	this.action(function(data){
 		//	Refresh page and prevent caching.
@@ -197,15 +205,6 @@ function CanvasCore(){
 		}
 		window.location.href = window.location.pathname + '?refresh=' + refresh;
 	}, 'refresh');
-	
-	//	Sub-controller checking.
-	this.componentFor = function(loc){
-		loc = loc.extend(loc.parents()).reduce('[cv-component]');
-		if (!loc.empty){
-			return loc.attr('cv-component');
-		}
-		return null;
-	}
 
 	//	Forms.
 	this.validateField = function(field){
@@ -276,17 +275,20 @@ function CanvasCore(){
 		});
 
 		//	Send.
-		self.request(data, form, function(data){
-			var summary = tk.prop(data, 'error_summary', null);
-			if (summary != null){
-				//	Show error summary
-				form.children('.error-summary').text(summary)
-					.classify('hidden', false, 5000);
-			}
-			tk.iter(tk.prop(data, 'errors', []), function(k, v){
-				self.fieldError(form.children('[name="' + k + '"]'), v);
-			});
-		});
+		self.request()
+			.json(data)
+			.failure(function(data){
+				var summary = tk.prop(data, 'error_summary', null);
+				if (summary != null){
+					//	Show error summary
+					form.children('.error-summary').text(summary)
+						.classify('hidden', false, 5000);
+				}
+				tk.iter(tk.prop(data, 'errors', []), function(k, v){
+					self.fieldError(form.children('[name="' + k + '"]'), v);
+				});
+			})
+			.send();
 	}, 'submit');
 
 	//	Flash messages

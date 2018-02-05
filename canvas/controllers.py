@@ -19,6 +19,7 @@ from .utils import (
 )
 from .core.thread_context import get_thread_context
 from .core.assets import render_template
+from .core import redirect_to
 from . import config
 
 #	Declare exports.
@@ -26,6 +27,7 @@ __all__ = [
 	'Controller',
 	'Page',
 	'APIEndpoint',
+	'Redirector',
 	#	Submodule classes.
 	'Component',
 	'PageComponent',
@@ -166,6 +168,22 @@ class APIEndpoint(Controller):
 		#	determine error response format.
 		if not self.route.startswith('/api/'):
 			raise APIRouteDefinitionError(f'{route} not prefixed with api/')
+
+class Redirector(Controller):
+	'''
+	A controller that redirects all requests to another URL.
+	'''
+
+	def __init__(self, route, target_route, code=302):
+		super().__init__(route)
+		self.target_route = target_route
+		self.code = 302
+
+	def get(self, ctx):
+		redirect_to(self.target_route, self.code)
+	
+	def post(self, ctx):
+		redirect_to(self.target_route, self.code)
 
 @register.template_helper
 def get_controller(route):

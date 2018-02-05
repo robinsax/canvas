@@ -9,7 +9,8 @@ import json as jsonlib
 
 from ..exceptions import Unrecognized
 from .registration import (
-	register, 
+	register,
+	callback,
 	get_registered
 )
 
@@ -84,7 +85,7 @@ class DatetimeJSONSerializer(JSONSerializer):
 
 	def deserialize(self, data):
 		#	Assert `data` is a string.
-		if not isinstance(data, basestring):
+		if not isinstance(data, str):
 			raise Unrecognized()
 		
 		for i, matcher in enumerate(self.matchers):
@@ -97,7 +98,7 @@ class DatetimeJSONSerializer(JSONSerializer):
 #   The global serializer list.
 _serializers = []
 
-@register.pre_init
+@callback.pre_init
 def create_serializers():
 	'''
 	Create the singleton instance of each registered `JSONSerializer`.
