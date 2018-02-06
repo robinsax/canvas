@@ -123,5 +123,5 @@ def test_json():
 	check((
 		isinstance(benchmark, dt.datetime) and
 		deserialized['bench'].minute == benchmark.minute and 
-		deserialized['bench'].second == benchmark.second
+		deserialized['bench'].hour == benchmark.hour
 	), 'Identity translation on round-trip')
