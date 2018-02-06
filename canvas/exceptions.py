@@ -44,8 +44,8 @@ class ValidationErrors(Exception):
 	An error used to trigger an input validation error response.
 	'''
 
-	def __init__(self, error_dict):
-		self.error_dict = error_dict
+	def __init__(self, error_dict=None, summary=None):
+		self.error_dict, self.summary = error_dict, summary
 
 class HTTPException(Exception):
 	'''

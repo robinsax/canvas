@@ -274,9 +274,12 @@ def _handle_controller_request(req, cookie):
 			}, ''
 	except ValidationErrors as e:
 		#	Return the canonical model-constraint-violation response.
-		return create_json('failure', {
-			'errors': e.error_dict
-		}, status=422)
+		data = {}
+		if e.summary is not None:
+			data['error_summary'] = e.summary
+		if e.error_dict is not None:
+			data['errors'] = e.error_dict
+		return create_json('failure', data, status=422)
 	except HTTPException as e:
 		#	A status-coded exception was raised.
 		error, error_desc, error_code = (e, e.desc, e.code)

@@ -277,19 +277,17 @@ function CanvasCore(){
 		//	Send.
 		self.request()
 			.json(data)
-			.failure(function(data){
-				var summary = tk.prop(data, 'error_summary', null);
+			.failure(function(response){
+				var summary = tk.prop(response.data, 'error_summary', null);
 				if (summary != null){
-					//	Show error summary
-					form.children('.error-summary').text(summary)
-						.classify('hidden', false, 5000);
+					form.children('.error-summary')
+						.text(summary)
+						.classify('hidden', false);
 				}
-				tk.iter(tk.prop(data, 'errors', []), function(k, v){
+				tk.iter(tk.prop(response.data, 'errors', []), function(k, v){
 					var src = form.children('[name="' + k + '"]');
 					if (src.empty){
-						//	Crappy placeholder error.
-						form.children('.error-summary').text(k + ': ' + v)
-							.classify('hidden', false, 5000);
+						tk.debug('Unmatched error: ' + k + ': ' + v);
 					}
 					else {
 						self.fieldError(src);
