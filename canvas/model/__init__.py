@@ -213,6 +213,7 @@ def schema(table_name, schema, accessors=None):
 			if attr in self.__columns__:
 				#	This attribute is mapped to a column; in-memory version is 
 				#	now dirty.
+				print('DIRTY', self.__table__, attr)
 				inner_set(self, '__dirty__', True)
 			inner_set(self, attr, val)
 		cls.__setattr__ = set_with_check

@@ -135,6 +135,9 @@ function CanvasCore(){
 				//	Catch deferred declarations.
 				for (var pName in inst){
 					var val = inst[pName];
+					if (val == null){
+						continue;
+					}
 					if (tk.prop(val, '__canvasAddTo')){
 						val.__canvasAddTo[pName] = val;
 					}
@@ -255,7 +258,8 @@ function CanvasCore(){
 		var errors = false;
 		form.children(INPUT_SELECTOR).iter(function(e){
 			if (self.validateField(e)){
-				data[e.attr('name')] = e.value();
+				var val = e.value();
+				data[e.attr('name')] = val === '' ? null : val;
 			}
 			else {
 				errors = true;	
@@ -290,7 +294,7 @@ function CanvasCore(){
 						tk.debug('Unmatched error: ' + k + ': ' + v);
 					}
 					else {
-						self.fieldError(src);
+						self.fieldError(src, v);
 					}
 				});
 			})

@@ -53,6 +53,10 @@ class _Session:
 		#	Set the row values onto the object.
 		for name, column, i in model.__class__.schema_iter(i=True):
 			column.set_value_for(model, row[i])
+
+		#	Clear the dirty flag, which was set by the mapping, since the model
+		#	is row-synced
+		model.__dirty__ = False
 		
 		#	Update the stored row reference for the newly mapped model 
 		#	instance.
@@ -170,10 +174,6 @@ class _Session:
 
 		#	Populate the model object with the returned, default-populated row.
 		self._map_model(model, self.cursor.fetchone())
-		
-		#	Clear the dirty flag, which was set by the mapping, since the model
-		#	is row-synced
-		model.__dirty__ = False
 
 		#	Dispatch creation callback.
 		model.__on_create__()
