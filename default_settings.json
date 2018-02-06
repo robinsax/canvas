@@ -31,11 +31,11 @@
 	},
 	"datetime_interface": {
 		"datetime_format": "%Y-%m-%dT%H:%M",
-		"datetime_matcher": "[0-9\\-]{10}T[0-9:]{5}",
+		"datetime_matcher": "[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}",
 		"date_format": "%Y-%M-%d",
-		"date_matcher": "[0-9\\-]{10}",
+		"date_matcher": "[0-9]{4}-[0-9]{2}-[0-9]{2}",
 		"time_format": "%H:%M",
-		"time_matcher": "[0-9:]{5}"
+		"time_matcher": "[0-9]{2}:[0-9]{2}"
 	},
 	"styling": {
 		"breakpoints": [850, 675, 450],
