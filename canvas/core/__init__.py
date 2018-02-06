@@ -21,7 +21,13 @@ __all__ = [
 	'get_thread_context',
 	'flash_message',
 	#	Assets subpackage.
+	'CanvasJinjaEnvironment',
+	'DeepFileSystemLoader',
+	'ExtendsAlias',
+	'get_client_asset',
+	#	Jinja.
 	'render_template',
+	#	Less.
 	'compile_less'
 ]
 

@@ -1,15 +1,18 @@
 #	coding utf-8
 '''
-A utility that allows arbitrary functions and 
-classes to be managed by declared type.
+A utility that allows arbitrary functions and classes to be identified and
+managed via decorator.
 '''
 
 import sys
 
+#	Declare dependencies.
 __all__ = [
 	#	Registration.
 	'register',
 	'callback',
+	#	De-registration.
+	'clear_registered',
 	#	Registration access.
 	'get_registered',
 	'get_registered_by_name',
@@ -22,17 +25,15 @@ _registrations = {}
 
 class _RegistrationDecoratorGenerator:
 	'''
-	A decorator generator that enables registration
-	by string parameter, or by attribute access
-	for reduced syntax.
+	A decorator generator that enables registration by string parameter, or 
+	by attribute access for reduced syntax.
 	'''
 
 	def __init__(self, prefix=''):
 		'''
 		Create a registration decorator generator.
 
-		:prefix A prefix to automatically add to all
-			registered types.
+		:prefix A prefix to automatically add to all registered types.
 		'''
 		self.prefix = prefix
 
@@ -70,9 +71,8 @@ del _RegistrationDecoratorGenerator
 
 def get_registered(*types):
 	'''
-	Return all registered classes or functions 
-	registered as the given types or an empty list 
-	if there are none.
+	Return all registered classes or functions registered as the given types 
+	or an empty list if there are none.
 	'''
 	lst = []
 	for typ in types:
@@ -82,9 +82,8 @@ def get_registered(*types):
 
 def get_registered_by_name(*types):
 	'''
-	Generate and return a dictionary containing all 
-	classes or functions registered as the given type, 
-	keyed by name.
+	Generate and return a dictionary containing all classes or functions 
+	registered as the given type, keyed by name.
 	'''
 	dct = {}
 	for typ in types:
@@ -94,8 +93,8 @@ def get_registered_by_name(*types):
 
 def call_registered(typ, *args, **kwargs):
 	'''
-	Invoke all functions registered as `typ`. The 
-	callback prefix is preppended if not present.
+	Invoke all functions registered as `typ`. The callback prefix is 
+	prepended if not present.
 	'''
 	if not typ.startswith('callback:'):
 		#	Add prefix.
@@ -113,13 +112,10 @@ def clear_registered(typ):
 
 def place_registered_on(name, typ):
 	'''
-	Add all registered classes or functions of the given 
-	typ to a module or package namespace.
+	Add all registered classes or functions of the given typ to a module or 
+	package namespace.
 
-	TODO(BP): Side-effect: __all__ list modification
-	
-	:name The name of the module whose namespace is
-		the target.
+	:name The name of the module whose namespace is the target.
 	:typ The registered type to place.
 	'''
 	#	Retrieve the module.

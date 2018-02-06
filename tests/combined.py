@@ -3,7 +3,9 @@
 Combined tests for good request handler coverage.
 '''
 
-from . import *
+import canvas as cv
+
+from canvas.tests import *
 
 MISSING_PATH = '/api/nowhere'
 ENDPOINT_PATH = '/api/test'
@@ -72,3 +74,6 @@ def test_basic():
 	check((
 		client.get('/assets/core.js').status_code == 200
 	), 'core.js serves')
+
+	check_html_response(client.get('/'), 200, 
+			lambda html: 'Hello World!' in html, 'Hello world page serves')

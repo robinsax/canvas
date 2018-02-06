@@ -175,8 +175,7 @@ class Redirector(Controller):
 
 	def __init__(self, route, target_route, code=302):
 		super().__init__(route)
-		self.target_route = target_route
-		self.code = 302
+		self.target_route, self.code = target_route, 302
 
 	def get(self, ctx):
 		from .core import redirect_to
@@ -185,6 +184,14 @@ class Redirector(Controller):
 	def post(self, ctx):
 		from .core import redirect_to
 		redirect_to(self.target_route, self.code)
+
+@register.controller
+class HelloWorldPage(Page):
+
+	def __init__(self):
+		super().__init__('/', 'Hello World', **{
+			'template': 'hello_world.html'
+		})
 
 @register.template_helper
 def get_controller(route):
