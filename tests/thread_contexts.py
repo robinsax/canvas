@@ -3,9 +3,11 @@
 Unit tests on thread context storage.
 '''
 
+import canvas as cv
+
 from threading import Thread, Barrier
 
-from . import *
+from canvas.tests import *
 
 THREAD_COUNT = 20
 
@@ -16,11 +18,6 @@ def test_thread_storage():
 	'''
 	Unit tests on thread aware context storage.
 	'''
-	from ..core.thread_context import (
-		register_thread_context,
-		get_thread_context,
-		remove_thread_context
-	)
 
 	passed, crash = True, None
 	#	Use a barrier so concurrent execution is not a race condition.
@@ -33,16 +30,16 @@ def test_thread_storage():
 		barrier.wait()
 		try:
 			ctx = {'number': k}
-			register_thread_context(ctx)
+			cv.register_thread_context(ctx)
 
 			check((
 				get_thread_context() == ctx
 			), f'Thread {k}: context equality')
 
-			remove_thread_context()
+			cv.remove_thread_context()
 
 			check((
-				get_thread_context() == None
+				cv.get_thread_context() == None
 			), f'Thread {k}: empty context returns None')
 		except Fail:
 			#	No concurrent readers => this is safe.

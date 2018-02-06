@@ -1,8 +1,7 @@
 [run]
 omit = 
-    canvas/tests/*
-    canvas/assets/*
-    docs/*
-    scripts/*
-    #   TODO: Python libraries are being included.
-    */lib/*
+	canvas/assets/*
+	*/tests/*
+	docs/*
+	scripts/*
+	*/lib/*

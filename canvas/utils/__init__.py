@@ -27,6 +27,7 @@ __all__ = [
 	'callback',
 	'get_registered',
 	'get_registered_by_name',
+	'clear_registered',
 	'call_registered',
 	'place_registered_on',
 	#	Subpackage functions - template_utils.

@@ -6,8 +6,7 @@ Unit tests on controller and component objects.
 import canvas as cv
 
 from canvas import controllers
-
-from . import *
+from canvas.tests import *
 
 controller_test = TestSuite('canvas.controllers')
 

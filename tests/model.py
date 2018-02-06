@@ -3,12 +3,10 @@
 Unit tests on the canvas model package.
 '''
 
-from ..exceptions import (
-	ValidationErrors,
-	InvalidSchema
-)
-from .. import model
-from . import *
+import canvas as cv
+
+from canvas import model
+from canvas.tests import *
 
 model_test = TestSuite('canvas.model')
 
@@ -129,12 +127,12 @@ def test_orm():
 		'b': model.Column('text', constraints=[
 			model.RegexConstraint('Something happened', '^\w{5,}$')
 		]),
-		'c': model.Column('json')
+		'c': model.Column('json', default=lambda: {'foo': 'bar'})
 	}, accessors=['a'])
 	class Y:
 		
-		def __init__(self, b, c=None):
-			self.b, self.c = (b, c)
+		def __init__(self, b):
+			self.b = b
 		
 	model.create_everything()
 
@@ -145,6 +143,10 @@ def test_orm():
 	check((
 		x_ser == 1
 	), 'SQL defaults mapped on save()')
+
+	check((
+		x.c.get('foo', None) == 'bar'
+	), 'Complex defaults mapped on save()')
 
 	session.commit()
 
@@ -164,7 +166,7 @@ def test_orm():
 		session.save(y)
 		session.commit()
 
-	check_throw(save_y, ValidationErrors, 'Regex validation in precheck')
+	check_throw(save_y, cv.ValidationErrors, 'Regex validation in precheck')
 	session.rollback()
 
 	y = Y('foobar')
@@ -198,9 +200,6 @@ def test_orm():
 		len(all_y) == 0
 	), 'Multiple-reference deletion')
 
-	y = Y('foobar', [1, 2, 3])
-	session.save(y).commit()
-
 @model_test('Foreign keys')
 def test_table_creation_order():
 	session = model.create_session()
@@ -229,7 +228,7 @@ def test_table_creation_order():
 	subcase('Table ordering and creation')
 	try:
 		model.create_everything()
-	except InvalidSchema:
+	except cv.InvalidSchema:
 		fail('Order not resolved')
 
 @model_test('Non-model queries')
