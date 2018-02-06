@@ -285,7 +285,15 @@ function CanvasCore(){
 						.classify('hidden', false, 5000);
 				}
 				tk.iter(tk.prop(data, 'errors', []), function(k, v){
-					self.fieldError(form.children('[name="' + k + '"]'), v);
+					var src = form.children('[name="' + k + '"]');
+					if (src.empty){
+						//	Crappy placeholder error.
+						form.children('.error-summary').text(k + ': ' + v)
+							.classify('hidden', false, 5000);
+					}
+					else {
+						self.fieldError(src);
+					}
 				});
 			})
 			.send();
