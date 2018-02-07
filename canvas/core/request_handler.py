@@ -143,6 +143,17 @@ def _on_error(req, error, ctx, level=log.error):
 	for k in remove:
 		del ctx[k]
 
+	#	Suppress huge inputs.
+	if 'request' in ctx:
+		request = ctx['request']
+		remove = []
+		for key, value in request.items():
+			#	TODO: Configure.
+			if isinstance(value, str) and len(value) > 500:
+				remove.append(key)
+		for key in remove:
+			request[key] = f'{request[key][:500]}...'
+
 	#	Invoke callbacks individually with error protection.
 	for callback in get_registered('request_error'):
 		try:

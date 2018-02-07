@@ -278,17 +278,23 @@ function CanvasCore(){
 			});
 		});
 
+		//	Check success callback.
+		var win = tk.varg(arguments, 1, null);
+
 		//	Send.
-		self.request()
-			.json(data)
-			.failure(function(response){
+		var req = self.request()
+			.json(data);
+		if (win != null){
+			req.success(win);
+		}	
+		req.failure(function(response){
 				var summary = tk.prop(response.data, 'error_summary', null);
 				if (summary != null){
 					form.children('.error-summary')
 						.text(summary)
 						.classify('hidden', false);
 				}
-				tk.iter(tk.prop(response.data, 'errors', []), function(k, v){
+				tk.iter(tk.prop(response.data, 'errors', {}), function(k, v){
 					var src = form.children('[name="' + k + '"]');
 					if (src.empty){
 						tk.debug('Unmatched error: ' + k + ': ' + v);
