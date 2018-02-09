@@ -1,69 +1,79 @@
+'use strict';
 /*
 	The canvas front-end core. Requires toolkit.js.
 
-	Learn more:
-	https://github.com/robinsax/canvas
-	https://github.com/robinsax/toolkit.js
+	TODO: Cleanup.
 */
+
 //	Create the canvas toolkit instance.
 var tk = createToolkit({
 	debug: '{{ config.debug }}' == 'True',
-	dataPrefix: 'cv',
 	callbacks: {
-		preXHR: function(req){
+		preRequest: function(req, xhr){
 			//	Inform controllers they need to use action-based redirects.
-			req.setRequestHeader('X-Canvas-View-Request', '1');
-		}
-	},
-	requests: {
-		defaultSuccess: function(data){
-			if (tk.prop(data, 'data') && tk.prop(data.data, 'action')){
-				core.actions[data.data.action](data);
+			xhr.setRequestHeader('X-Canvas-View-Request', '1');
+			if (req.fns.success === tk.fn.eatCall){
+				//	Add an action check response.
+				req.fns.success = function(response){
+					if (tk.prop(response, 'data') && tk.prop(response.data, 'action')){
+						core.storage.actions[response.data.action](response);
+					}
+				}
 			}
-		},
-		defaultResponseParser: JSON.parse
+		}
 	}
 });
 
-//	Create and assign canvas core.
 function CanvasCore(){
-	'use strict';
-	var INPUT_SELECTOR = 'input, textarea, select';
-
-	//	Alias self for scoping.
+	/*
+		The canvas core object.
+	*/
 	var self = this;
-
 	//	Insert configured style properties for reference.
 	this.palettes = JSON.parse('{{ config.styling.palettes|json }}');
 	this.breakpoints = JSON.parse('{{ config.styling.breakpoints|json }}');
 
-	//	To contain the query string.
-	this.query = {};
-	//	To contain current route (although redundant to canonical 
-	//	implementations).
+	//	To contain current route and query string.
 	this.route = null;
-
-	//	To contain the meta page element.
+	this.query = {};
+	//	To contain the meta page and page elements.
 	this.metaPage = null;
-	//	To contain the root page element.
 	this.page = null;
-	//	To contain the root header element.
-	this.header = null;
 
-	//	Create containers.
-	var initFns = [],
-		bindFns = [],
-		validators = {},
-		actions = {},
-		events = {};
+	//	Alias a few toolkit properties.
+	this.init = tk.init;
+	this.debug = tk.config.debug;
 
-	//	TODO: Better.
-	this.actions = actions;
+	//	Storage.
+	this.storage = {
+		validators: {},
+		actions: {},
+		events: {},
+		form: null,
+		forms: {}
+	};
+
+	if (this.debug){
+		function getAdditionLogger(added){
+			return function(newValue){
+				tk.log('Added ' + added + ':', newValue);
+			}
+		}
+
+		tk.binding(this.storage, 'validators')
+			.changed(getAdditionLogger('validator'))
+			.begin();
+		tk.binding(this.storage, 'actions')
+			.changed(getAdditionLogger('action function'))
+			.begin();
+		tk.binding(this.storage, 'events')
+			.changed(getAdditionLogger('event function'))
+			.begin();
+	}
 
 	/* -- Plugin interface -- */
 	//	List of loaded plugins.
 	this.plugins = [];
-	//	Internal list of plugins to load when `loadPlugins()` called.
 	var unloadedPlugins = [];
 
 	//	Define function decorators.
@@ -74,23 +84,23 @@ function CanvasCore(){
 				name = declaration[1];
 			}
 			else {
-				fn.__canvasAddTo = map;
+				fn.__targetContainers__ = map;
 			}
 		}
 		map[name] = fn;
 		return fn;
 	}
 	//	Decorates controller-invokable actions.
-	this.action = function(fn, name){ return stored(actions, fn, name); }
+	this.action = function(fn, name){ return stored(this.storage.actions, fn, name); }
 	//	Decorates user-triggerable events.
-	this.event = function(fn, name){ return stored(events, fn, name); }
+	this.event = function(fn, name){ return stored(this.storage.events, fn, name); }
 	//	Decorates live validator implementations.
-	this.validator = function(fn, name){ return stored(validators, fn, name); }
+	this.validator = function(fn, name){ return stored(this.storage.validators, fn, name); }
 
 	//	The primary plugin interface.
 	this.plugin = function(PluginClass){
 		var cond = tk.varg(arguments, 1, true),
-			condT = tk.typeCheck(cond, ['string', 'function', 'boolean']);
+			condT = tk.typeCheck(cond, 'string', 'function', 'boolean');
 		unloadedPlugins.push([
 			PluginClass, cond, condT
 		]);
@@ -120,7 +130,7 @@ function CanvasCore(){
 				else {
 					inst = plugin;
 				}
-				tk.debug('Loading plugin:', inst);
+				tk.log('Loading plugin:', inst);
 				//	Grab relevent methods.
 				var prop = tk.prop.on(inst);
 				if (prop('init')){
@@ -138,8 +148,8 @@ function CanvasCore(){
 					if (val == null){
 						continue;
 					}
-					if (tk.prop(val, '__canvasAddTo')){
-						val.__canvasAddTo[pName] = val;
+					if (tk.prop(val, '__targetContainers__')){
+						val.__targetContainers__[pName] = val;
 					}
 				}
 			}
@@ -182,7 +192,7 @@ function CanvasCore(){
 		//	Invoked by confirm being selected for a protected button.
 		var group = src.parents('.condom').ith(0).children('.button');
 		var original = group.reduce('.protected');
-		events[original.attr('cv-event')](original);
+		self.storage.events[original.attr('cv-event')](original);
 		group.classify('hidden', function(e){ return !e.is('.protected'); });
 	}, '__confirm__');
 	this.event(function(src){
@@ -193,13 +203,13 @@ function CanvasCore(){
 	}, '__cancel__');
 	this.event(function(e, evt){
 		evt.stopPropagation();
-	}, 'stopPropagation');
+	}, '__block__');
 
 	//	Core action definitions.
-	this.action(function(data){
-		window.location.href = data.data.url;
+	this.action(function(response){
+		window.location.href = response.data.url;
 	}, 'redirect');
-	this.action(function(data){
+	this.action(function(response){
 		//	Refresh page and prevent caching.
 		var refresh = 1;
 		var currentRefresh = self.query['refresh'];
@@ -297,7 +307,7 @@ function CanvasCore(){
 				tk.iter(tk.prop(response.data, 'errors', {}), function(k, v){
 					var src = form.children('[name="' + k + '"]');
 					if (src.empty){
-						tk.debug('Unmatched error: ' + k + ': ' + v);
+						tk.log('Unmatched error: ' + k + ': ' + v);
 					}
 					else {
 						self.fieldError(src, v);
@@ -307,45 +317,45 @@ function CanvasCore(){
 			.send();
 	}, 'submit');
 
-	//	Flash messages
-	var flashArea = null;
-	this.flash = function(msg){
-		flashArea.text(msg).classify('hidden', false, 5000);
-	}
-	//	Event binding
+	//	Flash message function with binding.
+	this.flashMessage = '';
+	tk.init(function(){
+		tk.binding(self, 'flashMessage')
+			.onto(tk('.flash-message'))
+				.placement(function(d, e){
+					e.text(d).classify('hidden', false, 5000);
+				})
+			.and().begin();
+	})
 	this.event(function(e){
-		self.flash(e.attr('cv-message'));
+		self.flashMessage = e.attr('cv-message');
 	}, 'flashMessage');
-	//	Action binding
-	this.action(function(data){
-		self.flash(data.message);
+	this.action(function(response){
+		self.flashMessage = response.data.message;
 	}, 'flash_message');
 
-	function flashError(){
-		self.flash(tk.varg(arguments, 0, 'An error occurred'));
-	}
-	this.flashError = this.event(flashError);
-
-	function createTooltip(target, text){
-		var pos = target.offset();
-		var tooltip = tk.varg(arguments, 2, null);
+	this.createTooltip = function(target, text){
+		var pos = target.offset(),
+			tooltip = tk.varg(arguments, 2, null);
+		
 		if (tooltip == null){
 			tooltip = tk.tag('div', 'tooltip', text);
 		}
 		this.page.append(tooltip);
-		var right = pos.x > self.page.size().width/2;
-		//	TODO: This is a hotfix.
-		var scroll = tk('.page').ith(0, true).scrollTop;
+
+		var right = pos.x > self.page.size().width/2,
+			scroll = this.page.ith(0, true).scrollTop;
+		
 		//	TODO: make right do something
-		tooltip.css({
-			'top': pos.y - scroll - 5 + 'px',
-			'left': pos.x - 5 + 'px'
-		})
-		.classify('hidden', false)
-		.classify('right', right);
+		tooltip
+			.css({
+				'top': pos.y - scroll - 5 + 'px',
+				'left': pos.x - 5 + 'px'
+			})
+			.classify('hidden', false)
+			.classify('right', right);
 		return tooltip;
 	}
-	this.createTooltip = this.event(createTooltip);
 
 	//	toolkit AJAX with defaults.
 	this.request = function(){
@@ -353,6 +363,17 @@ function CanvasCore(){
 		return tk.request(varg(0, 'POST'), varg(1, window.location.href));
 	}
 
+	//	Form access
+	this.form = function(){
+		if (arguments.length == 0){
+			return this.storage.form;
+		}
+		else {
+			return this.storage.forms[arguments[0]];
+		}
+	}
+
+	/* ---- Class definitions ---- */
 	this.Modal = function(){
 		var self = this;
 		this.element = null;
@@ -385,7 +406,7 @@ function CanvasCore(){
 		}
 	}
 
-	function bind(root){
+	function inspectNodes(root){
 		//	Bind callbacks.
 		root.children('[cv-tooltip]').iter(function(e){
 			var tooltip = null;
@@ -421,38 +442,7 @@ function CanvasCore(){
 			})());
 		});
 
-		root.children(INPUT_SELECTOR).iter(function(e){
-			if (!e.is('[cv-validator]')){
-				return;
-			}
-			var submits = !e.is('textarea');
-			e.on({
-				'keyup': function(h, event){
-					if (submits && event.keyCode == 13){
-						event.preventDefault();
-						self.submitForm(e);
-					}
-					e.parents('form').children('.error-summary')
-						.classify('hidden');
-					self.validateField(e);
-				},
-				'change': function(h, event){
-					//	TODO: Race cond.
-					tk.defer(function(){
-						e.parents('form').children('.error-summary')
-							.classify('hidden');
-						self.validateField(e);
-					}, 100)
-				},
-				'keydown': function(h, event){
-					if (submits && event.keyCode == 13){
-						event.preventDefault();
-					}
-				}
-			});
-		});
-
-		//	Setup on-page href nav
+		//	Setup on-page href nav.
 		root.children('a[href]').iter(function(e){
 			var href = e.attr('href');
 			if (href[0] == '#'){
@@ -465,12 +455,67 @@ function CanvasCore(){
 			}
 		});
 
-		tk.iter(bindFns, function(f){ f(); })
+		root.children('form').iter(function(form){
+			var data = {
+				__errors__: {}
+			};
+
+			form.children('[name]').iter(function(input){
+				var name = input.attr('name'),
+					field = input.parents('.field').ith(0);
+				
+				data[name] = null;
+				data.__errors__[name] = null;
+
+				//	Create error message binding.
+				tk.binding(data.__errors__, name)
+					.changed(function(d){
+						field.classify('error', d != null)
+							.children('.error-desc')
+							.text(d);
+					})
+					.begin();
+
+				if (input.is('[cv-validator]')){
+					//	Create validation binding.
+					var repr = input.attr('cv-validator');
+					
+					//	Parse repr.
+					var k = repr.indexOf(':'), 
+						type = repr.substring(0, k);
+					repr = repr.substring(k + 1);
+
+					//	Bind listener to data value.
+					tk.binding(data, name)
+						.changed(function(d){
+							input.value(d);
+							var pass = self.storage.validators[type](repr, input.value());
+							data.__errors__[name] = pass ? null : input.attr('cv-error');
+						})
+						.begin();
+					
+					function update(e){ data[name] = input.value(); }
+					input.on({
+						change: update,
+						keyup: update
+					});
+				}
+			});
+
+			self.storage.forms[form.attr('id')] = data;
+			if (self.storage.form === null){
+				self.storage.form = data;
+			}
+		});
 	}
 
 	
 	tk.init(function(){
-		self.route = tk('body').attr('cv-route');
+		var body = tk('body');
+		//	Parse DOM.
+		self.route = body.attr('cv-route');
+		self.page = body.children('.page', false);
+		self.metaBody = body.children('.meta-body');
 
 		//	Highlight open buttons.
 		tk('.button').classify('open', function(e){
@@ -483,26 +528,18 @@ function CanvasCore(){
 			self.query[decodeURIComponent(p[0])] = decodeURIComponent(p[1]);
 		});
 
-		//	Grab elements.
-		self.page = tk('body > .page');
-		self.meta = tk('.meta-body');
-		self.header = self.page.children('header.header');
-		flashArea = self.page.children('.flash-message')
-
 		//	Flash initial.
-		var initial = self.meta.children('.init-message');
+		var initial = self.metaBody.children('.init-message');
 		if (!initial.empty){
-			self.flash(initial.text());
+			self.flashMessage = initial.text();
 		}
 
 		//	Load plugins.
 		self.loadPlugins();
 
 		//	Apply bindings.
-		bind(tk('body'));
-		tk.config.callbacks.preInsert = bind;
-		
-		tk.iter(initFns, function(f){ f(self); });
+		inspectNodes(body);
+		tk.config.callbacks.preInsert = inspectNodes;		
 	});
 }
 var core = new CanvasCore();
