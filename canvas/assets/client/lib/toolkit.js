@@ -46,14 +46,14 @@ function createToolkit(){
 			if (typeof dest[key] == 'object'){
 				applyOverride(src[key], dest[key]);
 			}
-			else {
+			else if (src[key] !== undefined) {
 				dest[key] = src[key];
 			}
 		}
 	}
 
 	if (arguments.length > 0){
-		applyOverride(arguments[0], tk.config);
+		applyOverride(tk.config, arguments[0]);
 	}
 
 
@@ -195,7 +195,7 @@ function createToolkit(){
 			mode.
 		*/
 		if (tk.config.debug){
-			console.log.apply(arguments);
+			console.log.apply(null, arguments);
 		}
 	}
 
