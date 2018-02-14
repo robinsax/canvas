@@ -5,7 +5,6 @@ Utilities present in templates.
 
 import os
 import re
-import json as jsonlib
 
 from urllib import parse
 
@@ -17,6 +16,7 @@ from ..exceptions import (
 	UnsupportedEnforcementMethod,
 	MarkdownNotFound
 )
+from .json_serializers import serialize_json
 from .registration import register
 
 #	Declare exports.
@@ -110,12 +110,29 @@ def uri_encode(text):
 	return parse.quote(text)
 
 @register.template_filter
-def json(obj):
+def json(obj, camelize_keys=False):
 	'''
 	Return the JSON representation of the JSON-serializable object `obj`.
-	'''
-	return jsonlib.dumps(obj)
 
+	:camelize_props Whether to convert snake case keys to camel case.
+	'''
+	if not camelize_keys:
+		return serialize_json(obj)
+	
+	def camelize(key):
+		first, *other = key.split('_')
+		return first + ''.join(o.capitalize() for o in other)
+
+	def copy_one(one):
+		#	Copy object, camelizing property case.
+		if isinstance(one, (list, tuple)):
+			return [copy_one(value) for value in one]
+		elif isinstance(one, dict):
+			return {camelize(k): copy_one(v) for k, v in one.items()}
+		return one
+	
+	return serialize_json(copy_one(obj))
+	
 @register.template_helper
 def parameter_error(msg):
 	'''

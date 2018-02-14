@@ -179,6 +179,14 @@ class _Session:
 		model.__on_create__()
 		return self
 
+	def detach(self, model):
+		'''
+		Detach a model from this session.
+		'''
+		#	Remove the mapping.
+		del self.active_mappings[self._row_reference(model)]
+		return self
+
 	def delete(self, model):
 		'''
 		Delete the row mapped to a loaded model.
@@ -186,9 +194,7 @@ class _Session:
 		#	Perform the deletion.
 		self.execute(*row_deletion(model))
 
-		#	Remove the mapping.
-		del self.active_mappings[self._row_reference(model)]
-		return self
+		return self.detach(model)
 
 	def query(self, target, conditions=True, one=False, order_by=None, descending=False):
 		'''

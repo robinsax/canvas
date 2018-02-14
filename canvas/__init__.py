@@ -91,6 +91,7 @@ log.info(f'Initializing...')
 #	Carefully import components of the `core.plugins` module to perserve the 
 #	`canvas.plugins` psuedo-module which loaded plugins are accessed.
 from .core.plugins import load_all_plugins
+from .core.plugins import *
 
 #	Update the configuration object with plugin configurations and wrap it for
 #	better key error readback.

@@ -50,6 +50,8 @@ __all__ = [
 	'handle_request'
 ]
 
+#	TODO: Contextually appropriate fundamental error responses.
+
 #	Create the server identifier string provided in the `Server` header.
 SERVER_IDENTIFIER = ' '.join([
 	f'Python/{python_version()}',
@@ -219,7 +221,7 @@ def _handle_controller_request(req, cookie):
 			try:
 				params = deserialize_json(body)
 			except JSONDecodeError:
-				return 'Expecting JSON', 400, {}, 'text/plain'
+				return 'Expecting JSON', 415, {}, 'text/plain'
 	params = WrappedDict(params, RequestParamError)
 
 	#	Create a database session.

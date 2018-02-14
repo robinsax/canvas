@@ -11,7 +11,13 @@ import sys
 from ..utils import logger
 from .. import CANVAS_HOME, config
 
-log = logger()
+#	Create logger.
+log = logger(__name__)
+
+#	Declare exports.
+__all__ = [
+	'get_path_occurrences'
+]
 
 def plugin_base_path(name):
 	'''

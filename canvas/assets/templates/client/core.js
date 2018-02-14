@@ -1,8 +1,6 @@
 'use strict';
 /*
 	The canvas front-end core. Requires toolkit.js.
-
-	TODO: Cleanup.
 */
 
 //	Create the canvas toolkit instance.
@@ -26,21 +24,21 @@ var tk = createToolkit({
 
 function CanvasCore(){
 	/*
-		The canvas core object.
+		The canvas core interface, assigned to `core` at window scope.
 	*/
 	var self = this;
 	//	Insert configured style properties for reference.
-	this.palettes = JSON.parse('{{ config.styling.palettes|json }}');
+	this.palettes = JSON.parse('{{ config.styling.palettes|json(camelize_keys=True) }}');
 	this.breakpoints = JSON.parse('{{ config.styling.breakpoints|json }}');
 
-	//	To contain current route and query string.
+	//	The current route and query string.
 	this.route = null;
 	this.query = {};
-	//	To contain the meta page and page elements.
+	//	The meta page and page elements.
 	this.metaPage = null;
 	this.page = null;
 
-	//	Alias a few toolkit properties.
+	//	Alias some toolkit properties.
 	this.init = tk.init;
 	this.debug = tk.config.debug;
 
@@ -53,107 +51,109 @@ function CanvasCore(){
 		forms: {}
 	};
 
-	if (this.debug){
-		function getAdditionLogger(added){
-			return function(newValue){
-				tk.log('Added ' + added + ':', newValue);
-			}
-		}
-
-		tk.binding(this.storage, 'validators')
-			.changed(getAdditionLogger('validator'))
-			.begin();
-		tk.binding(this.storage, 'actions')
-			.changed(getAdditionLogger('action function'))
-			.begin();
-		tk.binding(this.storage, 'events')
-			.changed(getAdditionLogger('event function'))
-			.begin();
-	}
-
-	/* -- Plugin interface -- */
-	//	List of loaded plugins.
-	this.plugins = [];
+	/* -- Interface definition -- */
+	//	Plugin tracking.
+	this.plugins = {};
 	var unloadedPlugins = [];
 
-	//	Define function decorators.
-	function stored(map, fn, name){
+	//	Function decorator template.
+	function stored(map, func, name){
 		if (name === undefined){
-			var declaration = fn.toString().match(/^function\s*([^\s(]+)/);
+			var declaration = tk.functionName(func);
 			if (declaration != null){
 				name = declaration[1];
 			}
 			else {
-				fn.__targetContainers__ = map;
+				func.__targetContainers__ = map;
 			}
 		}
-		map[name] = fn;
-		return fn;
+		map[name] = func;
+		return func;
 	}
-	//	Decorates controller-invokable actions.
-	this.action = function(fn, name){ return stored(this.storage.actions, fn, name); }
-	//	Decorates user-triggerable events.
-	this.event = function(fn, name){ return stored(this.storage.events, fn, name); }
-	//	Decorates live validator implementations.
-	this.validator = function(fn, name){ return stored(this.storage.validators, fn, name); }
+	this.action = function(func, name){
+		/*
+			A function decorator for controller invokable actions.
+		*/
+		return stored(this.storage.actions, func, name);
+	}
+	
+	this.event = function(func, name){ 
+		/*
+			A function decorator for DOM-triggered events.
+		*/
+		return stored(this.storage.events, func, name); 
+	}
 
-	//	The primary plugin interface.
+	this.validator = function(func, name){
+		/*
+			A function decorator for validator implementations.
+		*/
+		return stored(this.storage.validators, func, name); 
+	}
+
 	this.plugin = function(PluginClass){
-		var cond = tk.varg(arguments, 1, true),
-			condT = tk.typeCheck(cond, 'string', 'function', 'boolean');
-		unloadedPlugins.push([
-			PluginClass, cond, condT
-		]);
+		/*
+			Register a plugin object constructor. A second positional argument 
+			specifies a condition for whether or not the plugin should be 
+			instatiated;
+			
+			* If the condition is omitted, always instantiate the plugin.
+			* If the condition is a string, instantiate the plugin if the
+				string is equal to the current route.
+			* If the condition is a function, invoke the function to determine
+				whether to instantiate the plugin.
+		*/
+		unloadedPlugins.push({
+			constructor: PluginClass,
+			condition: tk.varg(arguments, 1, true),
+			conditionType: tk.typeCheck(cond, 'string', 'function', 'boolean')
+		});
 	}
 
-	//	Expose this in case plugins are loaded deferred.
 	this.loadPlugins = function(){
-		tk.iter(unloadedPlugins, function(packed){
-			var plugin = packed[0], cond = packed[1],
-				condT = packed[2];
-			switch (condT){
+		/*
+			Load all plugins queued for load. Doesn't need to be called by 
+			plugin JavaScript under normal circumstances.
+		*/
+		tk.iter(unloadedPlugins, function(pluginInfo){
+			var load = false;
+			switch (pluginInfo.conditionType){
 				case 0:
-					cond = self.route == cond;
+					load = self.route == pluginInfo.condition;
 					break;
 				case 1:
-					cond = cond();
+					load = pluginInfo.condition();
 					break;
 				default:
 					break;
 			}
-			if (cond){
-				//	Create the instance.
-				var inst;
-				if (typeof plugin == 'function'){
-					inst = new plugin();
-				}
-				else {
-					inst = plugin;
-				}
-				tk.log('Loading plugin:', inst);
-				//	Grab relevent methods.
-				var prop = tk.prop.on(inst);
-				if (prop('init')){
-					initFns.push(function(){
-						inst.init.apply(inst);
-					});
-				}
-				if (prop('bind')){
-					bindFns.push(inst.bind);
-				}
-				
-				//	Catch deferred declarations.
-				for (var pName in inst){
-					var val = inst[pName];
-					if (val == null){
-						continue;
-					}
-					if (tk.prop(val, '__targetContainers__')){
-						val.__targetContainers__[pName] = val;
-					}
-				}
+			if (!load){
+				return;
 			}
+
+			//	Create the instance.
+			var instance = new pluginInfo.constructor();
+			tk.log('Loaded plugin:', instance);
+			
+			//	Add initialization function.
+			if (tk.prop(instance, 'init')){
+				self.init(function(){
+					instance.init.apply(instance);
+				});
+			}
+			
+			//	Catch queued decorations.
+			tk.iter(instance, function(property, value){
+				if (value == null){
+					return;
+				}
+				if (tk.prop(value, '__targetContainers__')){
+					value.__targetContainers__[property] = value;
+				}
+			});
 		});
+
+		//	Reset unloaded.
 		unloadedPlugins = [];
 	}
 
@@ -430,7 +430,7 @@ function CanvasCore(){
 				}
 				else {
 					return function(g, evt){
-						var event = tk.prop(events, e.attr('cv-event'), null);
+						var event = tk.prop(self.events, e.attr('cv-event'), null);
 						if (event != null){
 							event(e, evt);
 						}
@@ -489,7 +489,7 @@ function CanvasCore(){
 					tk.binding(data, name)
 						.changed(function(d){
 							input.value(d);
-							var pass = self.storage.validators[type](repr, input.value());
+							var pass = d == null || d.length == 0 || self.storage.validators[type](repr, input.value());
 							data.__errors__[name] = pass ? null : input.attr('cv-error');
 						})
 						.begin();

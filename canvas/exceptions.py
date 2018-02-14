@@ -11,6 +11,8 @@ __all__ = [
 	#	HTTP exceptions.
 	'HTTPException',
 	'UnsupportedMethod',
+	'BadRequest',
+	'Unprocessable',
 	'RequestParamError',
 	'UnknownAction',
 	'NotFound',
@@ -55,6 +57,22 @@ class HTTPException(Exception):
 	def __init__(self, message, code, desc):
 		super().__init__(message)
 		self.code, self.desc = (code, desc)
+
+class BadRequest(HTTPException):
+	'''
+	An error triggered by a bad request.
+	'''
+
+	def __init__(self, param):
+		super().__init__(param, 400, param)
+
+class Unprocessable(HTTPException):
+	'''
+	An error triggered by an unprocessable entity.
+	'''
+	
+	def __init__(self, param):
+		super().__init__(param, 422, param)
 
 class RequestParamError(HTTPException):
 	'''
