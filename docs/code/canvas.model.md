@@ -4,57 +4,6 @@ ORM class, decorator, and utility definitions.
 
 
 ## Classes
-### Session(object)
-The `Session` object manages database interaction and relational mapping.
-#### Methods
-#### \_\_del__(self)
-
-A deconstructor to ensure no database connections
-are orphaned.
-
-#### close(self)
-
-Close the underlying database connection for this
-session.
-
-#### commit(self)
-
-Write all actively mapped model instances into their 
-rows and commit the transaction.
-
-#### delete(self, model)
-
-Delete the row mapped to a loaded model.
-
-#### execute(self, sql, values=())
-
-Execute SQL with debug logging, raising a `ValidationErrors` when an 
-integrity check fails.
-
-#### query(self, target, conditions=True, one=False, order_by=None, descending=False)
-+ *target*:  The model class (must have been decorated with `model.schema()`). 
-+ *conditions*:  A query condition. 
-+ *one*:  Whether to return the first result only, or `None` if there are not results.
-
-Query the table mapped to or including `target`, returning mapped 
-models if `target` is a model class, scalar values if the it was a
-single column, and tuples if it was a tuple of columns
-
-
-#### reset(self)
-
-Rollback this session, then remove all active mappings.
-
-#### rollback(self)
-
-Undo all changes made during the current transaction.
-
-__TODO__: Rollback changes to model instances too.
-
-#### save(self, model)
-
-Insert a new table row given a constructed model object.
-
 ### Column(SQLExpression)
 The class-level representation of a table column, placed as a class 
 attribute by the `model.schema()` decorator.
@@ -62,7 +11,7 @@ attribute by the `model.schema()` decorator.
 Stores type information and generates an SQL-serializable expression 
 on comparison.
 #### Methods
-#### \_\_init__(self, type_str, constraints=[], default=<object object at 0x0000000003478750>, primary_key=False)
+#### \_\_init__(self, type_str, constraints=[], default=<object object at 0x000001A8C2E0B310>, primary_key=False)
 + *type_str*:  A string representation of the column type. 
 + *default*:  The default value to populate this column with. Default values are populated after row insertion since they may be resolved within Postgres. 
 + *primary_key*:  Whether or not this column is the table's primary key.
@@ -239,7 +188,7 @@ Resolve this constraint as belonging to `Column`.
 `ColumnType`s are attributes of `Column`s that store information about the
 SQL representation of the type.
 #### Methods
-#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x0000000003478750>)
+#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x000001A8C2E0B310>)
 + *sql_type*:  The name of this type in PostgreSQL. 
 + *input_type*:  The type of input to use for this column type if HTML forms. 
 + *default*:  The default value with which to populate attributes in this column.
@@ -344,6 +293,14 @@ Group and logically invert this comparison expression.
 
 Return a disjunction of this expression and another.
 
+#### \_\_rand__(self, other)
+
+Return a conjunction of this expression and another.
+
+#### \_\_ror__(other, self)
+
+Return a disjunction of this expression and another.
+
 #### as_condition(self, values)
 
 Return this expression serialized as an SQL query condition.
@@ -398,8 +355,8 @@ pre-initialization.
 A decorator for `TypeAdapter` actualization.
 ### create_session()
 
-Create a database session. `Session` generation should always use this 
-function to allow future modifications to the `Session` constructor.
+Create a database session. `_Session` generation should always use this 
+function to allow future modifications to the `_Session` constructor.
 ### create_everything()
 
 Resolve foreign keys and enum references then issue table and enumarable 

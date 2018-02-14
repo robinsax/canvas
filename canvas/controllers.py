@@ -27,9 +27,6 @@ __all__ = [
 	'Page',
 	'APIEndpoint',
 	'Redirector',
-	#	Submodule classes.
-	'Component',
-	'PageComponent',
 	#	Functions.
 	'create_everything',
 	'get_controller'

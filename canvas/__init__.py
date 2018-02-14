@@ -52,10 +52,11 @@ __all__ = [
 	#	HTTP exceptions.
 	'HTTPException',
 	'UnsupportedMethod',
+	'BadRequest',
+	'Unprocessable',
 	'RequestParamError',
 	'UnknownAction',
 	'NotFound',
-	'ComponentNotFound',
 	#	Other exceptions.
 	'TemplateNotFound',
 	'ColumnDefinitionError',
@@ -66,7 +67,11 @@ __all__ = [
 	'HeaderKeyError',
 	'APIRouteDefinitionError',
 	'TemplateOverlayError',
-	'UnsupportedEnforcementMethod'
+	'UnsupportedEnforcementMethod',
+	'InvalidSchema',
+	'InvalidQuery',
+	'UnadaptedType',
+	'Unrecognized'
 ]
 
 #	Retrieve an absolute path to the canvas root directory.
