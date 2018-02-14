@@ -72,8 +72,8 @@ def test_basic():
 	), 'base.css serves')
 
 	check((
-		client.get('/assets/core.js').status_code == 200
-	), 'core.js serves')
+		client.get('/assets/core.min.js').status_code == 200
+	), 'core.min.js serves')
 
 	check_html_response(client.get('/'), 200, 
 			lambda html: 'Hello World!' in html, 'Hello world page serves')
