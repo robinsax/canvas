@@ -50,6 +50,13 @@ this.storage = {
 		},
 		flashMessage: function(e){
 			self.flashMessage = e.attr('cv-message');
+		},
+		submit: function(e){
+			var form = e.parents('form');
+			if (form.empty){
+				throw 'No form here';
+			}
+			core.form(e.attr('id')).submit();
 		}
 	},
 	form: null,

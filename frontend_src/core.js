@@ -39,11 +39,11 @@ function CanvasCore(){
 	function stored(map, func, name){
 		if (name === undefined){
 			var declaration = tk.functionName(func);
-			if (declaration != null){
+			if (declaration != '<anonymous function>'){
 				name = declaration[1];
 			}
 			else {
-				func.__targetContainers__ = map;
+				func.__targetContainer__ = map;
 			}
 		}
 		map[name] = func;
@@ -82,10 +82,11 @@ function CanvasCore(){
 			* If the condition is a function, invoke the function to determine
 				whether to instantiate the plugin.
 		*/
+		var condition = tk.varg(arguments, 1, true);
 		unloadedPlugins.push({
 			constructor: PluginClass,
-			condition: tk.varg(arguments, 1, true),
-			conditionType: tk.typeCheck(cond, 'string', 'function', 'boolean')
+			condition: condition,
+			conditionType: tk.typeCheck(condition, 'string', 'function', 'boolean')
 		});
 	}
 
@@ -126,10 +127,12 @@ function CanvasCore(){
 				if (value == null){
 					return;
 				}
-				if (tk.prop(value, '__targetContainers__')){
-					value.__targetContainers__[property] = value;
+				if (tk.prop(value, '__targetContainer__')){
+					value.__targetContainer__[property] = value;
 				}
 			});
+
+			self.plugins[instance.name || tk.functionName(pluginInfo.constructor)] = instance;
 		});
 
 		//	Reset unloaded.
@@ -152,17 +155,17 @@ function CanvasCore(){
 			text = tk.varg(arguments, 2, target.attr('cv-tooltip'));
 
 		var right = pos.x > self.page.size().width/2,
-			scroll = this.page.ith(0, true).scrollTop;
+			scroll = this.page.ith(0, false).scrollTop;
 
 		//	TODO: make right do something.
 
-		return self.page.snap('+div.tooltip:class(hidden null() 5000):css(top $t):css(left $l):text', text, {
+		return self.page.snap('+div.tooltip:class(hidden null()):css(top $t):css(left $l):text', text, {
 			t: pos.y - scroll - 5,
 			l: pos.x - 5
 		});
 	}
-	tk.inspection(function(root){
-		root.children('[cv-tooltip]').iter(function(e){
+	tk.inspection(function(check){
+		check.reduce('[cv-tooltip]').iter(function(e){
 			var tooltip = null;
 			e.on({
 				mouseover: function(){
@@ -200,9 +203,8 @@ function CanvasCore(){
 	/* ::include constructs.js */
 
 	//	Set up event-binding inspection.
-	tk.inspection(function(root){
-		root.children('[cv-event]')
-			.off('click')
+	tk.inspection(function(check){
+		check.reduce('[cv-event]')
 			.on('click', function(e, evt){
 				var key = e.attr('cv-event'),
 					event = tk.prop(self.storage.events, key, null);
@@ -212,9 +214,9 @@ function CanvasCore(){
 				else {
 					throw 'No such event: ' + key;
 				}
-			});
-
-		root.children('.button').classify('open', function(e){
+			})
+		.back()
+		.reduce('.button').classify('open', function(e){
 			return e.attr('href') == self.route;
 		});
 	});

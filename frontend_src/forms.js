@@ -2,6 +2,7 @@ function Form(element){
 	/*
 		Form abstration object.
 	*/
+	tk.log('asdasdasd');
 	var self = this;
 	this.element = element;
 	this.keys = [];
@@ -15,7 +16,7 @@ function Form(element){
 		if (key != null){
 			var value = tk.varg(arguments, 1, this.content[key]),
 				pass = this.validators[key](value);
-			this.errors[key] = pass ? null : this.defaultErrors[key];
+			this.errors[key] = pass || value === null ? null : this.defaultErrors[key];
 			return pass;
 		}
 		else {
@@ -29,10 +30,38 @@ function Form(element){
 		}
 	}
 
+	//	TODO: no.
+	this.strictValidate = function(){
+		var key = tk.varg(arguments, 0, null);
+		if (key != null){
+			var value = tk.varg(arguments, 1, this.content[key]),
+				pass = this.validators[key](value);
+			this.errors[key] = pass ? null : this.defaultErrors[key];
+			return pass;
+		}
+		else {
+			var pass = true;
+			tk.iter(self.keys, function(key){
+				if (!self.strictValidate(key)){
+					pass = false;
+				}
+			});
+			return pass;
+		}
+	}
+
 	this.submit = function(){
-		if (this.validate()){
+		if (this.strictValidate()){
+			var toSend = tk.unbound(this.content);
+
+			//	Add additional.
+			var sendSpec = this.element.is('[cv-send-action]') ? this.element : this.element.children('[cv-send-action]');
+			if (!sendSpec.empty){
+				toSend.action = sendSpec.attr('cv-send-action');
+			}
+
 			core.request()
-				.json(this.content)
+				.json(toSend)
 				.failure(function(response){
 					if (response.status == 'error'){
 						core.flashMessage = 'An error occurred';
@@ -49,6 +78,14 @@ function Form(element){
 				.send();
 		}
 	}
+	
+	this.populate = function(source){
+		tk.iter(self.keys, function(k){
+			if (tk.prop(source, k)){
+				self.content[k] = source[k];
+			}
+		});
+	}
 
 	//	Initialize.
 	var contentBinding = tk.binding.on(this.content),
@@ -60,12 +97,13 @@ function Form(element){
 		})
 		.children('[name]').iter(function(e){
 			var key = e.attr('name'),
-				field = e.parents('.field').first();
+				field = e.parents('.field').first(),
+				error = e.attr('cv-error');
 
 			//	Populate defaults.
 			self.keys.push(key);
 			self.content[key] = e.value();
-			self.defaultErrors[key] = decodeURIComponent(e.attr('cv-error'));
+			self.defaultErrors[key] = error === null ? 'Required' : decodeURIComponent(error);
 			self.errors[key] = null;
 			
 			if (e.is('[cv-validator]')){
@@ -74,17 +112,19 @@ function Form(element){
 					type = repr.substring(0, k);
 				repr = repr.substring(k + 1);
 				self.validators[key] = function(value){
-					return value == null || value.length == 0 || core.storage.validators[type](repr, value);
+					return core.storage.validators[type](repr, value);
 				}
 			}
 			else {
-				self.validators[key] = tk.fn.tautology;
+				self.validators[key] = function(v){ return v != null };
 			}
 
 			//	Begin implicit validation.
 			contentBinding(key)
 				.changed(function(newValue){
-					e.value(newValue);
+					if (newValue != e.value()){
+						e.value(newValue);
+					}
 					self.validate(key, newValue);
 				})
 				.begin();

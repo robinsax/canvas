@@ -166,11 +166,8 @@ def get_client_validator(name):
 			#	support client-serialization.
 			pass
 	
-	#	Return an empty validator.
-	return {
-		'repr': 'none:',
-		'error': ''
-	}
+	#	Return no validator.
+	return None
 del get_client_validator
 
 @register.template_helper

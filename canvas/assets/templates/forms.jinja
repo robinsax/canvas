@@ -144,7 +144,13 @@
 	{% else %}
 		{% set validator = h.get_client_validator(validator) %}
 	{% endif %}
-	{% set common_attrs = 'name="%s" cv-validator="%s" cv-error="%s"'%(name, validator.repr, validator.error|uri_encode) %}
+	
+	{% set validator_str = '' %}
+	{% if validator is not none %}
+		{% set validator_str = 'cv-validator="%s" cv-error="%s"'%(validator.repr, validator.error|uri_encode) %}
+	{% endif %}
+
+	{% set common_attrs = 'name="%s" %s'%(name, validator_str) %}
 	{% if value is not none %}
 		{% set common_attrs = 'value="%s" %s'%(value, common_attrs) %}
 	{% endif %}
