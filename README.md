@@ -38,8 +38,7 @@ def cook_breakfast():
 		'bacon': {'type': 'crispy'},
 		'eggs': {'style': 'sunny side up'}
 	})
-	session.save(breakfast)
-	session.commit()
+	session.save(breakfast).commit()
 
 #	Create an API endpoint that serves breakfast.
 @cv.register.controller
