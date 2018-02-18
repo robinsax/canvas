@@ -9,9 +9,10 @@ before_install:
   - git clone https://github.com/robinsax/canvas.git
   - cd canvas
   - python3.6 -m pip install -r requirements.txt
-  - sudo ./scripts/ubuntu_trusty_setup.sh
-  - sudo python3.6 ./scripts/configure_plugin_test.py $plugin_name
+  - sudo ./etc/scripts/ubuntu_trusty_setup.sh
+  - sudo python3.6 ./etc/scripts/configure_plugin_test.py $plugin_name
   - cd ../canvas-pl-$plugin_name
+  - python3.6 -m pip install -r requirements.txt
   - export PYTHONPATH="../canvas"
 
 script:

@@ -239,3 +239,26 @@ class ActivatePluginMode(LaunchMode):
 
 		log.info(f'Activated plugins: {", ".join(new_list)}')
 		return True
+
+@register.launch_mode
+class SetPluginDirMode(LaunchMode):
+
+	def __init__(self):
+		super().__init__('set_plugin_dir', '<dirpath, relative to canvas>')
+
+	def launch(self, args):
+		#	Assert input is valid.
+		try:
+			path = args[0]
+		except:
+			return False
+
+		if not os.path.exists(os.path.join(CANVAS_HOME, path)):
+			log.critical(f'No such directory {path}')
+			return True
+
+		config['plugins']['directory'] = path
+		configuration.write(config)
+		
+		log.info(f'Set plugin directory: {path}')
+		return True

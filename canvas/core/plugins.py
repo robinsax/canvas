@@ -42,10 +42,12 @@ def load_all_plugins():
 
 		#	Import.
 		log.debug(f'Initializing plugin {plugin}')
-		__import__(plugin)
-
-		#	Populate into `canvas.plugins` namespace.
-		plugins_namespace.__path__.append(path)
+		try:
+			__import__(plugin)
+			#	Populate into `canvas.plugins` namespace.
+			plugins_namespace.__path__.append(path)
+		except ModuleNotFoundError:
+			log.critical(f'Failed to import plugin {plugin} (not found)!')
 	
 def get_path_occurrences(target, include_base=True, filter=os.path.exists):
 	'''

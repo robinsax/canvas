@@ -15,6 +15,7 @@ In the canvas core, the available modes are:
 * __create_plugin__, to create a plugin from the basic template.
 * __use_plugins__, to configure set the list of activated plugins in 
 	configuration.
+* __set_plugin_dir__, to set the plugin directory.
 '''
 
 import os

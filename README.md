@@ -75,13 +75,12 @@ python3.6 -m pip install -r requirements.txt
 ```
 
 To configure canvas, make a copy of `default_settings.json` called `settings.json`
-and in it update at least the `database` section (changing the `cookie_secret_key` 
-is also highly recommended).
+and in it update at least the `database` section and `cookie_secret_key` value.
 
 If you have not yet configured the user and database within Postgres, you can
 run the following to do so:
 ```bash
-python3.6 ./scripts/write_setup_sql.py | sudo -u postgres psql postgres
+python3.6 ./etc/scripts/write_setup_sql.py | sudo -u postgres psql postgres
 ```
 
 ### Running the tests
@@ -93,7 +92,7 @@ python3.6 canvas --run_tests
 
 ###	Serving for development
 
-You can then start canvas's development server with:
+You can start canvas's development server with:
 ```bash
 python3.6 canvas --serve 80
 ```
@@ -104,67 +103,28 @@ An empty canvas instance will then be served at http://localhost.
 
 ## Use
 
-### Plugin basics
+### Plugins
 
 canvas web applications are implemented as one or more plugins. Plugins are stored
 in a shared plugin folder (by default `../canvas_plugins`) and activated in
 configuration.
 
 Some existing plugins are:
-* [users](https://github.com/robinsax/canvas-pl-users) - A basic but extensible user model with authorization integration. 
-  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-users.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-users)
+* [users](https://github.com/robinsax/canvas-pl-users) - An extensible user model and authorization interface. 
+* [robots](https://github.com/robinsax/canvas) - Per-controller `robots.txt` management.
 * [deferral](https://github.com/robinsax/canvas-pl-deferral) - Scheduled and asynchronous code execution.
-  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-deferral.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-deferral)
 * [smtpmail](https://github.com/robinsax/canvas-pl-smtpmail) - Email templating and dispatch via SMTP.
-  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-smtpmail.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-smtpmail)
-* [xmlcolumns](https://github.com/robinsax/canvas-pl-xmlcolumns) - XML column type/model attribute.
-  <br>[![Build Status](https://travis-ci.org/robinsax/canvas-pl-xmlcolumns.svg?branch=master)](https://travis-ci.org/robinsax/canvas-pl-xmlcolumns)
+* [xmlcolumns](https://github.com/robinsax/canvas-pl-xmlcolumns) - XML column type/model attribute via `lxml.etree`.
 
 To create a plugin in the configured plugin directory, run:
 ```bash
 python3.6 canvas --create_plugin <plugin_name>
 ```
 
-Plugins are organized as follows. Directories prefixed with * are not automatically generated 
-as they may not be required.
-```
-canvas-pl-<plugin_name>/
-	assets/
-		# The assets directory contains all non-Python plugin assets.
-		*markdown/
-			# The root directory searched for markdown files.
-		*client/
-			# The root directory searched for client-side assets including 
-			# Javascript, CSS, LESS, and media.
-			*lib/
-			*media/
-		*templates/
-			# The root directory searched for Jinja templates.
-			*client/
-				# Client-side assets can also be templated with Jinja.
-			*components/
-				# Component HTML templates.
-			*pages/
-				# Page HTML templates.
-	<plugin_name>/
-		# The Python package containing the plugin logic.
-		__init__.py
-		*model/
-		*controllers/
-	tests/
-		# The Python package containing plugin unit tests.
-		__init__.py
-	docs/
-		# The plugin documentation directory.
-		code/
-			# The automatically generated code documentation directory.
-	# The settings JSON file.
-	settings.json
-	# A preconfigured Travis CI build configuration with Coveralls
-	# integration.
-	.travis.yml
-	# A preconfigured coverage configuration.
-	.coveragerc
+To activate some plugins, and their dependencies, run:
+```bash
+python3.6 canvas --use_plugins set <plugin_1>, ..., <plugin_n>
 ```
 
-*To be continued...*
+For more in depth documentation about developing plugins for canvas, see the `./docs`
+directory of this repository.
