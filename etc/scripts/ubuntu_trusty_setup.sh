@@ -1,7 +1,7 @@
 #	Package install script for Ubuntu 14.04 LTS.
 
 echo "Installing Python 3.6 and Pip"
-#   Add the Python 3.6 backport repository (Thanks Jon.).
+#   Add the Python 3.6 backport repository.
 add-apt-repository ppa:jonathonf/python-3.6 -y
 apt-get update
 #   Install Python.
