@@ -20,6 +20,6 @@ if [ ! -f ./settings.json ]; then
 fi
 
 echo "Configuring Postgres"
-python3.6 ./scripts/write_setup_sql.py | sudo -u postgres psql
+python3.6 ./etc/scripts/write_setup_sql.py | sudo -u postgres psql
 
 echo "Done"

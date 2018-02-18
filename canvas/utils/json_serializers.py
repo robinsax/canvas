@@ -94,7 +94,7 @@ class DatetimeJSONSerializer(JSONSerializer):
 
 		#	No match.
 		raise Unrecognized()
-
+		
 #   The global serializer list.
 _serializers = []
 

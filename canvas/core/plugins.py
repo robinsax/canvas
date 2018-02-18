@@ -16,7 +16,8 @@ log = logger(__name__)
 
 #	Declare exports.
 __all__ = [
-	'get_path_occurrences'
+	'get_path_occurrences',
+	'plugin_base_path'
 ]
 
 def plugin_base_path(name):

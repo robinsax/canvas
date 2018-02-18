@@ -152,6 +152,7 @@ function CanvasCore(){
 	//	Set up tooltip creation.
 	this.tooltip = function(target){
 		var pos = target.offset(),
+			targetSize = target.size(),
 			text = tk.varg(arguments, 2, target.attr('cv-tooltip'));
 
 		var right = pos.x > self.page.size().width/2,
@@ -159,9 +160,10 @@ function CanvasCore(){
 
 		//	TODO: make right do something.
 
-		return self.page.snap('+div.tooltip:class(hidden null()):css(top $t):css(left $l):text', text, {
-			t: pos.y - scroll - 5,
-			l: pos.x - 5
+		return self.page.snap('+div.tooltip:class(hidden null()):class(right $r):css(top $t):css(left $l):text', text, {
+			r: right,
+			t: pos.y - scroll - 10,
+			l: pos.x + targetSize.width/2 - 10
 		});
 	}
 	tk.inspection(function(check){

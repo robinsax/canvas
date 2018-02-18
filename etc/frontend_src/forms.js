@@ -2,7 +2,6 @@ function Form(element){
 	/*
 		Form abstration object.
 	*/
-	tk.log('asdasdasd');
 	var self = this;
 	this.element = element;
 	this.keys = [];
@@ -52,8 +51,31 @@ function Form(element){
 
 	this.submit = function(){
 		if (this.strictValidate()){
-			var toSend = tk.unbound(this.content);
+			var fileInput = this.element.children('[type="file"]');
+			if (fileInput.length > 0 && arguments.length == 0){
+				//	TODO: Messy.
+				if (fileInput.length != 1){
+					throw 'Only one file upload per form supported';
+				}
 
+				var reader = new FileReader(), 
+					toSend = tk.unbound(this.content),
+					file = fileInput.ith(0, false).files[0];
+				reader.onload = function(event){
+					toSend[fileInput.attr('name')] = {
+						data: btoa(event.target.result),
+						mimetype: file.mimetype,
+						name: file.name
+					};
+					self.submit(toSend);
+				}
+				reader.readAsBinaryString(file);
+				core.flashMessage = 'Uploading files...';
+				return;
+			}
+
+			var toSend = tk.varg(arguments, 0, tk.unbound(this.content));
+			
 			//	Add additional.
 			var sendSpec = this.element.is('[cv-send-action]') ? this.element : this.element.children('[cv-send-action]');
 			if (!sendSpec.empty){
@@ -148,8 +170,8 @@ function Form(element){
 		});
 }
 
-tk.inspection(function(root){
-	root.children('form').iter(function(e){
+tk.inspection(function(check){
+	check.reduce('form').iter(function(e){
 		var form = new Form(e);
 		self.storage.forms[e.attr('id')] = form;
 		self.storage.form = self.storage.form || form;

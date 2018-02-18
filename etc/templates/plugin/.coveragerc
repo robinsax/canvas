@@ -3,6 +3,5 @@ omit =
     assets/*
     docs/*
     */tests/*
-    #   TODO: Update once resolved.
     */lib/*
     */canvas/*

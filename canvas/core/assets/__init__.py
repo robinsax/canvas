@@ -19,7 +19,7 @@ __all__ = [
 	'CanvasJinjaEnvironment',
 	'DeepFileSystemLoader',
 	'ExtendsAlias',
-	'get_client_asset',
+	'get_asset',
 	#	Jinja.
 	'render_template',
 	#	Less.

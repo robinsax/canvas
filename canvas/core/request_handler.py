@@ -36,7 +36,7 @@ from ..controllers import Page, get_controller
 from .. import __version__ as canvas_version, config
 from .thread_context import *
 from .assets import (
-	get_client_asset, 
+	get_asset, 
 	render_template
 )
 from .cache_control import *
@@ -193,7 +193,7 @@ def _handle_asset_request(req):
 	path = req.path[8:]
 
 	#	Retrieve the asset.
-	data = get_client_asset(path)
+	data = get_asset(path)
 
 	#	Assert existance.
 	if data is None:

@@ -5,7 +5,7 @@ python:
   - '3.6'
 
 before_install:
-  - sudo ./scripts/ubuntu_trusty_setup.sh
+  - sudo ./etc/scripts/ubuntu_trusty_setup.sh
 
 script:
   - coverage-3.6 run canvas --run_tests

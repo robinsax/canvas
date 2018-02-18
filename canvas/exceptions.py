@@ -196,3 +196,6 @@ class Unrecognized(Exception):
 	deserialize a value.
 	'''
 	pass
+
+class NoSuchPlugin(Exception):
+	pass

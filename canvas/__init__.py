@@ -1,9 +1,18 @@
 #	coding utf-8
 '''
-canvas initialization and namespace generation.
+canvas is a full stack web application framework designed for minimalism and
+extensibility. This package contains the WSGI application that constitutes
+its backend.
+
+All of the canvas backend's exposed functionality, aside from its `model` and 
+`controller` packages (which are inteded by individual import), is available 
+within this namespace. The canonical import is
+```python
+import canvas as cv
+```
 '''
 
-__version__ = '0.0.1'
+__version__ = '0.1'
 
 import os
 import sys
@@ -17,34 +26,43 @@ __documented__ = [
 	'canvas.controllers'
 ]
 
-#   Declare exports.
+#   Declare the canvas namespace.
 __all__ = [
-	#	Core.
-	'asset_url',
+	#	Debugging access.
+	'serve',
+	'build_docs',
+	#	Core functions.
 	'create_json',
 	'redirect_to',
 	'get_thread_context',
 	'flash_message',
-	#	Assets subpackage.
 	'render_template',
-	#	Utilities.
-	#	Functions.
+	'asset_url',
+	'get_asset',
+	'compile_less',
+	#	Utilities functions.
 	'format_traceback',
 	'logger',
-	#	Subpackage functions - registration.
+	#	Registration and management functions and decorators.
 	'register',
 	'callback',
 	'get_registered',
 	'get_registered_by_name',
 	'call_registered',
 	'place_registered_on',
-	#	Subpackage functions - template_utils.
+	#	File management.
+	'get_path_occurrences',
+	#	Template utilities; included for completeness.
 	'markup',
 	'markdown',
 	'uri_encode',
 	'json',
-	#	Classes.
+	#	Utility classes.
 	'WrappedDict',
+	#	JSON interface.
+	'serialize_json',
+	'deserialize_json',
+	'JSONSerializer',
 	#   Exceptions.
 	#	Special exceptions.
 	'_Redirect',
@@ -74,18 +92,22 @@ __all__ = [
 	'Unrecognized'
 ]
 
-#	Retrieve an absolute path to the canvas root directory.
+#	Compute an absolute path to the canvas root directory, the parent 
+#	directory of this package.
 CANVAS_HOME = os.path.abspath(
 	os.path.dirname(
 		os.path.dirname(inspect.getfile(sys.modules[__name__]))
 	)
 )
 
-#	Populate namespace with exceptions and utilities.
+#	Import all exported exceptions and utilities. No exported modules in either
+#	of these packages can perform immediate imports from this package or any
+#	other.
 from .exceptions import *
 from .utils import *
 
-#	Load configuration and create the root configuration storage object.
+#	Load the root configuration and create an initial version of the global 
+#	configuration object.
 from . import configuration
 config = configuration.load()
 
@@ -94,9 +116,8 @@ log = logger()
 log.info(f'Initializing...')
 
 #	Carefully import components of the `core.plugins` module to perserve the 
-#	`canvas.plugins` psuedo-module which loaded plugins are accessed.
-from .core.plugins import load_all_plugins
-from .core.plugins import *
+#	`canvas.plugins` psuedo-package through which loaded plugins are accessed.
+from .core.plugins import load_all_plugins, get_path_occurrences
 
 #	Update the configuration object with plugin configurations and wrap it for
 #	better key error readback.
@@ -106,7 +127,6 @@ log.debug(f'Runtime configuration: {pprint.pformat(config)}')
 #	`canvas.core` and `canvas.launch` only export a subset of their contents 
 #	through `__all__`, import those into the `canvas` namespace.
 from .core import *
-from .launch import *
 
 #	Import the model and controllers packages for initialization.
 from . import model, controllers
@@ -116,7 +136,7 @@ from . import model, controllers
 load_all_plugins()
 
 #	Invoke pre-initialization callbacks. These are used to prepare for 
-#	initialization, and can only assume the core to be initialized.
+#	initialization, and can only assume the core to be importable.
 call_registered('pre_init')
 
 #	Populate the `canvas.model` and `canvas.controllers` namespaces with all 

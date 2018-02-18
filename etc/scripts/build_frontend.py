@@ -20,7 +20,7 @@ def main():
 	dev_mode = len(sys.argv) > 1 and sys.argv[1] == '--dev'
 
 	def collect_file(filename):
-		with open(f'./frontend_src/{filename}') as f:
+		with open(f'./etc/frontend_src/{filename}') as f:
 			source = f.read()
 
 		for match in re.finditer(r'(\t+)\/\*\s+::include\s+(.*?)\s+\*\/', source):

@@ -1,8 +1,6 @@
 #   coding utf-8
 '''
-Plugin unit tests.
-
-::incomplete
+Unit tests on the $plugin_name plugin for canvas.
 '''
 
 from canvas.tests import *

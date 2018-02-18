@@ -14,7 +14,7 @@ from . import compile_less
 #	The asset cache for storing rendered assets.
 _asset_cache = {}
 
-def get_client_asset(path, _recall=False):
+def get_asset(path, _recall=False):
 	'''
 	Return the asset at `path`, or `None` if there isn't one. Besides searching
 	the `client` directory, also:
@@ -37,7 +37,7 @@ def get_client_asset(path, _recall=False):
 			#	No occurences found.
 			if path.endswith('.css'):
 				#	Check for a `.less` instance of this stylesheet.
-				asset = get_client_asset(path.replace('.css', '.less'), _recall=True)
+				asset = get_asset(path.replace('.css', '.less'), _recall=True)
 
 				if not config['debug']:
 					#	Don't cache assets in debug mode so changes can be 

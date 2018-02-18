@@ -1,12 +1,26 @@
 #	coding utf-8
 '''
-Command line launch handler interface and default implementations.
+The command-line invocation handler interface and default implementations.
 '''
 
+import os
 import sys
+import shutil
+
+from .exceptions import NoSuchPlugin
 
 from .utils.registration import register
-from .utils import logger
+from .utils.doc_builder import build_docs
+from .utils import logger, serve
+
+from .core.plugins import plugin_base_path
+from .tests import run_tests
+
+from . import (
+	CANVAS_HOME, 
+	configuration, 
+	config
+)
 
 #	Declare exports.
 __all__ = [
@@ -17,20 +31,25 @@ __all__ = [
 	'CreatePluginMode'
 ]
 
-log = logger()
+#	Declare the template directory path.
+TEMPLATE_DIR = os.path.join(CANVAS_HOME, './etc/templates')
+
+#	Create a logger.
+log = logger(__name__)
 
 class LaunchMode:
 	'''
-	`LaunchMode`s handle command-line invocation of canvas for a specific mode.
-	The mode is prefixed with `--` in the command line.
+	`LaunchMode`s handle command-line invocation of canvas in a specific mode.
+	The mode is specified as the first arguments, prefixed with `--`, provided
+	in the command-line.
 
-	Implementations' constructors must take no parameters.
+	To be actualized, `LaunchMode`s must be registered as `launch_mode` using
+	the registration decorator.
 	'''
 
 	def __init__(self, mode, arg_fmt=''):
 		'''
-		Create a new launch handler. Must be registered as `launch_mode` for 
-		actuation.
+		Create a launch handler.
 		
 		:mode The mode string (e.g. `serve` to be triggered by `--serve`).
 		:arg_fmt The usage format (i.e. argument specification), as a string.
@@ -51,7 +70,7 @@ class LaunchMode:
 @register.launch_mode
 class DevServeMode(LaunchMode):
 	'''
-	The development serving mode, invoked with `--serve`.
+	The development server initializer.
 	'''
 
 	def __init__(self):
@@ -72,15 +91,15 @@ class DevServeMode(LaunchMode):
 @register.launch_mode
 class UnitTestMode(LaunchMode):
 	'''
-	The unit test execution mode, invoked with `--run_tests`.
+	The unit test execution mode.
 	'''
 
 	def __init__(self):
 		super().__init__('run_tests', '<suite_1> ... <suite_n>')
 
 	def launch(self, args):
-		from .tests import run_tests
-
+		#	Run the tests, exiting with a non-zero code if they fail, to inform
+		#	CI tools.
 		if not run_tests(args):
 			sys.exit(1)
 		return True
@@ -88,70 +107,135 @@ class UnitTestMode(LaunchMode):
 @register.launch_mode
 class BuildDocsMode(LaunchMode):
 	'''
-	The code documentation generation mode, invoked with `--build_docs`.
+	The code documentation generation mode.
 	'''
 	def __init__(self):
 		super().__init__('build_docs', '[<target_plugin>]')
 
 	def launch(self, args):
-		import canvas
-
-		from .utils.doc_builder import build_docs
-
 		if len(args) > 0:
 			try:
 				package = sys.modules[args[0]]
 			except:
 				return False
 		else:
+			#	Run core tests by default.
+			import canvas
 			package = canvas
 
 		build_docs(package)
-		log.info('Docs built')
+		log.info('Documentation built')
 		return True
 
 @register.launch_mode
 class CreatePluginMode(LaunchMode):
 	'''
-	The plugin template generation mode, invoked with `--create_plugin`
+	The plugin template generation mode.
 	'''
 
 	def __init__(self):
 		super().__init__('create_plugin', '<plugin_name>')
 
 	def launch(self, args):
-		from .utils.plugin_generator import create_plugin_template
-
 		try:
-			plugin_name = args[0]
+			name = args[0]
 		except:
 			return False
 
-		create_plugin_template(plugin_name)
-		log.info('Plugin created')
+		#	Load target directory from configuration or fail.
+		target_dir = os.path.join(CANVAS_HOME, config['plugins']['directory'])
+		
+		def detemplate_file_to(src, dest):
+			'''
+			Load and detemplate `src`, then write to `dest`
+			'''
+			with open(src, 'r') as src_f, open(dest, 'w') as dest_f:
+				dest_f.write(src_f.read().replace(f'$plugin_name', name))
+
+		#	Create the root directory
+		root = f'{target_dir}/canvas-pl-{name}'
+		os.makedirs(root)
+		#	...and package.
+		pkg_root = f'{root}/{name}'
+		os.mkdir(pkg_root)
+		test_root = f'{root}/tests'
+		os.mkdir(test_root)
+
+		#   Copy templates.
+		detemplate_file_to(f'{TEMPLATE_DIR}/plugin/settings.json', f'{root}/settings.json')
+		detemplate_file_to(f'{TEMPLATE_DIR}/plugin/.travis.yml', f'{root}/.travis.yml')
+		detemplate_file_to(f'{TEMPLATE_DIR}/plugin/pkg.__init__.py', f'{pkg_root}/__init__.py')
+		detemplate_file_to(f'{TEMPLATE_DIR}/plugin/tests.__init__.py', f'{test_root}/__init__.py')
+
+		#	Copy non-template.
+		shutil.copyfile(f'{TEMPLATE_DIR}/plugin/.gitignore', f'{root}/.gitignore')
+		shutil.copyfile(f'{TEMPLATE_DIR}/plugin/dependencies.txt', f'{root}/dependencies.txt')
+		shutil.copyfile(f'{TEMPLATE_DIR}/plugin/requirements.txt', f'{root}/requirements.txt')
+		shutil.copyfile(f'{TEMPLATE_DIR}/plugin/.coveragerc', f'{root}/.coveragerc')
+
+		#	Create assets folder.
+		os.mkdir(f'{root}/assets')
+		#	Create documentation folder.
+		os.mkdir(f'{root}/docs')
+		os.mkdir(f'{root}/docs/code')
+
+		log.info(f'Created plugin {name} in {root}')
 		return True
 
 @register.launch_mode
 class ActivatePluginMode(LaunchMode):
 	'''
-	The plugin activation mode. Mostly a development helper. Invoked with 
-	`--activate_plugin`.
+	The plugin activation list configuration mode.
 	'''
 
 	def __init__(self):
-		super().__init__('activate_plugin', '<plugin_name>')
+		super().__init__('use_plugins', '<set|add|remove> <plugin_1>, ..., <plugin_n>')
 
 	def launch(self, args):
-		from . import config
-		from .configuration import write
-
+		#	Assert input is valid.
 		try:
-			plugin_name = args[0]
+			operation, *plugins = args
 		except:
 			return False
-		if plugin_name not in config['plugins']['active']:
-			config['plugins']['active'].append(plugin_name)
+		if operation not in ['add', 'set', 'remove']:
+			return False
+		
+		new_list, prev_list = [], config['plugins']['active']
+		if operation == 'set':
+			to_load = plugins
+		elif operation == 'add':
+			to_load = plugins + old_list
+		elif operation == 'remove':
+			to_load = [name for name in old_list if name not in plugins]
 
-		write(config)
-		log.info(f'Activated plugin {plugin_name}')
+		def activate_one(name, source=None):
+			if name in new_list:
+				return
+			reference = name if source is None else f'{name} (from {source})'
+			log.info(f'Activating plugin {reference}')
+			
+			path = plugin_base_path(name)
+
+			#	Assert this plugin exists.
+			if not os.path.exists(path):
+				raise NoSuchPlugin(reference)
+			
+			#	Load dependencies, if they exist.
+			dependencies_path = os.path.join(path, 'dependencies.txt')
+			if os.path.exists(dependencies_path):
+				with open(dependencies_path, 'r') as f:
+					this_dependencies = f.readlines()
+				for dependency in this_dependencies:
+					activate_one(dependency, name)
+			
+			#	Add
+			new_list.append(name)
+
+		for name in to_load:
+			activate_one(name)
+
+		config['plugins']['active'] = new_list
+		configuration.write(config)
+
+		log.info(f'Activated plugins: {", ".join(new_list)}')
 		return True
