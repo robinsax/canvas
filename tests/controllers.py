@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-Unit tests on controller and component objects.
+Unit tests on controller objects.
 '''
 
 import canvas as cv

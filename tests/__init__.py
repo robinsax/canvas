@@ -9,5 +9,6 @@ from . import (
     assets,
     controllers,
     model,
-    combined
+    combined,
+	misc
 )

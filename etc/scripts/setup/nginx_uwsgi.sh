@@ -5,6 +5,9 @@ apt-get update
 /usr/bin/yes | pip3 install -r requirements.txt
 /usr/bin/yes | pip3 install uwsgi
 
+#	Copy relevant configuration to root.
+cp ./etc/configs/canvas_uwsgi.ini ./canvas_uwsgi.ini
+
 #   Configure Postgres.
 python3 ./scripts/write_setup_sql.py | sudo -u postgres psql
 
