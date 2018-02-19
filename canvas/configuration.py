@@ -83,9 +83,13 @@ def finalize(config):
 				#	considering other loaded plugins (or the core). Therefore 
 				#	the global dependency lists are configured additively.
 				if 'dependencies' in val:
-					config['client_dependencies']['dependencies'] += val['dependencies']
+					for d in val['dependencies']:
+						if d not in config['client_dependencies']['dependencies']:
+							config['client_dependencies']['dependencies'].append(d)
 				if 'library_dependencies' in val:
-					config['client_dependencies']['library_dependencies'] += val['library_dependencies']
+					for d in val['library_dependencies']:
+						if d not in config['client_dependencies']['library_dependencies']:
+							config['client_dependencies']['library_dependencies'].append(d)
 				if 'font_dependencies' in val:
 					config['client_dependencies']['font_dependencies'].update(val['font_dependencies'])
 				if 'icon_dependency' in val:

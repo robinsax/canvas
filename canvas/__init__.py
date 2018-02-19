@@ -124,9 +124,9 @@ from .core.plugins import load_all_plugins, get_path_occurrences
 config = configuration.finalize(config)
 log.debug(f'Runtime configuration: {pprint.pformat(config)}')
 
-#	`canvas.core` and `canvas.launch` only export a subset of their contents 
-#	through `__all__`, import those into the `canvas` namespace.
+#	`canvas.core` only exports a subset of its contents.
 from .core import *
+from .launch import *
 
 #	Import the model and controllers packages for initialization.
 from . import model, controllers

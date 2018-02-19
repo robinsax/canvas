@@ -14,7 +14,6 @@ from .utils.doc_builder import build_docs
 from .utils import logger, serve
 
 from .core.plugins import plugin_base_path
-from .tests import run_tests
 
 from . import (
 	CANVAS_HOME, 
@@ -24,11 +23,7 @@ from . import (
 
 #	Declare exports.
 __all__ = [
-	'LaunchMode',
-	'DevServeMode',
-	'UnitTestMode',
-	'BuildDocsMode',
-	'CreatePluginMode'
+	'LaunchMode'
 ]
 
 #	Declare the template directory path.
@@ -98,6 +93,8 @@ class UnitTestMode(LaunchMode):
 		super().__init__('run_tests', '<suite_1> ... <suite_n>')
 
 	def launch(self, args):
+		from .tests import run_tests
+
 		#	Run the tests, exiting with a non-zero code if they fail, to inform
 		#	CI tools.
 		if not run_tests(args):
@@ -224,7 +221,7 @@ class ActivatePluginMode(LaunchMode):
 			dependencies_path = os.path.join(path, 'dependencies.txt')
 			if os.path.exists(dependencies_path):
 				with open(dependencies_path, 'r') as f:
-					this_dependencies = f.readlines()
+					this_dependencies = [l.strip() for l in f.readlines() if len(l.strip()) > 0]
 				for dependency in this_dependencies:
 					activate_one(dependency, name)
 			
