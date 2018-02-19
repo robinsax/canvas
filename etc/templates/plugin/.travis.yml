@@ -10,7 +10,7 @@ before_install:
   - cd canvas
   - python3.6 -m pip install -r requirements.txt
   - sudo ./etc/scripts/ubuntu_trusty_setup.sh
-  - sudo python3.6 ./etc/scripts/configure_plugin_test.py $plugin_name
+  - sudo ./etc/scripts/configure_plugin_test.sh $plugin_name
   - cd ../canvas-pl-$plugin_name
   - python3.6 -m pip install -r requirements.txt
   - export PYTHONPATH="../canvas"

@@ -204,9 +204,9 @@ class ActivatePluginMode(LaunchMode):
 		if operation == 'set':
 			to_load = plugins
 		elif operation == 'add':
-			to_load = plugins + old_list
+			to_load = plugins + prev_list
 		elif operation == 'remove':
-			to_load = [name for name in old_list if name not in plugins]
+			to_load = [name for name in prev_list if name not in plugins]
 
 		def activate_one(name, source=None):
 			if name in new_list:
