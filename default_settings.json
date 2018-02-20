@@ -45,19 +45,19 @@
 		},
 		"palettes": {
 			"base": {
-				"background1": "white",
-				"background2": "white",
-				"theme1": "#63A9B2",
-				"theme2": "#C1F7FF",
-				"theme3": "#C1F7FF",
-				"highlight": "#A55C55"
+				"background1": "#ECF0F1",
+				"background2": "#ECF0F1",
+				"theme1": "#2C3E50",
+				"theme2": "#3498DB",
+				"theme3": "#2980B9",
+				"highlight": "#E74C3C"
 			},
 			"text": {
-				"title": "#63A9B2",
+				"title": "#E74C3C",
 				"text": "black",
 				"subtext": "grey",
-				"link": "#4E858C",
-				"link_clicked": "#396166"
+				"link": "#3498DB",
+				"link_clicked": "#2980B9"
 			},
 			"misc": {
 				"background1": "lightgrey",
