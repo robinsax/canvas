@@ -133,7 +133,7 @@
 		{% set cls = 'iconed %s'%cls %}
 	{% endif %}
 	{% if placeholder is none %}
-		{% set placeholder = '' %}
+		{% set placeholder = '' if label is none else label %}
 	{% endif %}
 
 	{% if type == 'textarea' %}

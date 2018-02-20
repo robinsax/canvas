@@ -88,6 +88,11 @@ class WrappedDict(dict):
 		#	Return the value.
 		return super().__getitem__(key)
 
+	def pop(self, key):
+		value = self[key]
+		del self[key]
+		return value
+
 def format_traceback(error):
 	'''
 	Return a formatted traceback string for `error` if it has

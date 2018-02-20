@@ -9,6 +9,11 @@ function Form(element){
 	this.defaultErrors = {};
 	this.validators = {};
 	this.errors = {};
+	this.onSuccess = tk.fn.eatCall;
+
+	this.success = function(callback){
+		this.onSuccess = callback;
+	}
 	
 	this.validate = function(){
 		var key = tk.varg(arguments, 0, null);
@@ -29,28 +34,8 @@ function Form(element){
 		}
 	}
 
-	//	TODO: no.
-	this.strictValidate = function(){
-		var key = tk.varg(arguments, 0, null);
-		if (key != null){
-			var value = tk.varg(arguments, 1, this.content[key]),
-				pass = this.validators[key](value);
-			this.errors[key] = pass ? null : this.defaultErrors[key];
-			return pass;
-		}
-		else {
-			var pass = true;
-			tk.iter(self.keys, function(key){
-				if (!self.strictValidate(key)){
-					pass = false;
-				}
-			});
-			return pass;
-		}
-	}
-
 	this.submit = function(){
-		if (this.strictValidate()){
+		if (this.validate()){
 			var fileInput = this.element.children('[type="file"]');
 			if (fileInput.length > 0 && arguments.length == 0){
 				//	TODO: Messy.
@@ -81,9 +66,11 @@ function Form(element){
 			if (!sendSpec.empty){
 				toSend.action = sendSpec.attr('cv-send-action');
 			}
-
-			core.request()
+			
+			var specURL = element.attr('cv-submit-to');
+			core.request('POST', specURL == null ? window.location.href : specURL)
 				.json(toSend)
+				.success(self.onSuccess)
 				.failure(function(response){
 					if (response.status == 'error'){
 						core.flashMessage = 'An error occurred';
@@ -168,6 +155,7 @@ function Form(element){
 				}
 			});
 		});
+	tk.log('Created form (at id ' + element.attr('id') + '): ', this);
 }
 
 tk.inspection(function(check){
@@ -188,4 +176,8 @@ this.form = function(){
 	else {
 		return this.storage.forms[arguments[0]];
 	}
+}
+
+this.forms = function(){
+	return this.storage.forms;
 }
