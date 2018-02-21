@@ -22,7 +22,7 @@ function Form(element){
 		if (key != null){
 			var value = tk.varg(arguments, 1, this.content[key]),
 				validator = this.validators[key],
-				pass = (value === null && (!this.required[key]) || !this.submitting) || validator(value);
+				pass = (value === null && !(this.required[key] && this.submitting)) || validator(value);
 			this.errors[key] = pass ? null : this.defaultErrors[key];
 			return pass;
 		}

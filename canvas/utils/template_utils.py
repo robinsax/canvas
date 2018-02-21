@@ -196,7 +196,6 @@ def describe_model_attr(model_cls, attr):
 			try:
 				constraint.as_client_parsable()
 				validator = constraint.name
-				break
 			except UnsupportedEnforcementMethod: pass
 
 	if isinstance(col.type, ForeignKeyColumnType):
