@@ -7,6 +7,13 @@
 var tk = createToolkit({
 	debug: '{{ config.debug }}' == 'True'
 });
+//	Customize directives.
+tk.snap.directive('show', function(params, right, element, resolve){
+	element.classify('hidden', !resolve(params[0]));
+});
+tk.snap.directive('hide', function(params, right, element, resolve){
+	element.classify('hidden', resolve(params[0]));
+});
 
 function CanvasCore(){
 	/*

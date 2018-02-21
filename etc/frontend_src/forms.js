@@ -95,9 +95,7 @@ function Form(element){
 	
 	this.populate = function(source){
 		tk.iter(self.keys, function(k){
-			if (tk.prop(source, k)){
-				self.content[k] = source[k];
-			}
+			self.content[k] = tk.prop(source, k, null);
 		});
 	}
 
