@@ -7,9 +7,11 @@ function Form(element){
 	this.keys = [];
 	this.content = {};
 	this.defaultErrors = {};
+	this.required = {};
 	this.validators = {};
 	this.errors = {};
 	this.onSuccess = tk.fn.eatCall;
+	this.submitting = false;
 
 	this.success = function(callback){
 		this.onSuccess = callback;
@@ -19,8 +21,9 @@ function Form(element){
 		var key = tk.varg(arguments, 0, null);
 		if (key != null){
 			var value = tk.varg(arguments, 1, this.content[key]),
-				pass = this.validators[key](value);
-			this.errors[key] = pass || value === null ? null : this.defaultErrors[key];
+				validator = this.validators[key],
+				pass = (value === null && (!this.required[key]) || !this.submitting) || validator(value);
+			this.errors[key] = pass ? null : this.defaultErrors[key];
 			return pass;
 		}
 		else {
@@ -35,6 +38,7 @@ function Form(element){
 	}
 
 	this.submit = function(){
+		this.submitting = true;
 		if (this.validate()){
 			var fileInput = this.element.children('[type="file"]');
 			if (fileInput.length > 0 && arguments.length == 0){
@@ -68,7 +72,7 @@ function Form(element){
 			}
 			
 			var specURL = element.attr('cv-submit-to');
-			core.request('POST', specURL == null ? window.location.href : specURL)
+			core.request('POST', specURL == null ? core.route : specURL)
 				.json(toSend)
 				.success(self.onSuccess)
 				.failure(function(response){
@@ -86,6 +90,7 @@ function Form(element){
 				})
 				.send();
 		}
+		this.submitting = false;
 	}
 	
 	this.populate = function(source){
@@ -114,6 +119,7 @@ function Form(element){
 			self.content[key] = e.value();
 			self.defaultErrors[key] = error === null ? 'Required' : decodeURIComponent(error);
 			self.errors[key] = null;
+			self.required[key] = e.is('[required]');
 			
 			if (e.is('[cv-validator]')){
 				var repr = e.attr('cv-validator'),
@@ -125,7 +131,9 @@ function Form(element){
 				}
 			}
 			else {
-				self.validators[key] = function(v){ return v != null };
+				self.validators[key] = function(value){
+					return !self.required[key] || value !== null;
+				};
 			}
 
 			//	Begin implicit validation.

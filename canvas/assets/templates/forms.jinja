@@ -91,7 +91,7 @@
 	:values A list of `name, value` pairs to use if this is a select
 		input.
 #}
-{% macro field(type=None, name=None, label=None, icon=None, placeholder=None, model=None, attr=None, attrs=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
+{% macro field(type=None, name=None, label=None, icon=None, placeholder=None, model=None, attr=None, required=False, attrs=None, icon_only=False, default_placeholder=True, cls='', validator=None, value=None, values=None) %}
 	{# Assert parameters are valid #}
 	{% if (name is none or type is none) and attr is none %}
 		{{ h.parameter_error('Cannot create field without name and type, or attr') }}
@@ -109,6 +109,7 @@
 			{% endif %}
 		{% endif %}
 		{% set model_attr = h.describe_model_attr(model, attr) %}
+		{% set required = model_attr.required %}
 		{% if type is none %}
 			{% set type = model_attr.type %}
 		{% endif %}
@@ -150,7 +151,7 @@
 		{% set validator_str = 'cv-validator="%s" cv-error="%s"'%(validator.repr, validator.error|uri_encode) %}
 	{% endif %}
 
-	{% set common_attrs = 'name="%s" %s'%(name, validator_str) %}
+	{% set common_attrs = 'name="%s" %s %s'%(name, validator_str, 'required' if required else '') %}
 	{% if value is not none %}
 		{% set common_attrs = 'value="%s" %s'%(value, common_attrs) %}
 	{% endif %}
