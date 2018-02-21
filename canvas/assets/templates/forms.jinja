@@ -112,6 +112,9 @@
 		{% set required = model_attr.required %}
 		{% if type is none %}
 			{% set type = model_attr.type %}
+			{% if type == 'select' %}
+				{% set values = model_attr.options %}
+			{% endif %}
 		{% endif %}
 		{% if name is none %}
 			{% set name = model_attr.name %}
@@ -140,11 +143,7 @@
 	{% if type == 'textarea' %}
 		{% set cls = 'textarea %s'%cls %}
 	{% endif %}
-	{% if type == 'select' or type == 'date' %}
-		{% set validator = {'repr': 'option:any', 'error': 'Select a value'} %}
-	{% else %}
-		{% set validator = h.get_client_validator(validator) %}
-	{% endif %}
+	{% set validator = h.get_client_validator(validator) %}
 	
 	{% set validator_str = '' %}
 	{% if validator is not none %}

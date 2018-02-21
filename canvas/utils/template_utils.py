@@ -179,6 +179,8 @@ def describe_model_attr(model_cls, attr):
 	Used for automatic form generation.
 	'''
 	from ..model.constraints import NotNullConstraint
+	from ..model.columns import ForeignKeyColumnType
+	from ..model import create_session
 
 	#	Retrieve the column object.
 	col = model_cls.__schema__[attr]
@@ -197,11 +199,22 @@ def describe_model_attr(model_cls, attr):
 				break
 			except UnsupportedEnforcementMethod: pass
 
-	return {
-		'type': col.type.input_type,
-		'name': attr,
-		'label': ' '.join(attr.split('_')).title(),
-		'validator': validator,
-		'required': required
-	}
+	if isinstance(col.type, ForeignKeyColumnType):
+		session = create_session()
+		return {
+			'type': 'select',
+			'options': {m.__label__(session): m.id for m in session.query(col.reference.model)},
+			'name': attr,
+			'validator': None,
+			'required': required,
+			'label': ' '.join(attr.split('_')).title(),
+		}
+	else:
+		return {
+			'type': col.type.input_type,
+			'name': attr,
+			'label': ' '.join(attr.split('_')).title(),
+			'validator': validator,
+			'required': required
+		}
 del describe_model_attr

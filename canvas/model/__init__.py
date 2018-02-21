@@ -3,6 +3,8 @@
 ORM class, decorator, and utility definitions. 
 '''
 
+import inspect
+
 from ..exceptions import (
 	ColumnDefinitionError,
 	InvalidSchema
@@ -144,6 +146,8 @@ def schema(table_name, schema, accessors=None):
 			cls.__on_load__ = eat_call
 		if not hasattr(cls, '__on_create__'):
 			cls.__on_create__ = eat_call
+		if not hasattr(cls, '__label__'):
+			cls.__label__ = lambda s, ses: s.id
 		
 		#	Assert the existance of a single primary key column for this model 
 		#	class and find that column.

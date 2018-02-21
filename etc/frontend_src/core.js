@@ -67,6 +67,9 @@ function CanvasCore(){
 		/*
 			A function decorator for DOM-triggered events.
 		*/
+		if (typeof func == 'string'){
+			return this.storage.events[func];
+		}
 		return stored(this.storage.events, func, name); 
 	}
 
@@ -111,6 +114,8 @@ function CanvasCore(){
 				case 1:
 					load = pluginInfo.condition();
 					break;
+				case 2:
+					load = pluginInfo.condition;
 				default:
 					break;
 			}
@@ -124,9 +129,7 @@ function CanvasCore(){
 			
 			//	Add initialization function.
 			if (tk.prop(instance, 'init')){
-				self.init(function(){
-					instance.init.apply(instance);
-				});
+				instance.init();
 			}
 			
 			//	Catch queued decorations.
@@ -245,7 +248,8 @@ function CanvasCore(){
 		});
 
 		//	Load plugins.
-		self.loadPlugins();
+		//	TODO: So greasy.
+		tk.timeout(self.loadPlugins, 250);
 	});
 }
 //	Create.
