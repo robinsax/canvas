@@ -234,7 +234,7 @@ function CanvasCore(){
 		.back()
 		.reduce('[cv-action]')
 			.on('click', function(e){
-				core.request()
+				self.request()
 					.json({
 						action: e.attr('cv-action')
 					})
