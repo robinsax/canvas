@@ -230,7 +230,16 @@ function CanvasCore(){
 		.back()
 		.reduce('.button').classify('open', function(e){
 			return e.attr('href') == self.route;
-		});
+		})
+		.back()
+		.reduce('[cv-action]')
+			.on('click', function(e){
+				core.request()
+					.json({
+						action: e.attr('cv-action')
+					})
+					.send();
+			});
 	});
 	
 	//	Set up core initialization.

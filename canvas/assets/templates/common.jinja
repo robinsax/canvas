@@ -29,7 +29,7 @@
 		`a` tag to be used.
 	:attrs Additional button attributes.
 #}
-{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, span=False, event=None, bind=None, mapped_event=None, view_fn=None, onto=None, href=None, attrs='') %}
+{% macro button(text=None, icon=None, icon_right=False, id=None, cls='', tooltip=None, fancy_tooltip=True, action=None, span=False, event=None, bind=None, mapped_event=None, view_fn=None, onto=None, href=None, attrs='') %}
 	{% set icon_span = '' %}
 	
 	{# Get tag #}
@@ -91,5 +91,5 @@
 	{#
 		Build
 	#}
-	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{{ map_attrs }}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %} {{ attrs }}>{% if icon_right %}{{ text }}{{ icon_span }}{% else %}{{ icon_span }}{{ text }}{% endif %}</{{ tag }}>
+	<{{ tag }} {% if id is not none %}id="{{ id }}" {% endif %}class="button {{ cls }}"{{ tooltip_str }}{{ map_attrs }}{% if event is not none %} cv-event="{{ event }}"{% endif %}{% if action is not none %} cv-action="{{ action }}"{% endif %}{% if href is not none %} href="{{ href }}"{% endif %} {{ attrs }}>{% if icon_right %}{{ text }}{{ icon_span }}{% else %}{{ icon_span }}{{ text }}{% endif %}</{{ tag }}>
 {% endmacro %}
