@@ -16,6 +16,7 @@ __all__ = [
 	'RequestParamError',
 	'UnknownAction',
 	'NotFound',
+	'ServiceUnavailable',
 	#	Other exceptions.
 	'TemplateNotFound',
 	'ColumnDefinitionError',
@@ -106,6 +107,14 @@ class UnsupportedMethod(HTTPException):
 
 	def __init__(self):
 		super().__init__('', 405, 'Unsupported Request Method')
+
+class ServiceUnavailable(HTTPException):
+	'''
+	An error to raise when the server cannot fufill a request.
+	'''
+
+	def __init__(self):
+		super().__init__('', 503, 'Service Unavailable')
 
 class ColumnDefinitionError(Exception):
 	'''

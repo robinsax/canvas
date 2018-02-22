@@ -75,6 +75,7 @@ __all__ = [
 	'RequestParamError',
 	'UnknownAction',
 	'NotFound',
+	'ServiceUnavailable',
 	#	Other exceptions.
 	'TemplateNotFound',
 	'ColumnDefinitionError',
