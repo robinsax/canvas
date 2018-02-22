@@ -236,7 +236,7 @@ def _handle_controller_request(req, cookie):
 		'session': session,
 		'request': params,
 		'headers': headers,
-		'url': req.full_path,
+		'url': req.url,
 		'big_3': (params, cookie, session)
 	}
 	#	Allow callbacks to modify.
