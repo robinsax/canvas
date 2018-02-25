@@ -56,7 +56,7 @@ this.storage = {
 			if (form.empty){
 				throw 'No form here';
 			}
-			core.form(form.attr('id')).submit();
+			core.form(form.attr('cv-send-action')).submit();
 		}
 	},
 	form: null,

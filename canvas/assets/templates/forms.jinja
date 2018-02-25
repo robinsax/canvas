@@ -151,7 +151,7 @@
 	{% endif %}
 
 	{% set common_attrs = 'name="%s" %s %s'%(name, validator_str, 'required' if required else '') %}
-	{% if value is not none %}
+	{% if value is not none and type != 'textarea' %}
 		{% set common_attrs = 'value="%s" %s'%(value, common_attrs) %}
 	{% endif %}
 	<div class="field {{ cls }}">
@@ -162,7 +162,7 @@
 			<div class="text label">{{ label }}</div>
 		{% endif %}
 		{% if type == 'textarea' %}
-			<textarea {{ common_attrs }}{% if attrs is not none %} {{ attrs }}{% endif %} placeholder="{{ placeholder }}"></textarea>
+			<textarea {{ common_attrs }}{% if attrs is not none %} {{ attrs }}{% endif %} placeholder="{{ placeholder }}">{{ value if value is not none else '' }}</textarea>
 		{% elif type == 'select' %}
 			<select {{ common_attrs }}>
 				{% if placeholder is not none %}

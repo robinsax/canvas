@@ -161,20 +161,20 @@ function Form(element){
 				}
 			});
 		});
-	tk.log('Created form (at id ' + element.attr('id') + '): ', this);
+	tk.log('Created form (with action ' + element.attr('cv-send-action') + '): ', this);
 }
 
 tk.inspection(function(check){
 	check.reduce('form').iter(function(e){
 		var form = new Form(e);
-		self.storage.forms[e.attr('id')] = form;
+		self.storage.forms[e.attr('cv-send-action')] = form;
 		self.storage.form = self.storage.form || form;
 	});
 });
 
 this.form = function(){
 	/*
-		Return the first form, or the form with a given `id`.
+		Return the first form, or the form with a given `cv-send-action`.
 	*/
 	if (arguments.length == 0){
 		return this.storage.form;
