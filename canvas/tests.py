@@ -3,7 +3,10 @@
 The canvas unit testing interface.
 '''
 
+import os
 import sys
+import imp
+import uuid
 import json
 
 from werkzeug.wrappers import BaseResponse
@@ -149,9 +152,8 @@ def run_tests(suites):
 	sys.path.insert(0, CANVAS_HOME)
 	import tests
 	#	Import plugin tests packages to allow them to create suites.
-	for test_pkg_path in get_path_occurrences('tests/', include_base=False):
-		sys.path.insert(0, test_pkg_path)
-		import tests
+	for test_pkg_path in get_path_occurrences('tests/__init__.py', include_base=False):
+		imp.load_source(uuid.uuid4().hex, test_pkg_path)
 
 	run_all = len(suites) == 0
 
