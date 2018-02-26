@@ -13,6 +13,7 @@ from werkzeug.serving import run_simple
 #	Import subpackage to namespace.
 from .registration import *
 from .json_serializers import *
+from .uploads import *
 from .template_utils import *
 
 #	Declare exports.

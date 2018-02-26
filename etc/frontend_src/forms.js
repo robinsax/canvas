@@ -54,7 +54,8 @@ function Form(element){
 					toSend[fileInput.attr('name')] = {
 						data: btoa(event.target.result),
 						mimetype: file.mimetype,
-						name: file.name
+						filename: file.name,
+						__file__: true
 					};
 					self.submit(toSend);
 				}
