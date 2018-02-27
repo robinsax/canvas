@@ -65,7 +65,7 @@ class BadRequest(HTTPException):
 	'''
 
 	def __init__(self, param):
-		super().__init__(param, 400, param)
+		super().__init__(param, 400, 'Bad Request')
 
 class Unprocessable(HTTPException):
 	'''
@@ -73,7 +73,7 @@ class Unprocessable(HTTPException):
 	'''
 	
 	def __init__(self, param):
-		super().__init__(param, 422, param)
+		super().__init__(param, 422, 'Unprocessable Entity')
 
 class RequestParamError(HTTPException):
 	'''

@@ -57,7 +57,8 @@ def markdown(markdown, return_markup=True):
 	:return_markup Whether or not to return a markup object that will not be 
 		escaped when rendered.
 	'''
-	rendered = render_markdown(markdown)
+	import inspect
+	rendered = render_markdown(inspect.cleandoc(markdown))
 	if return_markup:
 		return markup(rendered)
 	return rendered

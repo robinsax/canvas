@@ -11,10 +11,17 @@ function Form(element){
 	this.validators = {};
 	this.errors = {};
 	this.onSuccess = tk.fn.eatCall;
+	this._processContent = tk.fn.identity;
 	this.submitting = false;
 
 	this.success = function(callback){
 		this.onSuccess = callback;
+		return this;
+	}
+
+	this.processContent = function(callback){
+		this._processContent = callback;
+		return this;
 	}
 	
 	this.validate = function(){
@@ -71,6 +78,8 @@ function Form(element){
 			if (!sendSpec.empty){
 				toSend.action = sendSpec.attr('cv-send-action');
 			}
+
+			toSend = self._processContent(toSend);
 			
 			var specURL = element.attr('cv-submit-to');
 			core.request('POST', specURL == null ? core.route : specURL)
@@ -93,10 +102,17 @@ function Form(element){
 		}
 		this.submitting = false;
 	}
-	
+
+	this.clear = function(source){
+		tk.iter(self.content, function(k){
+			self.content[k] = null;
+		});
+	}
+
 	this.populate = function(source){
-		tk.iter(self.keys, function(k){
-			self.content[k] = tk.prop(source, k, null);
+		tk.iter(source, function(k, v){
+			self.content[k] = v;
+			tk.log(k, v, self.content[k]);
 		});
 	}
 
@@ -162,13 +178,13 @@ function Form(element){
 				}
 			});
 		});
-	tk.log('Created form (with action ' + element.attr('cv-send-action') + '): ', this);
+	tk.log('Created form (id ' + element.attr('id') + '): ', this);
 }
 
-tk.inspection(function(check){
-	check.reduce('form').iter(function(e){
+tk.init(function(){
+	tk('form').iter(function(e){
 		var form = new Form(e);
-		self.storage.forms[e.attr('cv-send-action')] = form;
+		self.storage.forms[e.attr('id')] = form;
 		self.storage.form = self.storage.form || form;
 	});
 });

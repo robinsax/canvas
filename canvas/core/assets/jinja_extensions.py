@@ -172,7 +172,11 @@ class CanvasJinjaEnvironment(Environment):
 			**get_registered_by_name('template_global'),
 			**{
 				'config': config,
-				'h': get_registered_by_name('template_helper')
+				'h': get_registered_by_name('template_helper'),
+				'__glob__': {
+					#	TODO: Make unnessesary in forms.jinja.
+					'form_model': None
+				}
 			}
 		})
 

@@ -13,7 +13,8 @@ from .exceptions import (
 from .utils import (
 	WrappedDict, 
 	register, 
-	get_registered, 
+	get_registered,
+	get_registered_by_name, 
 	call_registered,
 	markup
 )
@@ -139,7 +140,8 @@ class Page(Controller):
 			**resolved_params,
 			**{
 				#	This page.
-				'__page__': self
+				'__page__': self,
+				'model': get_registered_by_name('model')
 			}
 		})
 

@@ -2,11 +2,10 @@ this.Modal = function(){
 	/*
 		A modal class for extension.
 	*/
+	var self = this;
 	this.element = null;
 
-	this.create = function(){
-		throw 'Not implemented.'
-	}
+	this.create = tk.fn.notImplemented;
 
 	this.open = function(){
 		this.element = core.page.snap('+div.modal')
@@ -23,7 +22,7 @@ this.Modal = function(){
 	}
 
 	this.close = function(){
-		this.element.remove();
+		self.element.remove();
 	}
 }
 

@@ -14,6 +14,10 @@
 	<p class="error-summary hidden"></p>
 {% endmacro %}
 
+{% macro use_model(mdl) %}
+	{{ __glob__.update({'form_model': mdl}) or '' }}
+{% endmacro %}
+
 {#
 	Create the area to display errors.
 #}
@@ -102,6 +106,9 @@
 	
 	{% if attr is not none %}
 		{% if model is none %}
+			{% if __glob__.form_model is not none %}
+				{% set form_model = __glob__.form_model %}
+			{% endif %}
 			{% if form_model is none %}
 				{{ h.parameter_error('Cannot use attr if model is not specified in arguments or render call') }}
 			{% else %}
