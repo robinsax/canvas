@@ -173,7 +173,7 @@
 		{% elif type == 'select' %}
 			<select {{ common_attrs }}>
 				{% if placeholder is not none %}
-					<option selected disabled>{{ placeholder }}</option>
+					<option value="__null__" selected>Select one...</option>
 				{% endif %}
 				{% for name, value in values.items() %}
 					<option value="{{ value }}">{{ name }}</option>

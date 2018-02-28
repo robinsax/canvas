@@ -112,7 +112,6 @@ function Form(element){
 	this.populate = function(source){
 		tk.iter(source, function(k, v){
 			self.content[k] = v;
-			tk.log(k, v, self.content[k]);
 		});
 	}
 
@@ -154,10 +153,18 @@ function Form(element){
 			//	Begin implicit validation.
 			contentBinding(key)
 				.changed(function(newValue){
-					if (newValue != e.value()){
+					if (newValue == '__null__'){
+						newValue = null;
+					}
+					else if (newValue == null && e.is('select')){
+						e.value('__null__');
+					}
+					else if (newValue != e.value()){
 						e.value(newValue);
 					}
+
 					self.validate(key, newValue);
+					return newValue;
 				})
 				.begin();
 
