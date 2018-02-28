@@ -266,6 +266,7 @@ def dictize_all(model_list, omit=[]):
 	:model_list A list of model class instances to dictize.
 	:omit A list of columns not to include in the returned dictionaries.
 	'''
+	#	TODO: Move to dictize (when list passed).
 	return [dictize(model, omit) for model in model_list]
 	
 def create_session():

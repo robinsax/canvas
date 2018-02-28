@@ -244,6 +244,9 @@ class Column(SQLExpression):
 	def __eq__(self, other):
 		return SQLComparison(self, other, '=')
 
+	def matches(self, other):
+		return SQLComparison(self, other, '~')
+
 	def __ne__(self, other):
 		return SQLComparison(self, other, '<>')
 

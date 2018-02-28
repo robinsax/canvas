@@ -196,6 +196,20 @@ tk.init(function(){
 	});
 });
 
+//	TODO: Packaging.
+tk.inspection(function(check){
+	check.reduce('input')
+		.off('focus')
+		.off('blur').on({
+			focus: function(e){
+				e.parents('.field').classify('focused');
+			},
+			blur: function(e){
+				e.parents('.field').classify('focused', false);
+			}
+		});
+});
+
 this.form = function(){
 	/*
 		Return the first form, or the form with a given `cv-send-action`.

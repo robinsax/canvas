@@ -203,8 +203,8 @@ def enum_creation(enum_cls):
 
 	type_format = ', '.join(['%s']*len(enum_cls))
 	return f'''
-		DO $$ BEGIN
-			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = {name}) THEN
+		DO $$ BEGIN 
+			IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = {name}) THEN 
 				CREATE TYPE {name} AS ENUM ({type_format});
 			END IF;
 		END$$;
@@ -260,8 +260,9 @@ def retrieval(target, query, ordering=None):
 	:target The retrieval target.
 	:query The query condition.
 	'''
-	#	TODO: Refactor this import.
+	#	TODO: Refactor these imports.
 	from .columns import Column
+	from .joins import SQLJoin
 
 	#	Serialize and prepare the query.
 	values = []
@@ -281,6 +282,10 @@ def retrieval(target, query, ordering=None):
 		#	Full-model retrieval.
 		selection = _column_ordering(target)
 		table = target.__table__
+	elif isinstance(target, SQLJoin):
+		#	Join retrieval.
+		selection = 'TODO'
+		table = target.serialize(values)
 	elif isinstance(target, SQLExpression):
 		#	Aggregation or column retrieval.
 		selection = target.serialize([])
