@@ -153,9 +153,15 @@ class _Session:
 			#	Get the constraint object given the violated name.
 			constraint = get_constraint(e.diag.constraint_name)
 			#	Raise a validation error containing the constraint info.
-			raise ValidationErrors({
-				constraint.column.name: constraint.error_message
-			})
+			try:
+				raise ValidationErrors({
+					constraint.column.name: constraint.error_message
+				})
+			except BaseException as e2:
+				if isinstance(e2, ValidationErrors):
+					raise e2 from None
+				#	Weird thing happened.
+				raise e
 		
 		return self
 

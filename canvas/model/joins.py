@@ -5,6 +5,8 @@ Join generation functions.
 
 from .sql_factory import SQLExpression
 
+#	TODO: Implement.
+
 class SQLJoin(SQLExpression):
 
 	def __init__(self, l_model, r_model, typ):

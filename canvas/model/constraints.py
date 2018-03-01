@@ -229,3 +229,6 @@ class NotNullConstraint(Constraint):
 
 	def as_sql(self):
 		return 'NOT NULL'
+
+	def check(self, model, value):
+		return value is not None

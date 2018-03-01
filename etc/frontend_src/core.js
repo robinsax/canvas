@@ -149,6 +149,8 @@ function CanvasCore(){
 		unloadedPlugins = [];
 	}
 
+	/* ::include dnd.js */
+
 	/* ::include forms.js */
 
 	//	Set up flash messages.
@@ -172,7 +174,7 @@ function CanvasCore(){
 
 		return self.page.snap('+div.tooltip:class(hidden null()):class(right $r):css(top $t):css(left $l):text', text, {
 			r: right,
-			t: pos.y - scroll - 10,
+			t: pos.y - scroll,
 			l: pos.x + targetSize.width/2 - 10
 		});
 	}

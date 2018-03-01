@@ -244,8 +244,8 @@ class Column(SQLExpression):
 	def __eq__(self, other):
 		return SQLComparison(self, other, '=')
 
-	def matches(self, other):
-		return SQLComparison(self, other, '~')
+	def matches(self, other, ignore_case=False):
+		return SQLComparison(self, other, '~*' if ignore_case else '~')
 
 	def __ne__(self, other):
 		return SQLComparison(self, other, '<>')
