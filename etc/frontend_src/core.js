@@ -72,7 +72,7 @@ function CanvasCore(){
 		}
 		return stored(this.storage.events, func, name); 
 	}
-
+	
 	this.validator = function(func, name){
 		/*
 			A function decorator for validator implementations.

@@ -1,8 +1,12 @@
 this.dnd = function(element, data){
-	this.dnd.end();
+	var createElement = tk.varg(arguments, 2, function(){
+		return element.copy();
+	});
 	element.on('mousedown', function(e, event){
-		self.dnd.currentElement = core.page.append(element.copy().classify('dnd-dragging'));
+		self.dnd.end();
+		self.dnd.currentElement = core.page.append(createElement().classify('dnd-dragging'));
 		self.dnd.currentData = data;
+		tk('body').classify('dnd-active');
 		event.preventDefault();
 	});
 }
@@ -12,7 +16,7 @@ this.dnd.target = function(element, func){
 	var acceptFunc = tk.varg(arguments, 2, tk.fn.tautology);
 	element.on({
 		mouseover: function(e){
-			if (self.dnd.currentData != null){
+			if (self.dnd.currentData != null && acceptFunc(self.dnd.currentData)){
 				e.classify('dnd-targeted');
 			}
 		},
@@ -26,14 +30,12 @@ this.dnd.target = function(element, func){
 			if (acceptFunc(self.dnd.currentData)){
 				func(self.dnd.currentData);
 			}
-			else {
-				self.flashMessage = 'Can\'t drop that there';
-			}
 		}
 	});
 }
 this.dnd.end = function(){
 	if (self.dnd.currentElement != null){
+		tk('body').classify('dnd-active', false);
 		self.dnd.currentElement.remove();
 		self.dnd.currentElement = self.dnd.currentData = null;
 	}
