@@ -28,5 +28,5 @@ class FileUploadDeserializer(JSONSerializer):
 		if not isinstance(data, dict) or '_is_file' not in data:
 			raise Unrecognized()
 		
-		data.pop('_is_file')
+		del data['_is_file']
 		return FileUpload(**data)
