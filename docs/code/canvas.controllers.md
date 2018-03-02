@@ -45,7 +45,7 @@ metadata and dependency management.
 *Note*: All `Page` templates should be rendered while by calling 
 `super().get()`, as it provides parameters required by the base template.
 #### Methods
-#### \_\_init__(self, route, title, dependencies=[], library_dependencies=[], template=None, template_params={}, description=Fast, customizable websites and web applications)
+#### \_\_init__(self, route, title, dependencies=[], library_dependencies=[], template=None, template_params={}, description=Artist's Names gallery)
 + *route*:  The route for this controller, relative to domain root. 
 + *title*:  The title with which to populate the title tag. 
 + *template*:  The title of this `Page`s' template file, without the `pages/` prefix. 

@@ -11,7 +11,7 @@ attribute by the `model.schema()` decorator.
 Stores type information and generates an SQL-serializable expression 
 on comparison.
 #### Methods
-#### \_\_init__(self, type_str, constraints=[], default=<object object at 0x000001A8C2E0B310>, primary_key=False)
+#### \_\_init__(self, type_str, constraints=[], default=<object object at 0x000002333AE2AE10>, primary_key=False)
 + *type_str*:  A string representation of the column type. 
 + *default*:  The default value to populate this column with. Default values are populated after row insertion since they may be resolved within Postgres. 
 + *primary_key*:  Whether or not this column is the table's primary key.
@@ -188,7 +188,7 @@ Resolve this constraint as belonging to `Column`.
 `ColumnType`s are attributes of `Column`s that store information about the
 SQL representation of the type.
 #### Methods
-#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x000001A8C2E0B310>)
+#### \_\_init__(self, sql_type, input_type=text, default=<object object at 0x000002333AE2AE10>)
 + *sql_type*:  The name of this type in PostgreSQL. 
 + *input_type*:  The type of input to use for this column type if HTML forms. 
 + *default*:  The default value with which to populate attributes in this column.

@@ -30,7 +30,6 @@ __documented__ = [
 __all__ = [
 	#	Debugging access.
 	'serve',
-	'build_docs',
 	#	Core functions.
 	'create_json',
 	'redirect_to',
