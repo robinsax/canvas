@@ -118,7 +118,8 @@ def logger(name=None):
 		name = inspect.stack()[-1].frame.f_locals.get('__name__', '<local>')
 	
 	#	Create and return logger.
-	return logging.getLogger(name)
+	log = logging.getLogger(name)
+	return log
 
 def current_time():
 	'''

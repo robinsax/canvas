@@ -40,12 +40,11 @@ def load_all_plugins():
 		#	Add to path to allow import.
 		sys.path.insert(0, path)
 
-		#	Import.
+		#	Import from `..plugins`.
 		log.debug(f'Initializing plugin {plugin}')
 		try:
-			__import__(plugin)
-			#	Populate into `canvas.plugins` namespace.
 			plugins_namespace.__path__.append(path)
+			__import__(f'canvas.plugins.{plugin}')
 		except ModuleNotFoundError:
 			log.critical(f'Failed to import plugin {plugin} (not found)!')
 	

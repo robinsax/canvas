@@ -33,8 +33,7 @@ LOG_LEVELS = [
 ILLEGAL_OVERRIDES = [
 	'active', 
 	'logging',
-	'database',
-	'deferral'
+	'database'
 ]
 
 def load():
@@ -79,21 +78,22 @@ def finalize(config):
 				#	Illegal override performed.
 				raise PluginConfigError(f'{key} cannot be set by a plugin')
 			if key == 'client_dependencies':
+				target_dict = config['client_dependencies']
 				#	Plugins need to register their client dependencies without 
 				#	considering other loaded plugins (or the core). Therefore 
 				#	the global dependency lists are configured additively.
 				if 'dependencies' in val:
 					for d in val['dependencies']:
-						if d not in config['client_dependencies']['dependencies']:
-							config['client_dependencies']['dependencies'].append(d)
+						if d not in target_dict['dependencies']:
+							target_dict['dependencies'].append(d)
 				if 'library_dependencies' in val:
 					for d in val['library_dependencies']:
-						if d not in config['client_dependencies']['library_dependencies']:
-							config['client_dependencies']['library_dependencies'].append(d)
+						if d not in target_dict['library_dependencies']:
+							target_dict['library_dependencies'].append(d)
 				if 'font_dependencies' in val:
-					config['client_dependencies']['font_dependencies'].update(val['font_dependencies'])
+					target_dict['font_dependencies'].update(val['font_dependencies'])
 				if 'icon_dependency' in val:
-					config['client_dependencies']['icon_dependency'] = val['icon_dependency']
+					target_dict['icon_dependency'] = val['icon_dependency']
 				continue
 			if not key in target:
 				#	Not overriding, update normally.
