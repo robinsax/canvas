@@ -7,6 +7,7 @@ any files to `FileUpload`s.
 import base64
 
 from ..exceptions import Unrecognized
+from ..utils import register
 from .json_serializers import JSONSerializer
 
 class FileUpload:
@@ -17,14 +18,15 @@ class FileUpload:
 
 	def __init__(self, filename=None, mimetype=None, content=None):
 		self.filename, self.mimetype = filename, mimetype
-		self.content = base64.base64decode(content)
+		self.content = base64.b64decode(content)
 
+@register.json_serializer
 class FileUploadDeserializer(JSONSerializer):
 
 	def deserialize(self, data):
 		#	Assert data is an uploaded file.
-		if not isinstance(data, dict) or '__file__' not in data:
+		if not isinstance(data, dict) or '_is_file' not in data:
 			raise Unrecognized()
 		
-		data.pop('__file__')
+		data.pop('_is_file')
 		return FileUpload(**data)
