@@ -89,7 +89,8 @@ __all__ = [
 	'InvalidSchema',
 	'InvalidQuery',
 	'UnadaptedType',
-	'Unrecognized'
+	'Unrecognized',
+	'AssetCompilationError'
 ]
 
 #	Compute an absolute path to the canvas root directory, the parent 

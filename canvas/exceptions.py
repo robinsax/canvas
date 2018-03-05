@@ -31,7 +31,8 @@ __all__ = [
 	'InvalidSchema',
 	'InvalidQuery',
 	'UnadaptedType',
-	'Unrecognized'
+	'Unrecognized',
+	'AssetCompilationError'
 ]
 
 class _Redirect(Exception):
@@ -207,4 +208,7 @@ class Unrecognized(Exception):
 	pass
 
 class NoSuchPlugin(Exception):
+	pass
+
+class AssetCompilationError(Exception):
 	pass

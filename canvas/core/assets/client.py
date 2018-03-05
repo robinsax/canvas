@@ -9,7 +9,7 @@ from ...exceptions import TemplateNotFound
 from ... import config
 from ..plugins import get_path_occurrences
 from .templates import render_template
-from . import compile_less
+from . import compile_less, compile_coffee
 
 #	The asset cache for storing rendered assets.
 _asset_cache = {}
@@ -35,29 +35,37 @@ def get_asset(path, _recall=False):
 		occurrences = get_path_occurrences(os.path.join('assets', 'client', path))
 		if len(occurrences) == 0:
 			#	No occurences found.
+
 			if path.endswith('.css'):
 				#	Check for a `.less` instance of this stylesheet.
 				asset = get_asset(path.replace('.css', '.less'), _recall=True)
-
-				if not config['debug']:
-					#	Don't cache assets in debug mode so changes can be 
-					#	viewed without server restart. Cache even if `None` to 
-					#	avoid re-performing this logic.
-					_asset_cache[path] = asset
-				return asset
+			elif path.endswith('.js'):
+				#	Check for a `.coffee` instance of this file.
+				asset = get_asset(path.replace('.js', '.coffee'), _recall=True)
+			else:
+				#	No asset found.
+				return None
 			
-			#	No asset found.
-			return None
-		
+			if not config['debug']:
+				#	Don't cache assets in debug mode so changes can be 
+				#	viewed without server restart. Cache even if `None` to 
+				#	avoid re-performing this logic.
+				_asset_cache[path] = asset
+			return asset
+			
 		#	Read the asset.
 		with open(occurrences[-1], 'rb') as f:
 			asset = f.read()
 
-	if path.endswith('.less') and _recall:
-		#	Compile the `.less` asset since it was requested as `.css`.
-		if not isinstance(asset, str):
-			asset = asset.decode()
-		asset = compile_less(asset)
+	if _recall:
+		if path.endswith('.less'):
+			#	Compile the `.less` asset since it was requested as `.css`.
+			if not isinstance(asset, str):
+				asset = asset.decode()
+			asset = compile_less(asset)
+		if path.endswith('.coffee'):
+			#	Compile the `.coffee` asset.
+			return compile_coffee(asset)
 
 	if not config['debug']:
 		#	Don't cache assets in debug mode so changes can be viewed without 

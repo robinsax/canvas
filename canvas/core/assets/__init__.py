@@ -4,13 +4,18 @@ Asset management, retrieval, and rendering.
 '''
 
 import re
+import os
+import coffeescript
 
 from io import StringIO
+from subprocess import Popen, PIPE
 
 from lesscpy.exceptions import CompilationError
 from lesscpy import compile as lessc
 
+from ...exceptions import AssetCompilationError
 from ...utils.registration import callback
+from ..plugins import get_path_occurrences
 from .jinja_extensions import *
 from .templates import *
 
@@ -22,8 +27,9 @@ __all__ = [
 	'get_asset',
 	#	Jinja.
 	'render_template',
-	#	Less.
-	'compile_less'
+	#	Less and CoffeeScript.
+	'compile_less',
+	'compile_coffee'
 ]
 
 #	The common `less` definitions storage object.
@@ -58,11 +64,50 @@ def compile_less(source):
 			line_no = int(re.search('line: ([0-9]+)', str(e)).group(1))
 			line = source.split('\n')[line_no]
 			#	TODO: Insert into traceback.
-			ex = CompilationError(f'Less compilation failed: {line} (line {line_no})')
+			ex = AssetCompilationError(f'Less compilation failed: {line} (line {line_no})')
 		except:
 			#	Fuck.
 			pass
 		raise ex
 
-#	The `client` submodule imports `compile_less()`.
+def compile_coffee(source):
+	'''
+	Compile CoffeeScript.
+
+	:path The absolute path to the file.
+	'''
+	if not isinstance(source, str):
+		source = source.decode()
+
+	#	Resolve inclusions.
+	for include_defn in re.finditer(r'#\s+::include\s+(.+)\s*?\n', source):
+		#	Check templates first.
+		include_filename = f'{include_defn.group(1).strip()}.coffee'
+		try:
+			included = render_template(os.path.join(include_filename, path), response=False)
+		except TemplateNotFound:
+			#	Check non-templates.
+			occurences = get_path_occurrences(
+				os.path.join('assets', 'client', include_filename)
+			)
+			if len(occurences) == 0:
+				raise AssetCompilationError(f'Invalid include: {include_defn.group(1)}')
+			with open(occurences[-1], 'r') as f:
+				included = f.read()
+		
+		source = source.replace(include_defn.group(0), included)
+
+	try:
+		compiled = coffeescript.compile(source)
+	except BaseException as ex:
+		log.warning(source)
+		raise ex from None
+	
+	babel = Popen(f'babel --no-babelrc --presets=es2015', shell=True, stdin=PIPE, stdout=PIPE)
+	out, err = babel.communicate(input=compiled.encode('utf-8'))
+	if babel.returncode != 0:
+		raise AssetCompilationError(err.decode())
+	return out
+
+#	The `client` submodule imports `compile_less` and `compile_ts`.
 from .client import *

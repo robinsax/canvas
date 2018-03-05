@@ -1,11 +1,11 @@
 #	Package install script for Ubuntu 14.04 LTS.
 
-echo "Installing Python 3.6 and Pip"
+echo "Installing Dependencies"
 #   Add the Python 3.6 backport repository.
 add-apt-repository ppa:jonathonf/python-3.6 -y
 apt-get update
 #   Install Python.
-apt-get install python3.6 postgresql -y
+apt-get install python3.6 postgresql npm -y
 #   Install Pip.
 curl https://bootstrap.pypa.io/get-pip.py | python3.6
 
