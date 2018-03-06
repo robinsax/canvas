@@ -1,11 +1,13 @@
 #	Package install script for Ubuntu 14.04 LTS.
 
-echo "Installing Dependencies"
+echo "Installing canvas dependencies..."
 #   Add the Python 3.6 backport repository.
 add-apt-repository ppa:jonathonf/python-3.6 -y
+#	Install applications.
 apt-get update
-#   Install Python.
-apt-get install python3.6 postgresql npm -y
+apt-get install python3-pip postgresql nodejs -y
+#	Install CoffeeScript and Babel.
+npm install --save-dev coffeescript babel-cli babel-preset-es2015
 #   Install Pip.
 curl https://bootstrap.pypa.io/get-pip.py | python3.6
 
