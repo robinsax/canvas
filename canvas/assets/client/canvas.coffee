@@ -201,7 +201,7 @@ class CanvasCore
 			if response.data?.action?
 				@actions[response.data.action](response);
 		.failure flashError
-		.error flashError
+		#	TODO(tk): Rename above to .error
 
 	#	Create and return a tooltip element on target.
 	tooltip: (target, content=null) ->

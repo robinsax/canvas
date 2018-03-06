@@ -36,7 +36,7 @@ ILLEGAL_OVERRIDES = [
 	'database'
 ]
 
-def load():
+def load(configure_logger=True):
 	'''
 	Load and return the initial configuration.
 	'''
@@ -44,6 +44,9 @@ def load():
 	config_path = os.path.join(CANVAS_HOME, CONFIG_FILE)
 	with open(config_path, 'r') as f:
 		config = json.load(f)
+
+	if not configure_logger:
+		return config
 	
 	#	Configure the logging module.
 	log_config = config['logging']
@@ -119,10 +122,7 @@ def finalize(config):
 
 def write(config):
 	'''
-	Write the configuration file. 
-	
-	Should not be called in a production environment (the serving user 
-	shouldn't have the required permissions anyway).
+	Write the configuration file.
 	'''
 	#	Read the configuration file.
 	config_path = os.path.join(CANVAS_HOME, CONFIG_FILE)

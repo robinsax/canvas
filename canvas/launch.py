@@ -7,19 +7,16 @@ import os
 import sys
 import shutil
 
+from .configuration import (
+	write as write_configuration,
+	load as load_configuration
+)
 from .exceptions import NoSuchPlugin
-
 from .utils.registration import register
 from .utils.doc_builder import build_docs
 from .utils import logger, serve
-
 from .core.plugins import plugin_base_path
-
-from . import (
-	CANVAS_HOME, 
-	configuration, 
-	config
-)
+from . import CANVAS_HOME, config
 
 #	Declare exports.
 __all__ = [
@@ -231,8 +228,9 @@ class ActivatePluginMode(LaunchMode):
 		for name in to_load:
 			activate_one(name)
 
-		config['plugins']['active'] = new_list
-		configuration.write(config)
+		new_config = load_configuration(configure_logger=False)
+		new_config['plugins']['active'] = new_list
+		write_configuration(new_config)
 
 		log.info(f'Activated plugins: {", ".join(new_list)}')
 		return True
@@ -254,8 +252,9 @@ class SetPluginDirMode(LaunchMode):
 			log.critical(f'No such directory {path}')
 			return True
 
-		config['plugins']['directory'] = path
-		configuration.write(config)
+		new_config = load_configuration(configure_logger=False)
+		new_config['plugins']['directory'] = path
+		write_configuration(new_config)
 		
 		log.info(f'Set plugin directory: {path}')
 		return True

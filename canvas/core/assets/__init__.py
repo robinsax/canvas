@@ -116,7 +116,6 @@ def compile_coffee(source):
 
 	try:
 		source = _jsi_context.call('compileCoffee', source)
-		source = _jsi_context.call('transpileES6', source)
 	except BaseException as ex:
 		#	TODO: Handle better.
 		log.warning(source)
@@ -124,5 +123,5 @@ def compile_coffee(source):
 
 	return source
 
-#	The `client` submodule imports `compile_less` and `compile_ts`.
+#	The `client` submodule imports `compile_less` and `compile_coffee`.
 from .client import *
