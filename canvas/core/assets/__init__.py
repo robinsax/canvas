@@ -3,9 +3,11 @@
 Asset management, retrieval, and rendering.
 '''
 
+#	TODO: ES6 transpile from directive.
+
 import re
 import os
-import coffeescript
+import execjs
 
 from io import StringIO
 from subprocess import Popen, PIPE
@@ -15,10 +17,12 @@ from lesscpy import compile as lessc
 
 from ...exceptions import AssetCompilationError
 from ...utils.registration import callback
+from ... import CANVAS_HOME
 from ..plugins import get_path_occurrences
 from .jinja_extensions import *
 from .templates import *
 
+#	Declare exports.
 __all__ = [
 	#	Common.
 	'CanvasJinjaEnvironment',
@@ -34,6 +38,18 @@ __all__ = [
 
 #	The common `less` definitions storage object.
 _less_defns = None
+_jsi_context= None
+
+@callback.init
+def load_js_interface():
+	'''
+	Load a JavaScript context containing the interface functions.
+	'''
+	global _jsi_context
+	interface_filename = os.path.join(CANVAS_HOME, 'canvas', 'core', 'interface.js')
+	with open(interface_filename) as f:
+		interface_source = f.read()
+	_jsi_context = execjs.compile(interface_source)
 
 @callback.init
 def render_common_less_defns():
@@ -42,7 +58,7 @@ def render_common_less_defns():
 	properties available in all rendered `less` files.
 	'''
 	global _less_defns
-	_less_defns = render_template('snippets/less_definitions.jinja')
+	_less_defns = render_template(os.path.join('client', 'less_definitions.jinja'))
 del render_common_less_defns
 
 def compile_less(source):
@@ -84,7 +100,7 @@ def compile_coffee(source):
 		#	Check templates first.
 		include_filename = f'{include_defn.group(1).strip()}.coffee'
 		try:
-			included = render_template(os.path.join(include_filename, path), response=False)
+			included = render_template(os.path.join('client', include_filename), response=False)
 		except TemplateNotFound:
 			#	Check non-templates.
 			occurences = get_path_occurrences(
@@ -95,19 +111,17 @@ def compile_coffee(source):
 			with open(occurences[-1], 'r') as f:
 				included = f.read()
 		
-		source = source.replace(include_defn.group(0), included)
+		source = source.replace(include_defn.group(0), included + '\n')
 
 	try:
-		compiled = coffeescript.compile(source)
+		source = _jsi_context.call('compileCoffee', source)
+		source = _jsi_context.call('transpileES6', source)
 	except BaseException as ex:
+		#	TODO: Handle better.
 		log.warning(source)
 		raise ex from None
-	
-	babel = Popen(f'babel --no-babelrc --presets=es2015', shell=True, stdin=PIPE, stdout=PIPE)
-	out, err = babel.communicate(input=compiled.encode('utf-8'))
-	if babel.returncode != 0:
-		raise AssetCompilationError(err.decode())
-	return out
+
+	return source
 
 #	The `client` submodule imports `compile_less` and `compile_ts`.
 from .client import *

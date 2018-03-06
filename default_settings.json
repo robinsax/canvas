@@ -6,7 +6,7 @@
 	"client_dependencies": {
 		"dependencies": [
 			"base.css",
-			"core.min.js"
+			"canvas.js"
 		],
 		"library_dependencies": [
 			"toolkit.min.js"

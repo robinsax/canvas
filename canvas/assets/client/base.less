@@ -488,8 +488,15 @@ code {
 	z-index: 1000;
 }
 
-.dnd-dragging {
-	pointer-events: none;
-	position: fixed;
-	opacity: 0.5;
+.dnd {
+	&.target {
+		cursor: -webkit-grab;
+		cursor: grab;
+	}
+
+	&.drag {
+		pointer-events: none;
+		position: fixed;
+		opacity: 0.5;
+	}
 }

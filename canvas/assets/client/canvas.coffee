@@ -10,31 +10,8 @@ loader = new Loader
 #	::include canvas.config
 #	::include objects/canvas.forms
 #	::include objects/canvas.dnd
-###
-class Modal
-	constructor(params) ->
-		@createPanel = params.create
-		@onClose = params.close
-		@el = null
+#	::include objects/canvas.modal
 
-	open: () ->
-		@el = cv.page.snap '+div.modal'
-		.on 'click', @close
-		.snap '+div.panel'
-			.on 'click', (el, event) ->
-				event.stopPropagation()
-			.snap '+i.fa.fa-times.closer'
-				.on 'click', @close
-			.back()
-		.back()
-		@createPanel @el.children '.panel'
-		@
-
-	close: () ->
-		@onClose() if @onClose
-		@el.remove()
-		@
-###
 class CanvasCore
 	constructor: ->
 		#	Copy debug flag back.
@@ -87,11 +64,11 @@ class CanvasCore
 		#	Create magic objects.
 		@flashMessage = null
 		tk.binding @, 'flashMessage'
-			.changed (value) ->
-				if value and @page
-					@page.snap '+*aside.flash-message.hidden'
-					.text value
-					.classify 'hidden', false, 5000
+			.changed (value) =>
+				if value? and @page
+					@page.snap '+*aside.flash-message'
+						.text value
+						.classify 'hidden', false, 5000
 
 				return
 			.begin()
@@ -102,12 +79,10 @@ class CanvasCore
 			@components.push(new Component @)
 
 		#	Place initialization and inspection callbacks.
-		tk.init () => 
-			@init()
-		tk.inspection () =>
-			@inspect()
+		tk.init @init
+		tk.inspection @inspect
 	
-	init: ->
+	init: =>
 		#	Initialize own fields.
 		@route = tk 'html' 
 		.attr 'cv-route'
@@ -117,83 +92,86 @@ class CanvasCore
 		@metaPage = tk 'body > .meta'
 
 		#	Parse query string.
-		parts = window.location.substring 1
-		.split '&'
+		parts = window.location.search.substring 1
+			.split '&'
+		
 		for part in parts
-			part = parts.split '='
-			self.query[decodeURIComponent part[0]] = decodeURIComponent part[1] 
+			part = part.split '='
+			@query[decodeURIComponent part[0]] = decodeURIComponent part[1] 
 
 		#	Initialize components.
 		for component in @components
-			component.init?(core)
+			component.init? @
 
 		#	Initialize plugins.
-		for plugin in @plugins
-
+		for name, plugin of @plugins
 			#	Resolve decorators.
-			for property, value in plugin
+			for property, value of plugin
 				if value._target?
 					value._target[value._name] = value
 
 			#	Initialize.
-			plugin.init()
+			plugin.init?()
+		
+		tk.log 'Initialized'
 
 	inspect: (check) =>
 		#	Bind events.
 		check.reduce '[cv-event]'
-		.iter (el) =>
-			eventName = el.attr 'cv-event'
-			trigger = el.attr 'cv-on' ? 'click'
-			
-			el.on trigger, (el, event) =>
-				if not @events[eventName]? 
-					throw 'No event: ' + key
+			.iter (el) =>
+				eventName = el.attr 'cv-event'
+				trigger = (el.attr 'cv-on') ? 'click'
 				
-				@events[eventName](el, event)
-		
+				el.on trigger, (el, event) =>
+					if not @events[eventName]? 
+						throw 'No event: ' + key
+					
+					@events[eventName](el, event)
+			
 		#	Bind actions.
 		check.reduce '[cv-action]'
-		.iter (el) =>
-			el.on el.attr 'cv-on' ? 'click', () =>
-				@request
-				.json
-					action: el.attr('cv-action')
-				.send()
+			.iter (el) =>
+				el.on el.attr 'cv-on' ? 'click', () =>
+					@request
+					.json
+						action: el.attr('cv-action')
+					.send()
 
 		#	Open active links.
 		check.reduce 'a'
-		.classify 'open', (el) =>
-			el.attr 'href' == @route
+			.classify 'open', (el) =>
+				el.attr 'href' == @route
 
 		#	Set up field classification.
 		check.reduce 'body > [name]'
-		.off 'focus'
-		.off 'blur'
-		.on
-			focus: (el) ->
-				el.parents '.field'
-				.classify 'focused'
-			blur: (el) ->
-				el.parents '.field'
-				.classify 'focused', false
+			.off 'focus'
+			.off 'blur'
+			.on
+				focus: (el) ->
+					el.parents '.field'
+					.classify 'focused'
+				blur: (el) ->
+					el.parents '.field'
+					.classify 'focused', false
 		
 		#	Set up tooltips.
 		check.reduce '[cv-tooltip]'
-		.iter (el) =>
-			tooltip = null
-			el.on
-				mouseover: () =>
-					tooltip = @tooltip el
-				mouseout: () ->
-					tooltip.remove() if tooltip
+			.iter (el) =>
+				tooltip = null
+				el.on
+					mouseover: () =>
+						tooltip = @tooltip el
+					mouseout: () ->
+						tooltip.remove() if tooltip
 
-	plugin: (PluginClass, condition) ->
+	plugin: (PluginClass, condition=true) ->
 		if (typeof condition == 'boolean' and condition) or
 				(typeof condition == 'string' and tk('html').attr('cv-route') == condition) or 
 				(typeof condition == 'function' and condition())
 			#	Condition passed, load and store plugin.
 			inst = new PluginClass
 			name = inst.name ? tk.fname PluginClass
+			tk.log 'Loaded plugin ' + name
 			@plugins[name] = inst
 
 	#	Define decorators.
@@ -212,11 +190,6 @@ class CanvasCore
 
 	validator: (func, name=null) ->
 		_decorate(func, name, @validators)
-
-	#	Modal creation.
-	modal: (params) ->
-		modal = new Modal params
-		modal.open()
 
 	#	Send a request with defaults.
 	request: (method='POST', url=window.location.href) ->

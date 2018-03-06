@@ -6,7 +6,7 @@ jinja2
 htmlmin
 markdown
 lesscpy
-CoffeeScript
+PyExecJS
 #   Testing.
 coverage
 python-coveralls

@@ -6,20 +6,24 @@ class Drag
 		@data = params.data
 		@element = null
 
-		@source.on 'mousedown', (source, event) =>
-			Drag.current?.end()
-			Drag.current = @
-			
-			cv.page.classify
+		@source
+			.classify
 				dnd: true
-				active: true
+				target: true
+			.on 'mousedown', (source, event) =>
+				Drag.current?.end()
+				Drag.current = @
+				
+				cv.page.classify
+					dnd: true
+					active: true
 
-			@element = cv.page.append @createElement()
-			.classify 
-				dnd: true
-				drag: true
+				@element = cv.page.append @createElement()
+					.classify 
+						dnd: true
+						drag: true
 
-			event.stopPropagation()
+				event.preventDefault()
 
 	end: () ->
 		cv.page.classify
@@ -47,7 +51,7 @@ class Drop
 					targeted: false
 			mouseup: (el) =>
 				if @willAccept Drag.current
-					@accept Drag.current.end()
+					@accept Drag.current.end().data
 
 loader.attach class DragAndDrop
 	constructor: (core) ->
@@ -64,6 +68,8 @@ loader.attach class DragAndDrop
 			mouseup: () ->
 				Drag.current?.end()
 			mousemove: (el, event) ->
-				Drag.current?.el.css
-					top: event.clientY
-					left: event.clientX
+				if Drag.current
+					size = Drag.current.element.size()
+					Drag.current.element.css
+						top: event.clientY - size.height/2
+						left: event.clientX - size.width/2
