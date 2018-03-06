@@ -1,4 +1,6 @@
+
 echo "Installing canvas dependencies..."
+
 #	Install applications.
 apt-get update
 apt-get install python3-pip postgresql nodejs -y
