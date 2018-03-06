@@ -84,8 +84,8 @@ class CanvasCore
 	
 	init: =>
 		#	Initialize own fields.
-		@route = tk 'html' 
-		.attr 'cv-route'
+		@route = tk 'body' 
+			.attr 'cv-route'
 
 		#	Grab elements.
 		@page = tk 'body > .page'
@@ -218,6 +218,12 @@ class CanvasCore
 			top: offset.y - scroll
 			left: offest.x + size.width/2 - 10
 		.text content
+	
+	tag: (type, props, ...children) ->
+		return
+			type: type
+			props: props
+			children: children
 
 window.tk = createToolkit
 	debug: true
