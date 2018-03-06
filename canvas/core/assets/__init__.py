@@ -4,7 +4,6 @@ Asset management, retrieval, and rendering.
 '''
 
 #	TODO: ES6 transpile from directive.
-#	TODO: Use real less.
 
 import re
 import os
@@ -39,6 +38,7 @@ __all__ = [
 
 #	The common `less` definitions storage object.
 _less_defns = None
+#	The compiled JavaScript interface.
 _jsi_context= None
 
 @callback.init
@@ -47,7 +47,7 @@ def load_js_interface():
 	Load a JavaScript context containing the interface functions.
 	'''
 	global _jsi_context
-	interface_filename = os.path.join(CANVAS_HOME, 'canvas', 'core', 'interface.js')
+	interface_filename = os.path.join(CANVAS_HOME, 'canvas', 'core', '_interface.js')
 	with open(interface_filename) as f:
 		interface_source = f.read()
 	_jsi_context = execjs.compile(interface_source)

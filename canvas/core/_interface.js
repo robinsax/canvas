@@ -7,7 +7,3 @@ function transpileES6(source){
 function compileCoffee(source){
 	return transpileES6(require('coffeescript').compile(source));
 }
-
-function compileLess(source){
-	return require('less').render(source);
-}
