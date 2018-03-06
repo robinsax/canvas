@@ -5,7 +5,7 @@ echo "Installing canvas dependencies..."
 add-apt-repository ppa:jonathonf/python-3.6 -y
 #	Install applications.
 apt-get update
-apt-get install python3-pip postgresql nodejs -y
+apt-get install python3.6 postgresql nodejs -y
 #	Install CoffeeScript and Babel.
 npm install --save-dev coffeescript babel-cli babel-preset-es2015
 #   Install Pip.
