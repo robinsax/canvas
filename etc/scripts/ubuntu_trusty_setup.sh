@@ -11,6 +11,6 @@ fi
 
 #	Configure Postgres.
 echo "Configuring Postgres"
-python3 ./etc/scripts/write_setup_sql.py | sudo -u postgres psql
+python ./etc/scripts/write_setup_sql.py | sudo -u postgres psql
 
 echo "Done"
