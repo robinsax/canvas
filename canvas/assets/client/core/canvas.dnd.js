@@ -3,7 +3,7 @@ class Drag {
 
 	constructor(source, params) {
 		this.source = source;
-		this.createElement = params.createElement || (() => { this.source.copy() });
+		this._displayed = params.displayed || (() => { return this.source.copy() });
 		this._data = params.data;
 		this.dataSource = params.dataSource;
 		this.element = null;
@@ -23,11 +23,16 @@ class Drag {
 					dnd: true,
 					active: true
 				});
-				this.element = cv.page.append(this.createElement())
+				this.element = cv.page.append(this._displayed())
 					.classify({
 						dnd: true,
 						drag: true
 					});
+				let size = this.element.size();
+				this.element.css({
+					top: event.clientY - size.height/2,
+					left: event.clientX - size.width/2
+				});
 
 				event.preventDefault();
 			});
@@ -77,7 +82,7 @@ class Drop {
 				});
 			},
 			mouseup: (el) => {
-				if (this.aceepts(Drag.current)){
+				if (this.accepts(Drag.current)){
 					this.accept(Drag.current.end().data);
 				}
 			}
@@ -98,12 +103,12 @@ class DragAndDropComponent {
 	init(core) {
 		core.page.on({
 			mouseup: () => {
-				if (Drag.current){
+				if (Drag.current != null){
 					Drag.current.end();
 				}
 			},
 			mousemove: (el, event) => {
-				if (Drag.current){
+				if (Drag.current != null){
 					let el = Drag.current.element, size = el.size();
 					el.css({
 						top: event.clientY - size.height/2,

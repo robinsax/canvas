@@ -6,6 +6,7 @@ Client asset rendering and retrieval.
 import os
 
 from ...exceptions import TemplateNotFound
+from ...utils import logger
 from ... import config
 from ..plugins import get_path_occurrences
 from .templates import render_template
@@ -13,6 +14,8 @@ from . import compile_less, transpile_js
 
 #	The asset cache for storing rendered assets.
 _asset_cache = {}
+
+log = logger(__name__)
 
 def get_asset(path, _recall=False):
 	'''
@@ -56,9 +59,10 @@ def get_asset(path, _recall=False):
 				asset = asset.decode()
 			asset = compile_less(asset)
 
-	if path.endswith('.js'):
+	if path.endswith('.js') and not path.startswith('lib/'):
 		#	Transpile in case it's ES6.
 		asset = transpile_js(asset)
+		log.debug(f'Transpiled {path}')
 	
 	if not config['debug']:
 		#	Don't cache assets in debug mode so changes can be viewed without 
