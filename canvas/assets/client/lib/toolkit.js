@@ -515,9 +515,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           ref = this.set;
           for (i = j = 0, len = ref.length; j < len; i = ++j) {
             el = ref[i];
-            if (checkType === 0 && !e.matches(check)) {
+            if (checkType === 0 && (el.nodeType === Node.TEXT_NODE || !el.matches(check))) {
               return false;
-            } else if (checkType === 1 && !check(new ToolkitSelection(e), i)) {
+            } else if (checkType === 1 && !check(new ToolkitSelection(el), i)) {
               return false;
             }
           }
@@ -666,8 +666,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               if (!pure.__listeners__) {
                 pure.__listeners__ = [];
               }
+              if (typeof name === 'function') {
+                name = name(el, i);
+              }
               repr = {
-                event: ToolkitSelection.tk.resolve(event, el, i),
+                event: name,
                 callback: function callback(g) {
                   return _callback(el, g, i);
                 }
@@ -732,6 +735,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       }, {
         key: 'classify',
         value: function classify(classOrMap) {
+          var _this4 = this;
+
           var value = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
           var time = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _sentinel;
 
@@ -743,7 +748,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return !e.is(selector);
               };
             }
-            return this.iter(function (el, i) {
+            return _this4.iter(function (el, i) {
               var classes, flagValue, has, index, timeValue;
               flagValue = ToolkitSelection.tk.resolve(flag, el, i);
               classes = el.classes();
@@ -1082,16 +1087,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     _createClass(ToolkitAListener, [{
       key: '_mixinListeners',
       value: function _mixinListeners() {
-        var _this4 = this;
+        var _this5 = this;
 
         var innerPop, innerPush, innerSplice, listeners, updateIndicies;
         listeners = this.array.__listeners__ = [];
         updateIndicies = function updateIndicies() {
           var descriptor, i, j, ref, results;
           results = [];
-          for (i = j = 0, ref = _this4.array.length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
-            descriptor = _this4._indexDescriptor(_this4.array[i], i, listeners);
-            results.push(Object.defineProperty(_this4.array, i + '', descriptor));
+          for (i = j = 0, ref = _this5.array.length; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
+            descriptor = _this5._indexDescriptor(_this5.array[i], i, listeners);
+            results.push(Object.defineProperty(_this5.array, i + '', descriptor));
           }
           return results;
         };
@@ -1102,8 +1107,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           }
 
           var i, item, j, k, len, len1, listener, start;
-          start = _this4.array.length;
-          innerPush.apply(_this4.array, items);
+          start = _this5.array.length;
+          innerPush.apply(_this5.array, items);
           updateIndicies();
           for (i = j = 0, len = items.length; j < len; i = ++j) {
             item = items[i];
@@ -1112,13 +1117,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               listener._added(item, start + i);
             }
           }
-          return _this4.array.length;
+          return _this5.array.length;
         };
         innerPop = this.array.pop;
         this.array.pop = function () {
           var index, j, len, listener, removed;
-          removed = _this4.array[index = _this4.array.length - 1];
-          innerPop.apply(_this4.array);
+          removed = _this5.array[index = _this5.array.length - 1];
+          innerPop.apply(_this5.array);
           updateIndicies();
           for (j = 0, len = listeners.length; j < len; j++) {
             listener = listeners[j];
@@ -1140,8 +1145,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
               results.push(this.array[i]);
             }
             return results;
-          }.call(_this4);
-          result = innerSplice.apply(_this4.array, [start, count].concat(items));
+          }.call(_this5);
+          result = innerSplice.apply(_this5.array, [start, count].concat(items));
           updateIndicies();
           for (i = j = 0, ref = count; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
             for (k = 0, len = listeners.length; k < len; k++) {
@@ -1152,7 +1157,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           for (i = l = 0, ref1 = items.length; 0 <= ref1 ? l < ref1 : l > ref1; i = 0 <= ref1 ? ++l : --l) {
             for (m = 0, len1 = listeners.length; m < len1; m++) {
               listener = listeners[m];
-              listener._added(_this4.array[start + i], i);
+              listener._added(_this5.array[start + i], i);
             }
           }
           return result;
@@ -1301,7 +1306,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: 'render',
       value: function render() {
-        var _this5 = this;
+        var _this6 = this;
 
         var inserts, nodes;
         if (this._data instanceof Array) {
@@ -1310,13 +1315,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.tk.listener(this._data).added(function (item, index) {
             var changed, dom, property, value;
             //	Create DOM.
-            dom = _this5._realize(_this5.definition(item));
+            dom = _this6._realize(_this6.definition(item));
             changed = function changed() {
               var newDom;
               if (!inserts) {
                 return;
               }
-              newDom = _this5._realize(_this5.definition(item));
+              newDom = _this6._realize(_this6.definition(item));
               nodes[nodes.indexOf(dom)] = newDom;
               return dom = dom.replace(newDom);
             };
@@ -1325,9 +1330,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             for (property in item) {
               value = item[property];
               if (value instanceof Array) {
-                _this5.tk.listener(value).added(changed).removed(changed);
+                _this6.tk.listener(value).added(changed).removed(changed);
               }
-              _this5.tk.listener(item, property).changed(changed, false);
+              _this6.tk.listener(item, property).changed(changed, false);
             }
             //	Insert.
             nodes.splice(index, 0, dom);
@@ -1345,7 +1350,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           inserts = true;
           return this.tk(nodes);
         } else {
-          return this._realize(this.definition(this._data)).node;
+          return this.tk(this._realize(this.definition(this._data)));
         }
       }
     }]);
@@ -1385,14 +1390,14 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
   Toolkit = callable(_Toolkit = function () {
     function _Toolkit() {
-      var _this6 = this;
+      var _this7 = this;
 
       _classCallCheck(this, _Toolkit);
 
       //	Define the 'here' debug helper.
       Object.defineProperty(this, 'here', {
         get: function get() {
-          return _this6.log('here');
+          return _this7.log('here');
         }
       });
     }
@@ -1405,7 +1410,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }, {
       key: '_finalize',
       value: function _finalize(config) {
-        var _this7 = this;
+        var _this8 = this;
 
         var ref, ref1;
         //	Read config.
@@ -1421,7 +1426,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           this.guts.init();
         } else if (typeof window !== "undefined" && window !== null) {
           window.addEventListener('DOMContentLoaded', function () {
-            return _this7.guts.init();
+            return _this8.guts.init();
           });
         }
       }

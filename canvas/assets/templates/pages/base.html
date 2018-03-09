@@ -22,7 +22,7 @@
 {% block logic %}{% endblock %}
 
 <!DOCTYPE html>
-<html lang="en" {% block html_attributes %}{% endblock %}>
+<html lang="en" {% if config.debug %}cv-debug="true"{% endif %}{% block html_attributes %}{% endblock %}>
 	<head {% block head_attributes %}{% endblock %}>
 		{% block head %}
 			{#

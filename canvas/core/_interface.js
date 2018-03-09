@@ -1,9 +1,18 @@
-function transpileES6(source){
-	return require('babel-core').transform(source, {
-		presets: ['es2015']
-	}).code;
-}
+let babel = require('babel-core')
 
-function compileCoffee(source){
-	return transpileES6(require('coffeescript').compile(source));
+function transpile(source){
+	return babel.transform(source, {
+		presets: [
+			'es2015'
+		],
+		plugins: [
+			'transform-decorators-legacy',
+			'transform-class-properties',
+			[
+				'transform-react-jsx', {
+					pragma: 'tk.template.tag'
+				}
+			]
+		]
+	}).code;
 }

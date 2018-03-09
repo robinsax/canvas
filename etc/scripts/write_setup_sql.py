@@ -1,9 +1,9 @@
 #   coding utf-8
 '''
-Install script to generate Postgres setup
-commands using values from configuration.
+Install script to generate Postgres setup commands using values from 
+configuration.
 
-Must be invoked from root directory.
+Must be invoked from repository root.
 '''
 
 import json

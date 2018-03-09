@@ -33,7 +33,7 @@ __all__ = [
 	'render_template',
 	#	Less and CoffeeScript.
 	'compile_less',
-	'compile_coffee'
+	'transpile_js'
 ]
 
 #	The common `less` definitions storage object.
@@ -59,7 +59,7 @@ def render_common_less_defns():
 	properties available in all rendered `less` files.
 	'''
 	global _less_defns
-	_less_defns = render_template(os.path.join('client', 'less_definitions.jinja'))
+	_less_defns = render_template(os.path.join('snippets', 'less_definitions.jinja'))
 del render_common_less_defns
 
 def compile_less(source):
@@ -87,35 +87,30 @@ def compile_less(source):
 			pass
 		raise ex
 
-def compile_coffee(source):
+def transpile_js(source):
 	'''
-	Compile CoffeeScript.
-
-	:path The absolute path to the file.
+	Transpile JavaScript to ES2015.
 	'''
 	if not isinstance(source, str):
 		source = source.decode()
 
 	#	Resolve inclusions.
-	for include_defn in re.finditer(r'#\s+::include\s+(.+)\s*?\n', source):
+	for include_defn in re.finditer(r'//\s+cv::include\s+(.+)\s*?\n', source):
+		include = include_defn.group(1).strip()
 		#	Check templates first.
-		include_filename = f'{include_defn.group(1).strip()}.coffee'
-		try:
-			included = render_template(os.path.join('client', include_filename), response=False)
-		except TemplateNotFound:
-			#	Check non-templates.
-			occurences = get_path_occurrences(
-				os.path.join('assets', 'client', include_filename)
-			)
-			if len(occurences) == 0:
-				raise AssetCompilationError(f'Invalid include: {include_defn.group(1)}')
-			with open(occurences[-1], 'r') as f:
-				included = f.read()
+		include_filename = f'{include}.js'
+		occurences = get_path_occurrences(
+			os.path.join('assets', 'client', include_filename)
+		)
+		if len(occurences) == 0:
+			raise AssetCompilationError(f'Invalid include: {include}')
 		
+		with open(occurences[-1], 'r') as f:
+			included = f.read()
 		source = source.replace(include_defn.group(0), included + '\n')
 
 	try:
-		source = _jsi_context.call('compileCoffee', source)
+		source = _jsi_context.call('transpile', source)
 	except BaseException as ex:
 		#	TODO: Handle better.
 		log.warning(source)

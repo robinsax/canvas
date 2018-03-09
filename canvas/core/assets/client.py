@@ -9,7 +9,7 @@ from ...exceptions import TemplateNotFound
 from ... import config
 from ..plugins import get_path_occurrences
 from .templates import render_template
-from . import compile_less, compile_coffee
+from . import compile_less, transpile_js
 
 #	The asset cache for storing rendered assets.
 _asset_cache = {}
@@ -27,35 +27,27 @@ def get_asset(path, _recall=False):
 		#	Retrieve cache entry.
 		return _asset_cache[path]
 	
-	try:
-		#	Jinja templates have priority.
-		asset = render_template(os.path.join('client', path), response=False)
-	except TemplateNotFound:
-		#	No template for this asset, retrieve non-template occurences.
-		occurrences = get_path_occurrences(os.path.join('assets', 'client', path))
-		if len(occurrences) == 0:
-			#	No occurences found.
+	occurrences = get_path_occurrences(os.path.join('assets', 'client', path))
+	if len(occurrences) == 0:
+		#	No occurences found.
 
-			if path.endswith('.css'):
-				#	Check for a `.less` instance of this stylesheet.
-				asset = get_asset(path.replace('.css', '.less'), _recall=True)
-			elif path.endswith('.js'):
-				#	Check for a `.coffee` instance of this file.
-				asset = get_asset(path.replace('.js', '.coffee'), _recall=True)
-			else:
-				#	No asset found.
-				return None
-			
-			if not config['debug']:
-				#	Don't cache assets in debug mode so changes can be 
-				#	viewed without server restart. Cache even if `None` to 
-				#	avoid re-performing this logic.
-				_asset_cache[path] = asset
-			return asset
-			
-		#	Read the asset.
-		with open(occurrences[-1], 'rb') as f:
-			asset = f.read()
+		if path.endswith('.css'):
+			#	Check for a `.less` instance of this stylesheet.
+			asset = get_asset(path.replace('.css', '.less'), _recall=True)
+		else:
+			#	No asset found.
+			return None
+		
+		if not config['debug']:
+			#	Don't cache assets in debug mode so changes can be 
+			#	viewed without server restart. Cache even if `None` to 
+			#	avoid re-performing this logic.
+			_asset_cache[path] = asset
+		return asset
+		
+	#	Read the asset.
+	with open(occurrences[-1], 'rb') as f:
+		asset = f.read()
 
 	if _recall:
 		if path.endswith('.less'):
@@ -63,10 +55,11 @@ def get_asset(path, _recall=False):
 			if not isinstance(asset, str):
 				asset = asset.decode()
 			asset = compile_less(asset)
-		if path.endswith('.coffee'):
-			#	Compile the `.coffee` asset.
-			return compile_coffee(asset)
 
+	if path.endswith('.js'):
+		#	Transpile in case it's ES6.
+		asset = transpile_js(asset)
+	
 	if not config['debug']:
 		#	Don't cache assets in debug mode so changes can be viewed without 
 		#	server restart.
