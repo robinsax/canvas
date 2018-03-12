@@ -87,7 +87,7 @@ class UnitTestMode(LaunchMode):
 	'''
 
 	def __init__(self):
-		super().__init__('run_tests', '<suite_1> ... <suite_n>')
+		super().__init__('run-tests', '<suite_1> ... <suite_n>')
 
 	def launch(self, args):
 		from .tests import run_tests
@@ -104,7 +104,7 @@ class BuildDocsMode(LaunchMode):
 	The code documentation generation mode.
 	'''
 	def __init__(self):
-		super().__init__('build_docs', '[<target_plugin>]')
+		super().__init__('build-docs', '[<target_plugin>]')
 
 	def launch(self, args):
 		if len(args) > 0:
@@ -128,7 +128,7 @@ class CreatePluginMode(LaunchMode):
 	'''
 
 	def __init__(self):
-		super().__init__('create_plugin', '<plugin_name>')
+		super().__init__('create-plugin', '<plugin_name>')
 
 	def launch(self, args):
 		try:
@@ -183,7 +183,7 @@ class ActivatePluginMode(LaunchMode):
 	'''
 
 	def __init__(self):
-		super().__init__('use_plugins', '<set|add|remove> <plugin_1>, ..., <plugin_n>')
+		super().__init__('use-plugins', '<set|add|remove> <plugin_1>, ..., <plugin_n>')
 
 	def launch(self, args):
 		#	Assert input is valid.
@@ -239,7 +239,7 @@ class ActivatePluginMode(LaunchMode):
 class SetPluginDirMode(LaunchMode):
 
 	def __init__(self):
-		super().__init__('set_plugin_dir', '<dirpath, relative to canvas>')
+		super().__init__('set-plugin-dir', '<dirpath, relative to canvas>')
 
 	def launch(self, args):
 		#	Assert input is valid.

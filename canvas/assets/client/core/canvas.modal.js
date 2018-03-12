@@ -10,6 +10,7 @@ class Modal {
 	constructor(params) {
 		//	Parse
 		this._create = params.create;
+		this._bindings = params.bindings || (() => {});
 		this._close = params.close || (() => {});
 		this.element = null;
 	}
@@ -22,6 +23,9 @@ class Modal {
 			.children('.closer')
 				.on('click', doClose)
 			.back();
+
+		this._bindings(this.element);
+
 		cv.page.append(this.element);
 		return this;
 	}

@@ -117,12 +117,12 @@ Some existing plugins are:
 
 To create a plugin in the configured plugin directory, run:
 ```bash
-python3.6 canvas --create_plugin <plugin_name>
+python3.6 canvas --create-plugin <plugin_name>
 ```
 
 To activate some plugins, and their dependencies, run:
 ```bash
-python3.6 canvas --use_plugins set <plugin_1>, ..., <plugin_n>
+python3.6 canvas --use-plugins set <plugin_1>, ..., <plugin_n>
 ```
 
 For more in depth documentation about developing plugins for canvas, see the `./docs`

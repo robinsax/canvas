@@ -14,6 +14,7 @@ function loadCanvas() {
 	//	Include directives.
 	//	cv::include core/canvas.forms
 	//	cv::include core/canvas.dnd
+	//	cv::include core/canvas.views
 	//	cv::include core/canvas.modal
 
 	class CanvasCore {
@@ -125,16 +126,16 @@ function loadCanvas() {
 
 				if (load){
 					let inst = new ControllerClass();
+					tk.log('Loaded controller ' + tk.nameOf(ControllerClass));
 					let name = inst.name || tk.nameOf(ControllerClass);
 					this.controllers[name] = inst;
+					if (inst.layout){
+						tk(window).on('resize', inst.layout);
+						inst.layout();
+					}
 				}
 			});
-			//	And initialize.
-			tk.iter(this.controllers, (name, controller) => {
-				tk.log('Initializing controller ' + name);
-				controller.init();
-			});
-			
+
 			tk.log('canvas initialized');
 		}
 			

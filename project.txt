@@ -1,0 +1,2 @@
+Map color to palette label instead of vice versa (swap key values).
+	- Have a 5 color default.
