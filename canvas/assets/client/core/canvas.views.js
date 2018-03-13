@@ -1,9 +1,8 @@
 class View {
 	constructor(parameters) {
 		this.template = parameters.template || null;
-		this.target = parameters.target || 'body > .page';
 		this.data = parameters.data || null;
-		this.array = parameters.array || false;
+		this.array = parameters.items || false;
 		this.live = parameters.live || false;
 		this.dataSource = parameters.dataSource || null;
 		this.bindings = parameters.bindings || (() => {});
@@ -14,20 +13,22 @@ class View {
 
 	_watch(data) {
 		if (data instanceof Array){
+			if (data._watched){
+				return;
+			}
+			data._watched = true;
 			tk.listener(data)
 				.added((item) => {
-					this._watch(data);
+					this._watch(item);
 					this.render();
 				})
 				.removed((item) => {
 					this.render();
 				});
 		}
-		else {
+		else if (typeof data == 'object') {
 			tk.iter(data, (property, value) => {
-				if (value instanceof Array || typeof value == 'object'){
-					this._watch(value);
-				}
+				this._watch(value);
 				tk.listener(data, property)
 					.changed((value) => {
 						this.render();
@@ -36,7 +37,7 @@ class View {
 		}
 	}
 
-	render() {
+	render(target=null) {
 		//	Fetch data if it's remote.
 		if (this.data == null && this.dataSource != null){
 			this.dataSource.success((response) => {
@@ -70,23 +71,18 @@ class View {
 		
 		this.bindings(el);
 
-		//	Prolly fukt, as I am.
 		if (this.node){
-			let before = this.node.prev();
+			if (!target){
+				target = this.node.parents(false);
+			}
 			this.node.remove();
-			if (before.empty){
-				this.node = this.node.parents(false).prepend(this.node);
-			}
-			else {
-				this.node.remove();
-				before.next(el);
-				this.node = el;
-			}
 		}
-		else {
-			this.node = tk(this.target).append(el);
+		this.node = el;
+		if (target){
+			target.append(this.node);
 		}
 		this._rendering = false;
+		return this.node;
 	}
 }
 
@@ -97,8 +93,7 @@ class ViewsComponent {
 
 		core.view = (params) => {
 			let view = new View(params);
-			view.render();
-			return view;
+			return view.render();
 		}
 	}
 }

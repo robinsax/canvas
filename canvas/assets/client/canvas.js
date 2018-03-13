@@ -22,8 +22,10 @@ function loadCanvas() {
 			tk.config.debug = debug;
 			this.debug = debug;
 
-			//	Context variables.
-			this.route = null;
+			let head = tk('head');
+			this.route = head.attr('cv-route');
+			head.attr('cv-route', null);
+			
 			this.query = {};
 
 			//	Common elements.
@@ -31,7 +33,7 @@ function loadCanvas() {
 			this.page = null;
 
 			this._registeredControllers = [];
-			this.controllers = {};
+			this.viewControllers = {};
 
 			//	Define initial actions, events, and validators.		
 			this.actions = {
@@ -96,9 +98,6 @@ function loadCanvas() {
 
 		//	Post DOM-loaded.
 		init(){
-			//	Initialize own fields.
-			this.route = tk('body').attr('cv-route');
-
 			//	Grab elements.
 			this.page = tk('body > .page');
 			this.metaPage = tk('body > .meta');
@@ -116,23 +115,13 @@ function loadCanvas() {
 			});
 
 			//	Create controllers.
-			tk.iter(this._registeredControllers, (registration) => {
-				let condition = registration.condition, ControllerClass = registration.Class;
-				let load = (
-					(typeof condition == 'boolean' && condition) ||
-					(typeof condition == 'string' && condition == this.route) || 
-					(typeof condition == 'function' && condition())
-				);
-
-				if (load){
-					let inst = new ControllerClass();
-					tk.log('Loaded controller ' + tk.nameOf(ControllerClass));
-					let name = inst.name || tk.nameOf(ControllerClass);
-					this.controllers[name] = inst;
-					if (inst.layout){
-						tk(window).on('resize', inst.layout);
-						inst.layout();
-					}
+			tk.iter(this._registeredControllers, (controller) => {
+				if (controller.init){
+					controller.init();
+				}
+				if (controller.layout){
+					tk(window).on('resize', controller.layout);
+					controller.layout();
 				}
 			});
 
@@ -197,12 +186,20 @@ function loadCanvas() {
 		}
 
 		//	Decorators.
-		controller(condition=true) {
+		viewController(condition=true) {
 			return (ControllerClass) => {
-				this._registeredControllers.push({
-					Class: ControllerClass,
-					condition: condition
-				});
+				let load = (
+					(typeof condition == 'boolean' && condition) ||
+					(typeof condition == 'string' && condition == this.route) || 
+					(typeof condition == 'function' && condition())
+				);
+				if (load){
+					let inst = new ControllerClass();
+					tk.log('Loaded view controller ' + ControllerClass.name);
+					let name = inst.name || ControllerClass.name;
+					this.viewControllers[name] = inst;
+					this._registeredControllers.push(inst);
+				}
 			}
 		}
 		

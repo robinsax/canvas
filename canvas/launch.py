@@ -92,7 +92,7 @@ class UnitTestMode(LaunchMode):
 	def launch(self, args):
 		from .tests import run_tests
 
-		#	Run the tests, exiting with a non-zero code if they fail, to inform
+		#	Run the tests, exiting with a non-zero code if they fail to inform
 		#	CI tools.
 		if not run_tests(args):
 			sys.exit(1)

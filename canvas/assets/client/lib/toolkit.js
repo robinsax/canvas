@@ -405,13 +405,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           var high = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : true;
 
           var checkElement, conditionType, set;
-          conditionType = ['string', 'function'].indexOf(typeof condition === 'undefined' ? 'undefined' : _typeof(condition));
+          conditionType = ['string', 'function', 'boolean'].indexOf(typeof condition === 'undefined' ? 'undefined' : _typeof(condition));
           if (conditionType < 0) {
             throw 'Illegal condition';
+          } else if (conditionType === 2) {
+            conditionType = 0;
+            condition = '*';
+            high = false;
           }
           checkElement = function checkElement(element, index) {
             if (conditionType === 0) {
-              return e.is(condition);
+              return element.is(condition);
             } else {
               return condition(element, index);
             }
@@ -419,9 +423,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
           set = [];
           this.iter(function (el, i) {
             var parent;
-            parent = el.parentNode;
+            parent = el.first(false).parentNode;
             while (parent !== ToolkitSelection.tk.config.root) {
-              if (checkElement(parent, i)) {
+              if (checkElement(tk(parent, i))) {
                 set.push(parent);
               }
               if (!high) {
@@ -1294,7 +1298,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         if (!virtual) {
           return document.createTextNode('');
         }
-        if (typeof virtual === 'string') {
+        if (typeof virtual === 'string' || typeof virtual === 'number') {
           result = document.createTextNode(virtual);
         } else if (typeof virtual === 'function') {
           result = this._realize(virtual());
@@ -1515,8 +1519,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
       //	Comprehension.
 
     }, {
-      key: 'compr',
-      value: function compr(array, callback) {
+      key: 'comp',
+      value: function comp(array, callback) {
         var i, item, j, len, result, returned;
         result = [];
         for (i = j = 0, len = array.length; j < len; i = ++j) {
@@ -1526,7 +1530,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             result.push(returned);
           }
         }
-        return returned;
+        return result;
+      }
+    }, {
+      key: 'compr',
+      value: function compr(array, callback) {
+        console.warn('compr() is deprecated! Use comp() instead.');
+        return this.comp(array, callback);
       }
     }, {
       key: 'timeout',
