@@ -2,11 +2,11 @@ function loadCanvas() {
 	//	Define and create the core loader.
 	class CoreLoader {
 		constructor() {
-			this.components = [];
+			this.attached = [];
 		}
 
-		component(Component){
-			loader.components.push(Component);
+		attach(Class){
+			loader.attached.push(Class);
 		}
 	}
 	let loader = new CoreLoader();
@@ -32,8 +32,8 @@ function loadCanvas() {
 			this.metaPage = null;
 			this.page = null;
 
-			this._registeredControllers = [];
-			this.viewControllers = {};
+			this._registeredViews = [];
+			this.views = {};
 
 			//	Define initial actions, events, and validators.		
 			this.actions = {
@@ -75,10 +75,10 @@ function loadCanvas() {
 				}
 			}
 
-			//	Load core components.
-			this.components = []
-			tk.iter(loader.components, (Component) => {
-				this.components.push(new Component(this));
+			//	Load core.
+			this._attached = [];
+			tk.iter(loader.attached, (Class) => {
+				this._attached.push(new Class(this));
 			});
 
 			//	Place initialization and inspection callbacks.
@@ -109,19 +109,20 @@ function loadCanvas() {
 				this.query[decodeURIComponent(part[0])] = decodeURIComponent(part[1]);
 			});
 
-			//	Initialize components.
-			tk.iter(this.components, (component) => {
-				if (component.init){ component.init(this); }
+			//	Initialize attached.
+			tk.iter(this._attached, (attached) => {
+				if (attached.init){ attached.init(this); }
 			});
 
-			//	Create controllers.
-			tk.iter(this._registeredControllers, (controller) => {
-				if (controller.init){
-					controller.init();
-				}
-				if (controller.layout){
-					tk(window).on('resize', controller.layout);
-					controller.layout();
+			//	Create views.
+			tk.iter(this._registeredViews, (view) => {
+				view.initDOM();
+
+				if (view.layout){
+					tk(window).on('resize', () => {
+						view.layout.apply(view);
+					});
+					view.layout();
 				}
 			});
 
@@ -142,6 +143,12 @@ function loadCanvas() {
 						
 						this.events[eventName](el, event)
 					});
+
+					//	Consume.
+					el.attr({
+						'cv-event': null,
+						'cv-on': null
+					});
 				});
 				
 			//	Bind actions.
@@ -155,6 +162,8 @@ function loadCanvas() {
 							})
 						.send();
 					});
+
+					el.attr('cv-on', null);
 				});
 
 			//	Open active links.
@@ -186,19 +195,19 @@ function loadCanvas() {
 		}
 
 		//	Decorators.
-		viewController(condition=true) {
-			return (ControllerClass) => {
+		view(condition=true) {
+			return (Class) => {
 				let load = (
 					(typeof condition == 'boolean' && condition) ||
 					(typeof condition == 'string' && condition == this.route) || 
 					(typeof condition == 'function' && condition())
 				);
 				if (load){
-					let inst = new ControllerClass();
-					tk.log('Loaded view controller ' + ControllerClass.name);
-					let name = inst.name || ControllerClass.name;
-					this.viewControllers[name] = inst;
-					this._registeredControllers.push(inst);
+					let inst = new Class();
+					tk.log('Loaded view ' + Class.name);
+					let name = inst.name || Class.name;
+					this.views[name] = inst;
+					this._registeredViews.push(inst);
 				}
 			}
 		}

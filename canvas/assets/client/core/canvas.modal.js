@@ -39,8 +39,8 @@ class Modal {
 	}
 }
 
-@loader.component
-class ModalComponent {
+@loader.attach
+class ModalPart {
 	constructor(core) {
 		core.Modal = Modal;
 		

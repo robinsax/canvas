@@ -624,7 +624,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             });
             return this;
           } else {
-            throw 'Illegal argument';
+            throw 'Illegal argument: ' + nameOrMap;
           }
         }
       }, {
@@ -1354,7 +1354,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return {
           tag: _tag,
           attributes: attributes || {},
-          children: children
+          children: children,
+          _virtual: true
         };
       }
     }]);

@@ -201,8 +201,8 @@ class Form {
 	}
 }
 
-@loader.component
-class Forms {
+@loader.attach
+class FormPart {
 	constructor(core) {
 		this.forms = {}
 		this.first = null

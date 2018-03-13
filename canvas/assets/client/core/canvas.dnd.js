@@ -82,16 +82,18 @@ class Drop {
 				});
 			},
 			mouseup: (el) => {
-				if (this.accepts(Drag.current)){
-					this.accept(Drag.current.end().data);
+				if (Drag.current != null){
+					if (this.accepts(Drag.current)){
+						this.accept(Drag.current.end().data);
+					}
 				}
 			}
 		});
 	}
 }
 
-@loader.component
-class DragAndDropComponent {
+@loader.attach
+class DragAndDropPart {
 	constructor(core) {
 		core.Drag = Drag;
 		core.Drop = Drop;
