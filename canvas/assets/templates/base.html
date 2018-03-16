@@ -1,0 +1,36 @@
+{% set global_dependencies = ['test.css'] %}
+
+<!DOCTYPE html>
+<html lang="en"{% block html_attributes %}{% endblock %}>
+	<head {% if config.development.debug %}cv-debug {% endif %} cv-route="{{ __route__ }}" {% block head_attributes %}{% endblock %}>
+		{% block head %}
+			<meta charset="utf-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1">
+		
+			<title>{{ full_title|default('%s - %s'%(title_prefix|default('canvas'), title|default('New Page'))) }}</title>
+			<meta name="description" content="{{ description|default('The canvas framework')|normalize_whitespace }}">
+			<link rel="icon" type="image/png" href="{{ h.asset_url('media/site_icon.png') }}"/>
+		
+			{% for dependency in dependencies + global_dependencies %}
+				{% if dependency.endswith('.css') %}
+					<link rel="stylesheet" type="text/css" href="{{ h.asset_url(dependency) }}"/>
+				{% else %}
+					<script type="text/javascript" src="{{ h.asset_url(dependency) }}"></script>
+				{% endif %}
+			{% endfor %}
+		{% endblock %}
+	</head>
+	<body cv-route="{{ __route__ }}" {% block body_attributes %}{% endblock %}>
+		{% block body %}
+			<header class="header">
+				{% block header %}{% endblock %}
+			</header>
+			<div class="page">
+				{% block page %}{% endblock %}
+			</div>
+		{% endblock %}
+		<div class="meta">
+			{% block meta_body %}{% endblock %}
+		</div>
+	</body>
+</html>

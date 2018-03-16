@@ -1,214 +1,112 @@
 #	coding utf-8
 '''
-Exceptions, because shit happens.
+Exception definitions.
 '''
 
-#	Declare exports.
-__all__ = [
-	#	Special exceptions.
-	'_Redirect',
-	'ValidationErrors',
-	#	HTTP exceptions.
-	'HTTPException',
-	'UnsupportedMethod',
-	'BadRequest',
-	'Unprocessable',
-	'RequestParamError',
-	'UnknownAction',
-	'NotFound',
-	'ServiceUnavailable',
-	#	Other exceptions.
-	'TemplateNotFound',
-	'ColumnDefinitionError',
-	'MacroParameterError',
-	'MarkdownNotFound',
-	'PluginConfigError',
-	'ConfigKeyError',
-	'HeaderKeyError',
-	'APIRouteDefinitionError',
-	'TemplateOverlayError',
-	'UnsupportedEnforcementMethod',
-	'InvalidSchema',
-	'InvalidQuery',
-	'UnadaptedType',
-	'Unrecognized',
-	'AssetCompilationError'
-]
+from .namespace import export
 
-class _Redirect(Exception):
-	'''
-	A class used internally as a redirection trigger.
-	'''
-
-	def __init__(self, target, code):
-		self.target, self.code = target, code
-
-class ValidationErrors(Exception):
-	'''
-	An error used to trigger an input validation error response.
-	'''
-
-	def __init__(self, error_dict=None, summary=None):
-		self.error_dict, self.summary = error_dict, summary
-
-class HTTPException(Exception):
-	'''
-	An errors with a specific HTTP code (e.g. `500`, `404`, etc.).
-	'''
-
-	def __init__(self, message, code, desc):
-		super().__init__(message)
-		self.code, self.desc = (code, desc)
-
-class BadRequest(HTTPException):
-	'''
-	An error triggered by a bad request.
-	'''
-
-	def __init__(self, param):
-		super().__init__(param, 400, 'Bad Request')
-
-class Unprocessable(HTTPException):
-	'''
-	An error triggered by an unprocessable entity.
-	'''
-	
-	def __init__(self, param):
-		super().__init__(param, 422, 'Unprocessable Entity')
-
-class RequestParamError(HTTPException):
-	'''
-	An error triggered by an incomplete request parameter set.
-	'''
-
-	def __init__(self, param):
-		super().__init__(param, 400, 'Missing Request Parameter: %s'%param)
-
-class UnknownAction(HTTPException):
-	'''
-	An error to raise when an invalid `action` parameter is specified in a 
-	request. 
-	'''
-	
-	def __init__(self, action):
-		super().__init__(action, 400, 'Unknown Action: %s'%action)
-
-class NotFound(HTTPException):
-	'''
-	An error used internally when an uncontrolled route is requested.
-	'''
-
-	def __init__(self, key):
-		super().__init__(key, 404, 'Not Found')
-
-class UnsupportedMethod(HTTPException):
-	'''
-	An error used internally when an unsupported request method is used.
-	'''
-
-	def __init__(self):
-		super().__init__('', 405, 'Unsupported Request Method')
-
-class ServiceUnavailable(HTTPException):
-	'''
-	An error to raise when the server cannot fufill a request.
-	'''
-
-	def __init__(self):
-		super().__init__('', 503, 'Service Unavailable')
-
-class ColumnDefinitionError(Exception):
-	'''
-	An error raised when an invalid column type is declared.
-	'''
+@export
+class Failure(Exception):
 	pass
 
-class MacroParameterError(Exception):
-	'''
-	An exception raised by Jinja macros when they are supplied an invalid set 
-	of parameters.
-	'''
+@export 
+class ConfigurationError(Exception):
 	pass
 
-class MarkdownNotFound(Exception):
-	'''
-	An exception raised when a markdown file doesn't exist.
-	'''
+@export
+class AssetError(Exception):
 	pass
 
-class PluginConfigError(Exception):
-	'''
-	An exception raised if a plugin modifies configuration incorrectly.
-	'''
-	pass
-
-class ConfigKeyError(KeyError):
-	'''
-	An exception raised as the `KeyError` for `config`.
-	'''
-	pass
-
-class HeaderKeyError(KeyError):
-	'''
-	An exception raised when a non-present header is retrieved.
-	'''
-	pass
-
-class APIRouteDefinitionError(Exception):
-	'''
-	An exception raised when the route of an `APIEndpointController` isn't 
-	prefixed with `api/`.
-	'''
-	pass
-
-class TemplateNotFound(Exception):
-	'''
-	An exception raised when a template cannot be located for render.
-	'''
-	pass
-
-class TemplateOverlayError(Exception):
-	'''
-	An exception raised when the `{% overlay %}` Jinja tag is used in a
-	bottom-level template.
-	'''
-	pass
-
-class UnsupportedEnforcementMethod(Exception):
-	'''
-	An exception raised by constraints when an unsupported enforcement
-	method is invoked.
-	'''
-	pass
-
-class InvalidSchema(Exception):
-	'''
-	An exception raised when a schema definition is invalid.
-	'''
-	pass
-
-class InvalidQuery(Exception):
-	'''
-	An exception raised when a `session.query()` is given invalid parameters.
-	'''
-	pass
-
-class UnadaptedType(Exception):
-	'''
-	An exception raised when an unadaptable leaf is reached in an 
-	`SQLExpression`.
-	'''
-	pass
-
+@export
 class Unrecognized(Exception):
-	'''
-	An exception raised by `JSONSerializer`s when they are unable to 
-	deserialize a value.
-	'''
 	pass
 
-class NoSuchPlugin(Exception):
+@export
+class TemplateNotFound(Exception):
 	pass
 
-class AssetCompilationError(Exception):
+@export
+class TemplateOverlayError(Exception):
 	pass
+
+@export
+class InvalidSchema(Exception):
+	pass
+
+@export
+class InvalidConstraint(Exception):
+	pass
+
+@export
+class InvalidQuery(Exception):
+	pass
+
+@export
+class UnadaptedType(Exception):
+	pass
+
+@export
+class ValidationErrors(Exception):
+	
+	def __init__(self, errors_or_summary, summary=None):
+		if isinstance(errors_or_summary, str):
+			self.errors, self.summary = False, errors_or_summary
+		else:
+			self.errors, self.summary = errors_or_summary, summary
+
+@export
+class HTTPException(Exception):
+
+	def __init__(self, title, status_code, message='', headers=None):
+		super().__init__(message)
+		self.title, self.status_code = title, status_code
+		self.headers = headers
+
+	def response(self):
+		return self.title, self.status_code, self.headers, None
+
+@export
+class BadRequest(HTTPException):
+
+	def __init__(self, message):
+		super().__init__('Bad Request', 400, message)
+
+@export
+class NotFound(HTTPException):
+
+	def __init__(self, path):
+		super().__init__('Not Found', 404, path)
+
+@export
+class UnsupportedVerb(HTTPException):
+
+	def __init__(self, verb, supported):
+		super().__init__('Method Not Allowed', 405, verb, {
+			'Allow': supported
+		})
+
+@export
+class OversizeEntity(HTTPException):
+
+	def __init__(self, size):
+		super().__init__('Request Entity Too Large', 413, size, {
+			'Retry-After': 0
+		})
+
+@export
+class UnsupportedMediaType(HTTPException):
+
+	def __init__(self, content_type):
+		super().__init__('Unsupported Media Type', 415, content_type)
+
+@export
+class UnprocessableEntity(HTTPException):
+
+	def __init__(self, message):
+		super().__init__('Unprocessable Entity', 422, message)
+
+@export
+class InternalServerError(HTTPException):
+
+	def __init__(self):
+		super().__init__('Internal Server Error', 500)

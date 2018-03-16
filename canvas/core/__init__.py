@@ -1,95 +1,59 @@
 #	coding utf-8
 '''
-Core functionality including request handling, plugin management, and asset 
-management.
+The canvas core contains fundamental system logic and namespaces which are
+already in the root package.
 '''
 
-import datetime as dt
+from werkzeug.serving import run_simple
 
-from ..exceptions import _Redirect
-from ..utils.registration import register
-from ..utils.json_serializers import *
-
-from .thread_context import get_thread_context
-from .assets import *
-
-#	Declare exports.
-__all__ = [
-	'asset_url',
-	'create_json',
-	'redirect_to',
-	'get_thread_context',
-	'flash_message',
-	#	Assets subpackage.
-	'CanvasJinjaEnvironment',
-	'DeepFileSystemLoader',
-	'ExtendsAlias',
-	'get_asset',
-	#	Jinja.
-	'render_template',
-	#	Less.
-	'compile_less'
-]
-
-def create_json(status_str, *data, status=200, headers={}, fallback_serializer=None):
-	'''
-	Create a JSON response tuple in the canonical format.
-
-	:status_str The status string. Should be one of: `'success'`, `'failure'`, 
-		or `'error'`.
-	:data (Optional) A data package.
-	:status The HTTP status code for the response.
-	:headers A dictionary of headers for the response.
-	:fallback_serializer A fallback serialization function for complex objects.
-	'''
-	if len(data) > 0:
-		#	Include a data package.
-		return serialize_json({
-			'status': status_str,
-			'data': data[0]
-		}, fallback_serializer), status, headers, 'application/json'
-	else:
-		#	Don't include a data package.
-		return serialize_json({
-			'status': status_str
-		}, fallback_serializer), status, headers, 'application/json'
-
-#	`create_json()` is required by the request handler.
+from ..namespace import export
+from ..callbacks import define_callback_type, invoke_callbacks
+from ..controllers import create_controllers
+from ..configuration import load_config
+from .plugins import load_plugins
+from .routing import create_routing
 from .request_handler import handle_request
+from .templates import create_render_environment
+from .styles import load_palette
+from .node_interface import create_node_interface
+from .model import initialize_model
+from . import responses
 
-@register.template_helper
-def asset_url(rel_path):
-	'''
-	Return the URL relative to domain root for an asset. This method should 
-	always be called for asset retrieval to allow for forwards-compatability.
-	'''
-	if rel_path.startswith('/'):
-		return f'/assets{rel_path}'
-	return f'/assets/{rel_path}'
+application = handle_request
 
-def redirect_to(target, code=302):
-	'''
-	Redirect the view to `target`. Does not return a value. When called, flow 
-	control is halted.
+define_callback_type('pre_init', arguments=False)
+define_callback_type('init', arguments=False)
+define_callback_type('post_init', arguments=False)
 
-	`code` will be ignored if an AJAX POST request is being handled; The 
-	redirection will be formulated as a view action (it wouldn't work 
-	otherwise).
+_initialized = False
 
-	:target The URL to redirect to.
-	:code The HTTP redirect code. Must be `3xx`.
-	'''
-	raise _Redirect(target, code)
+@export
+def initialize():
+	global _initialized
+	if _initialized:
+		return
+	_initialized = True
 
-def flash_message(message):
-	'''
-	Flash a message the next time a view or view update is sent.
-	'''
-	get_thread_context()['__flash_message__'] = message
+	invoke_callbacks('pre_init')
 
-@register.template_helper
-def get_flash_message():
-	'''
-	Return the currently queued flash message, or `None` if there isn't one.
-	'''
-	return get_thread_context().get('__flash_message__', None)
+	load_config()
+	load_plugins()
+
+	invoke_callbacks('init')
+
+	create_node_interface()
+	create_render_environment()
+	load_palette()
+
+	route_map = create_controllers()
+	create_routing(route_map)
+
+	initialize_model()
+
+	invoke_callbacks('post_init')
+
+@export
+def serve(port=80):
+	initialize()
+
+	run_simple('0.0.0.0', port, application)

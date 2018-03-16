@@ -1,6 +1,5 @@
-#   coding utf-8
+#	coding utf-8
 '''
-A namespace package for plugins.
+A placeholder namespace for loaded plugins.
 '''
-
 pass
