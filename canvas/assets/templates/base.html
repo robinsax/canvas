@@ -1,4 +1,4 @@
-{% set global_dependencies = ['test.css'] %}
+{% set global_dependencies = ['canvas.js', 'canvas.css'] %}
 
 <!DOCTYPE html>
 <html lang="en"{% block html_attributes %}{% endblock %}>
@@ -8,14 +8,14 @@
 			<meta name="viewport" content="width=device-width, initial-scale=1">
 		
 			<title>{{ full_title|default('%s - %s'%(title_prefix|default('canvas'), title|default('New Page'))) }}</title>
-			<meta name="description" content="{{ description|default('The canvas framework')|normalize_whitespace }}">
+			<meta name="description" content="{{ (description|default('The canvas framework'))|normalize_whitespace }}">
 			<link rel="icon" type="image/png" href="{{ h.asset_url('media/site_icon.png') }}"/>
 		
 			{% for dependency in dependencies + global_dependencies %}
 				{% if dependency.endswith('.css') %}
 					<link rel="stylesheet" type="text/css" href="{{ h.asset_url(dependency) }}"/>
 				{% else %}
-					<script type="text/javascript" src="{{ h.asset_url(dependency) }}"></script>
+					<script type="text/javascript" src="{{ h.asset_url(dependency) }}"{% if config.customization.defer_scripts %} defer{% endif %}></script>
 				{% endif %}
 			{% endfor %}
 		{% endblock %}

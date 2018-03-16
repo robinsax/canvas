@@ -7,4 +7,7 @@ light-grey 	-> focused-input
 #2980B9 	-> theme3, visited-link
 #E74C3C 	-> highlight, title
 red 		-> error
+orange		-> warning
 green 		-> success
+
+'Helvetica' -> text_font, title_font

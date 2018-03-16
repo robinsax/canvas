@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
 
-A full-stack web application framework written in Python and JavaScript.
+A full-stack web application framework with modern front-end toolchain.
 
 ## What's it like?
 
