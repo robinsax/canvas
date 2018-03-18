@@ -20,7 +20,7 @@ def json_serializer(*types):
 	return json_serializer_wrap
 
 @export
-def json_deserializer():
+def json_deserializer(func):
 	_deserializers.append(func)
 	return func
 
@@ -40,7 +40,7 @@ def serialize_json(obj, fallback=None):
 	return json.dumps(obj, default=serialize_default)
 
 @export
-def deserialize_json():
+def deserialize_json(data):
 	def deserialize_hook(dct):
 		for key, value in dct.items():
 			for deserializer in _deserializers:

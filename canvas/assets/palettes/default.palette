@@ -10,4 +10,8 @@ red 		-> error
 orange		-> warning
 green 		-> success
 
-'Helvetica' -> text_font, title_font
+'Helvetica' -> text-font, title-font
+
+1000px 		-> breakpoint1
+700px		-> breakpoint2
+450px		-> breakpoint3

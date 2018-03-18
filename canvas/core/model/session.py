@@ -12,6 +12,7 @@ from ...exceptions import ValidationErrors
 from ...utils import logger
 from ...configuration import config
 from .columns import _sentinel
+from .model import Model
 from .constraints import get_constraint
 from .sql_factory import (
 	table_creation,
@@ -104,7 +105,7 @@ class _Session:
 			log.debug(sql)
 
 			if len(values) > 0:
-				log.debug(f'\t{str(values)}')
+				log.debug('\t%s'%str(values))
 			
 		try:
 			self.cursor.execute(sql, values)
@@ -148,7 +149,7 @@ class _Session:
 		order = (order_by, not descending) if order_by is not None else None		
 		self.execute(*selection(target, conditions, order))
 
-		if hasattr(target, '__schema__'):
+		if issubclass(target, Model):
 			if one:
 				row = self.cursor.fetchone()
 				if row is None:

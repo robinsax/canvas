@@ -9,6 +9,7 @@ import execjs
 
 from ..exceptions import AssetError
 from ..namespace import export
+from .plugins import get_path_occurrences
 from .. import HOME
 
 _node_interface = None

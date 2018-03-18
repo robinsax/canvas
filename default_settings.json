@@ -21,6 +21,7 @@
 	},
 	"customization": {
 		"asset_route_prefix": "assets",
+		"api_route_prefix": "api",
 		"defer_scripts": true,
 		"palette": "default"
 	}

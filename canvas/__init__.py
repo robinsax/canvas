@@ -1,6 +1,6 @@
 #	coding utf-8
 '''
-canvas is a full-stack web application framework designed to make complex web
+canvas is a full-stack web application framework designed to make modern web
 application development easier.
 
 This is its back end interface and engine.
@@ -18,7 +18,4 @@ HOME = os.path.abspath(
 	)
 )
 
-from . import (
-	core as _core, 
-	tests as _tests
-)
+from . import core, launchers, tests

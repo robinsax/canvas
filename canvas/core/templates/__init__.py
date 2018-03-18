@@ -45,7 +45,7 @@ def create_render_environment():
 def render_template(template_path, params=dict(), minify=True):
 	template = _render_environment.get_template(template_path)
 	
-	params['__secrets__'] = dict()
+	params['__secrets__'] = dict()	#	TODO: Not using?
 	rendered = template.render(params)
 	
 	if minify:

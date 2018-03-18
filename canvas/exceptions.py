@@ -46,6 +46,10 @@ class UnadaptedType(Exception):
 	pass
 
 @export
+class IllegalEndpointRoute(Exception):
+	pass
+
+@export
 class ValidationErrors(Exception):
 	
 	def __init__(self, errors_or_summary, summary=None):
@@ -61,6 +65,7 @@ class HTTPException(Exception):
 		super().__init__(message)
 		self.title, self.status_code = title, status_code
 		self.headers = headers
+		self.diag = (self,)
 
 	def response(self):
 		return self.title, self.status_code, self.headers, None
@@ -108,5 +113,6 @@ class UnprocessableEntity(HTTPException):
 @export
 class InternalServerError(HTTPException):
 
-	def __init__(self):
+	def __init__(self, reraise=False):
 		super().__init__('Internal Server Error', 500)
+		self.reraise = reraise

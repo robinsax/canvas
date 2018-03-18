@@ -5,8 +5,10 @@ Default extension, helper, and filter definitions.
 
 import re
 
+from jinja2 import Markup
 from jinja2.ext import Extension
 
+from ..styles import compile_less
 from .jinja_extensions import ExtendsAliasTag
 from . import jinja_extension, template_filter, template_helper
 
@@ -39,8 +41,16 @@ class OverlayTag(Extension):
 		return node
 
 @template_filter
+def markup(string):
+	return Markup(string)
+
+@template_filter
 def normalize_whitespace(string):
 	return re.sub(r'\s+', ' ', string).strip()
+
+@template_filter
+def less(source):
+	return compile_less(source)
 
 @template_helper
 def asset_url(subroute):

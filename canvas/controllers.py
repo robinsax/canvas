@@ -3,6 +3,7 @@
 Controller registration and management.
 '''
 
+from .exceptions import IllegalEndpointRoute
 from .namespace import export
 from .utils import logger, patch_type
 from .core.request_context import RequestContext
@@ -12,11 +13,9 @@ _definitions = []
 
 log = logger(__name__)
 
-class Controller:
-	pass
+class Controller: pass
 
-class Endpoint(Controller):
-	pass
+class Endpoint(Controller): pass
 
 class Page(Controller):
 
@@ -51,6 +50,10 @@ def controller(*routes, _destiny=Controller, _attrs=dict()):
 
 @export
 def endpoint(*routes):
+	route_prefix = '/%s'%config.customization.api_route_prefix
+	for route in routes:
+		if not route.startswith(route_prefix):
+			raise IllegalEndpointRoute(route)
 	return controller(*routes, _destiny=Endpoint)
 
 @export
@@ -58,6 +61,9 @@ def page(*routes, template=None):
 	return controller(*routes, _destiny=Page, _attrs={
 		'template': template
 	})
+
+@page('/', template='welcome.html')
+class DefaultWelcomePage: pass
 
 def create_controllers():
 	route_map = dict()
@@ -75,6 +81,6 @@ def create_controllers():
 		for route in definition.routes:
 			route_map[route] = instance
 
-		log.debug('Created controller %s\n\tVerbs: %s, Routes: %s', instance, supported_verbs, definition.routes)
+		log.debug('Created controller %s (Verbs: %s, Routes: %s)', instance.__class__.__name__, supported_verbs, definition.routes)
 	
 	return route_map

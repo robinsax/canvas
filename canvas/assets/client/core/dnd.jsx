@@ -92,7 +92,7 @@ class Drop {
 	}
 }
 
-@loader.attach
+@part
 class DragAndDropPart {
 	constructor(core) {
 		core.Drag = Drag;
@@ -102,7 +102,7 @@ class DragAndDropPart {
 		core.drop = (el, params) => { return new Drop(el, params); };
 	}
 	
-	init(core) {
+	initDOM(core) {
 		core.page.on({
 			mouseup: () => {
 				if (Drag.current != null){

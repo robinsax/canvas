@@ -23,6 +23,7 @@ from .plugins import get_path_occurrences
 from .routing import controller_at
 from .request_parsers import parse_request
 from .request_context import RequestContext
+from .request_errors import get_error_response
 from .styles import compile_less
 from .node_interface import transpile_jsx
 from .dictionaries import (
@@ -140,10 +141,12 @@ def serve_controller(request):
 		response = handler(context)
 	except BaseException as ex:
 		cleanup()
-		if isinstance(ex, HTTPException):
-			raise ex
 		report_error(ex, context)
-		raise InternalServerError() from None
+		diag_ex = ex
+		if not isinstance(ex, HTTPException):
+			ex = InternalServerError(True)
+		ex.diag = (diag_ex, context)
+		raise ex
 	
 	response = parse_response_tuple(response)
 	cleanup(response)
@@ -174,15 +177,20 @@ def handle_request(environ, start_response):
 	request = BaseRequest(environ)
 	route = request.path
 
-	try:
-		if route.startswith('/%s'%config.customization.asset_route_prefix):
+	if route.startswith('/%s'%config.customization.asset_route_prefix):
+		try:
 			response = serve_asset(request)
-		else:	
+		except HTTPException as ex:
+			if ex.status_code > 499:
+				report_error(ex)
+			response = parse_response_tuple(ex.response())
+	else:
+		try:
 			response = serve_controller(request)
-	except HTTPException as ex:
-		if ex.status_code > 499:
-			report_error(ex)
-		response = parse_response_tuple(ex.response())
+		except HTTPException as ex:
+			if ex.status_code > 499 and not (isinstance(ex, InternalServerError) and ex.reraise):
+				report_error(ex)
+			response = parse_response_tuple(get_error_response(route, *ex.diag))
 	
 	response.headers['Server'] = _identifier
 	return response(environ, start_response)

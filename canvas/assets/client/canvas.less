@@ -11,7 +11,7 @@
 .container(){
 	width: 100%;
 	height: 100%;
-	font-size: 12pt;
+	background-color: @background;
 }
 
 html {
@@ -19,11 +19,11 @@ html {
 	
 	body {
 		.container();
-		position: relative;
-		background-color: @background;
+		//position: relative;
 		color: @text;
 
-		font-family: @text_font;
+		font-family: @text-font;
+		font-size: 12pt;
 
 		& > .meta {
 			display: none;
@@ -65,16 +65,16 @@ p, li {
 }
 
 .subtext {
-	color: @text_subtext;
+	color: @subtext;
 	font-size: 10pt;
 }
 
 //	Heading styles.
 h1, h2, h3, h4 {
-	margin: 1.5em 0px;
+	margin: 0.75em 0em;
 	font-size: 40pt; 
 	font-weight: normal;
-	font-family: @title_font;
+	font-family: @title-font;
 	color: @title;
 }
 h2 { font-size: 25pt; }
@@ -114,7 +114,7 @@ h4 { font-size: 16pt; }
 		margin-bottom: 1em;
 
 		input, textarea {
-			border: 2px solid @error_level_error;
+			border: 2px solid @error;
 		}
 
 		.error-desc {
@@ -138,17 +138,16 @@ h4 { font-size: 16pt; }
 		border: none;
 		font-size: 12pt;
 		vertical-align: top;
-		color: @misc_text;
-		background-color: @misc_background1;
+		color: @text;
+		background-color: @input;
 		transition: color .5s, background-color .5s;
 
 		&.error-highlight {
-			color: @error_level_label;
-			background-color: @error_level_error;
+			background-color: @error;
 		}
 
 		&:hover {
-			background-color: @misc_background2;
+			background-color: @focused-input;
 		}
 	}
 
@@ -217,7 +216,7 @@ h4 { font-size: 16pt; }
 		padding: 10px;
 		top: 50%;
 		left: 50%;
-		background-color: @base_background2;
+		background-color: @background;
 		transform: translate(-50%, -50%);
 		cursor: default;
 
@@ -282,18 +281,18 @@ h4 { font-size: 16pt; }
 	padding: 0px 15px;
 	font-size: 15pt;
 	line-height: 40px;
-	color: @base_background1;
-	background-color: @base_theme1;
-	border-bottom: 4px solid @base_theme1;
+	color: @background;
+	background-color: @theme1;
+	border-bottom: 4px solid @theme1;
 	transition: .1s color;
 	text-align: center;
 	text-decoration: none;
 	
 	&.confirm {
-		background-color: @error_level_success;
+		background-color: @success;
 	}
 	&.cancel {
-		background-color: @error_level_error;
+		background-color: @error;
 	}
 
 	&.texted:not(.icon-right) .icon {
@@ -304,12 +303,12 @@ h4 { font-size: 16pt; }
 	}
 
 	&.open {
-		background-color: @base_theme2;
+		background-color: @theme2;
 	}
 	
 	&:hover {
 		cursor: pointer;
-		border-bottom: 4px solid @base_theme2;
+		border-bottom: 4px solid @theme2;
 	}
 
 	&.small {
@@ -340,11 +339,11 @@ h4 { font-size: 16pt; }
 	margin: 0px 10px;
 	font-size: 12px;
 	text-decoration: none;
-	color: @text_subtext;
+	color: @subtext;
 	transition: color 0.5s;
 	
 	&:hover {
-		color: @base_highlight;
+		color: @highlight;
 	}
 }
 
@@ -359,7 +358,7 @@ h4 { font-size: 16pt; }
 	vertical-align: top;
 	padding: 15px;
 	margin: 15px;
-	background-color: @base_background1;
+	background-color: @background;
 	overflow-wrap: break-word;
 
 	&.flat {
@@ -388,7 +387,7 @@ h4 { font-size: 16pt; }
 		width: e('calc(25% - 30px)');
 	}
 
-	@media screen and (max-width: @breakpoint_1){
+	@media screen and (max-width: @breakpoint1){
 		&.col-12,
 		&.col-9 {
 			width: e('calc(100% - 30px)');
@@ -407,7 +406,7 @@ h4 { font-size: 16pt; }
 		}
 	}
 
-	@media screen and (max-width: @breakpoint_2) {
+	@media screen and (max-width: @breakpoint2) {
 		&.col-6 {
 			width: e('calc(100% - 30px)');
 		}
@@ -417,7 +416,7 @@ h4 { font-size: 16pt; }
 		}
 	}
 
-	@media screen and (max-width: @breakpoint_3) {
+	@media screen and (max-width: @breakpoint3) {
 		&.col-4,
 		&.col-3 {
 			width: e('calc(100% - 30px)');
@@ -430,8 +429,8 @@ pre {
 	padding: 15px;
 	text-align: left;
 	overflow-x: auto;
-	color: @misc_text;
-	background-color: @misc_background1;
+	color: @text;
+	background-color: @input;
 
 	code {
 		display: inline-block;
@@ -441,7 +440,7 @@ pre {
 }
 
 code {
-	background-color: @misc_background1;
+	background-color: @input;
 }
 
 //	Tooltip area.
@@ -454,8 +453,8 @@ code {
 	padding: 3px 5px;
 	padding-bottom: 0px;
 	border-radius: 2px;
-	background-color: @base_highlight;
-	color: @base_background2;
+	background-color: @highlight;
+	color: @background;
 	transform: translateY(-100%);
 
 	&::after {
@@ -468,7 +467,7 @@ code {
 		line-height: 0px;
 		border-left: 5px solid transparent;
 		border-right: 5px solid transparent;
-		border-top: 5px solid @base_highlight;
+		border-top: 5px solid @highlight;
 	}
 }
 
@@ -480,8 +479,8 @@ code {
 	left: 0px;
 	margin: 20px;
 	padding: 10px;
-	background-color: @base_highlight;
-	color: @base_background2;
+	background-color: @highlight;
+	color: @background;
 	z-index: 1000;
 }
 
