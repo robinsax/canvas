@@ -25,14 +25,25 @@ define_callback_type('pre_init', arguments=False)
 define_callback_type('init', arguments=False)
 define_callback_type('post_init', arguments=False)
 
-_initialized = False
+_route_map = None
+
+@export
+def get_routing():
+	return _route_map
+
+@export
+def get_controllers():
+	controllers = []
+	for route, controller in _route_map.items():
+		if controller not in controllers:
+			controllers.append(controller)
+	return controllers
 
 @export
 def initialize():
-	global _initialized
-	if _initialized:
+	global _route_map
+	if _route_map is not None:
 		return
-	_initialized = True
 
 	invoke_callbacks('pre_init')
 
@@ -45,8 +56,8 @@ def initialize():
 	create_render_environment()
 	load_palette()
 
-	route_map = create_controllers()
-	create_routing(route_map)
+	_route_map = create_controllers()
+	create_routing(_route_map)
 
 	initialize_model()
 

@@ -16,7 +16,7 @@
 		"host": "localhost"
 	},
 	"plugins": {
-		"directory": "../canvas_home",
+		"directory": "../canvas_plugins",
 		"activated": []
 	},
 	"customization": {

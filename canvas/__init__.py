@@ -12,7 +12,7 @@ import os
 import sys
 import inspect
 
-HOME = os.path.abspath(
+__home__ = os.path.abspath(
 	os.path.dirname(
 		os.path.dirname(inspect.getfile(sys.modules[__name__]))
 	)

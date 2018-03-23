@@ -9,7 +9,7 @@ import logging
 from .namespace import export
 from .core.json_io import deserialize_json
 from .core.dictionaries import Configuration
-from . import HOME
+from . import __home__
 
 config = Configuration()
 export('config')(config)
@@ -35,7 +35,7 @@ def plugin_config(plugin_name):
 	return plugin_config
 
 def load_config():
-	with open(os.path.join(HOME, 'settings.json'), 'r') as config_file:
+	with open(os.path.join(__home__, 'settings.json'), 'r') as config_file:
 		local_config = deserialize_json(config_file.read())
 
 	for key, value in local_config.items():

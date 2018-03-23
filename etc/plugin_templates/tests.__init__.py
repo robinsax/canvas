@@ -3,9 +3,6 @@
 Unit tests on the $plugin_name plugin for canvas.
 '''
 
-from canvas.tests import *
-
-#   Create a test suite decorator.
-test = TestSuite('$plugin_name')
+import canvas as cv
 
 pass

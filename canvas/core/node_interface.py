@@ -10,13 +10,13 @@ import execjs
 from ..exceptions import AssetError
 from ..namespace import export
 from .plugins import get_path_occurrences
-from .. import HOME
+from .. import __home__
 
 _node_interface = None
 
 def create_node_interface():
 	global _node_interface
-	partner_path = os.path.join(HOME, 'canvas', 'core', 'node_interface.js')
+	partner_path = os.path.join(__home__, 'canvas', 'core', 'node_interface.js')
 	with open(partner_path) as partner_file:
 		partner_source = partner_file.read()
 	

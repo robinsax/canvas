@@ -50,6 +50,9 @@ class IllegalEndpointRoute(Exception):
 	pass
 
 @export
+class DependencyError(Exception): pass
+
+@export
 class ValidationErrors(Exception):
 	
 	def __init__(self, errors_or_summary, summary=None):

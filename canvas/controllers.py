@@ -49,18 +49,22 @@ def controller(*routes, _destiny=Controller, _attrs=dict()):
 	return controller_wrap
 
 @export
-def endpoint(*routes):
+def endpoint(*routes, **attrs):
 	route_prefix = '/%s'%config.customization.api_route_prefix
 	for route in routes:
 		if not route.startswith(route_prefix):
 			raise IllegalEndpointRoute(route)
-	return controller(*routes, _destiny=Endpoint)
+
+	return controller(*routes, _destiny=Endpoint, _attrs=attrs)
 
 @export
-def page(*routes, template=None):
-	return controller(*routes, _destiny=Page, _attrs={
-		'template': template
-	})
+def page(*routes, template=None, **attrs):
+	if template is None:
+		template = '%s.html'%routes[0][1:]
+	
+	attrs['template'] = template
+
+	return controller(*routes, _destiny=Page, _attrs=attrs)
 
 @page('/', template='welcome.html')
 class DefaultWelcomePage: pass
