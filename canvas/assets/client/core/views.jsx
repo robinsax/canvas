@@ -1,48 +1,93 @@
+class View {
+	constructor(definition) {
+		this.templates = definition.templates || null;
+		this.template = definition.template || null;
+		if (!this.template && this.templates) {
+			this.template = this.templates.root;
+		}
+		this.data = definition.data || {};
+		this.bindings = definition.bindings || (() => {});
+		this.live = definition.live || false;
+	}
+
+	render(target=null) {
+		if (this._rendering){ return; }
+		this._rendering = true;
+		
+		let watch = (data, callback) => {
+			if (data instanceof Array){
+				if (data._watched){
+					return;
+				}
+				data._watched = true;
+				
+				tk.listener(data)
+					.added((item) => {
+						watch(item, callback);
+						callback();
+					})
+					.removed((item) => {
+						callback();
+					});
+			}
+			else if (typeof data == 'object' && data !== null) {
+				if (data._watched){ return; }
+				data._watched = true;
+	
+				tk.iter(data, (property, value) => {
+					watch(value, callback);
+					tk.listener(data, property)
+						.changed((value) => {
+							callback();
+						});
+				});
+			}
+		}
+		let render = () => { this.render(); };
+		let data = this.data;
+
+		if (this.live){
+			watch(this.data, render);
+		}
+
+		let el = tk.template(this.template)
+			.data(this.data).render();
+		
+		ViewPart.instance._resolveData(el);
+
+		this.bindings(el);
+
+		if (this._node){
+			if (!target){
+				target = this._node.parents(false);
+			}
+			this._node.remove();
+		}
+		this._node = el;
+		if (target){
+			target.append(this._node);
+		}
+		
+		this._rendering = false;
+		return this._node;
+	}
+}
+
 @part
 class ViewPart {
 	static instance = null;
 
 	constructor(core) {
+		ViewPart.instance = this;
+
 		this.dataStaging = {};
 		this.dataCount = 0;
 
-		ViewPart.instance = this;
+		core.View = View;
 
-		core.comp = (iterable, callback) => this.comp(iterable, callback);
-		core.view = (definition) => this.view(definition);
-
+		tk.comp = (iterable, callback) => this.comp(iterable, callback);
 		tk.ToolkitSelection.prototype.data = function(){ return this.first(false)._cvData.data; };
 		tk.ToolkitSelection.prototype.index = function(){ return this.first(false)._cvData.index; };
-	}
-
-	_watch(data, callback) {
-		if (data instanceof Array){
-			if (data._watched){
-				return;
-			}
-			data._watched = true;
-			
-			tk.listener(data)
-				.added((item) => {
-					this._watch(item, callback);
-					callback();
-				})
-				.removed((item) => {
-					callback();
-				});
-		}
-		else if (typeof data == 'object' && data !== null) {
-			if (data._watched){ return; }
-			data._watched = true;
-
-			tk.iter(data, (property, value) => {
-				this._watch(value, callback);
-				tk.listener(data, property)
-					.changed((value) => {
-						callback();
-					});
-			});
-		}
 	}
 
 	_resolveData(root) {
@@ -75,54 +120,5 @@ class ViewPart {
 			}
 		}
 		return result;
-	}
-
-	view(definition) {
-		definition.binding = definition.binding || {};
-
-		return (ViewClass) => {
-			ViewClass.prototype.data = function(data) {
-				this.data = data;
-				return this;
-			};
-
-			ViewClass.prototype.render = function(target=null) {
-				if (this._rendering){
-					return;
-				}
-				this._rendering = true;
-
-				let render = () => { this.render(); };
-
-				if (definition.live){
-					ViewPart.instance._watch(this.data, render);
-				}
-		
-				let el = tk.template(definition.template)
-					.data(this.data).render();
-				
-				ViewPart.instance._resolveData(el);
-		
-				tk.iter(definition.binding, (selector, callback) => {
-					el.children(selector).iter((el, i) => {
-						callback.apply(this, [this.data, el, i]);
-					});
-				});
-		
-				if (this._node){
-					if (!target){
-						target = this._node.parents(false);
-					}
-					this._node.remove();
-				}
-				this._node = el;
-				if (target){
-					target.append(this._node);
-				}
-				
-				this._rendering = false;
-				return this._node;
-			};
-		}
 	}
 }

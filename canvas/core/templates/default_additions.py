@@ -3,9 +3,11 @@
 Default extension, helper, and filter definitions.
 '''
 
+import os
 import re
 
 from jinja2 import Markup
+from jinja2.nodes import Extends, Const
 from jinja2.ext import Extension
 
 from ..styles import compile_less
@@ -49,8 +51,8 @@ def normalize_whitespace(string):
 	return re.sub(r'\s+', ' ', string).strip()
 
 @template_filter
-def less(source):
-	return compile_less(source)
+def less(source, minify=True):
+	return markup(compile_less(source, minify=minify))
 
 @template_helper
 def asset_url(subroute):

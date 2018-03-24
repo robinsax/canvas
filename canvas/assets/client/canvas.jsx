@@ -5,7 +5,7 @@
 	}
 
 	//	cv::include core/views
-	//	cv::include core/components
+	//	cv::include core/pages
 	//	cv::include core/dnd
 
 	class Core {

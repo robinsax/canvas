@@ -35,6 +35,14 @@ def load_palette():
 	log.debug('Loaded palette: %s', occurrences[-1])
 
 	declarations = []
+	for match in re.finditer(r'@font\s+(.*?)\s+(.*)', palette_data):
+		name, filename = match.group(1), match.group(2)
+		declarations.append('''
+			@font-face {
+				font-family: %s;
+				src: url('/assets/fonts/%s');
+			}
+		'''%(name, filename))
 	for match in re.finditer(r'(.*?)\s+->\s+(.*?)\r*(?:\n|$|&)', palette_data):
 		value, labels = match.group(1), match.group(2)
 		for label in [l.strip() for l in labels.split(',')]:
@@ -42,10 +50,13 @@ def load_palette():
 	_less_header = '\n'.join(declarations) + '\n'
 
 @export
-def compile_less(source):
+def compile_less(source, minify=None):
 	source = _less_header + source
 
+	if minify is None:
+		minify= not config.development.debug
+
 	try:
-		return lessc(io.StringIO(source), minify=not config.development.debug)
+		return lessc(io.StringIO(source), minify=minify)
 	except CompilationError as ex:
 		raise AssetError(str(ex)) from None

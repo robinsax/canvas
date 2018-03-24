@@ -12,7 +12,7 @@ from ..plugins import get_path_occurrences
 
 log = logger(__name__)
 
-_extensions = []
+_extensions = ['jinja2.ext.do']
 _helpers = dict()
 _filters = dict()
 _render_environment = None

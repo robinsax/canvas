@@ -190,7 +190,7 @@ def handle_request(environ, start_response):
 		except HTTPException as ex:
 			if ex.status_code > 499 and not (isinstance(ex, InternalServerError) and ex.reraise):
 				report_error(ex)
-			response = parse_response_tuple(get_error_response(route, *ex.diag))
+			response = parse_response_tuple(get_error_response(ex, route, *ex.diag))
 	
 	response.headers['Server'] = _identifier
 	return response(environ, start_response)
