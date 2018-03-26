@@ -12,23 +12,26 @@ from ..namespace import export
 from ..utils import logger
 from ..configuration import config
 from .. import __home__
+from .json_io import deserialize_json
 
 log = logger(__name__)
 
 def plugin_base_path(name):
 	name = name.split('.')[-1]
-	return os.path.join(__home__, config.plugins.directory, 'canvas-pl-%s'%name)
+	return os.path.join(__home__, config.plugins.directory, 'cvpl-%s'%name)
 
 def load_plugins():
 	from .. import plugins as plugins_namespace
 
 	def load_plugin(name, dependency_of=None):
 		path = plugin_base_path(name)
-		dependency_path = os.path.join(path, 'dependencies.txt')
+		config_path = os.path.join(path, 'plugin.json')
 
-		if os.path.exists(dependency_path):
-			with open(dependency_path) as dependency_file:
-				dependencies = [l.strip() for l in dependency_file.readlines()]
+		if os.path.exists(config_path):
+			with open(config_path) as config_file:
+				raw_plugin_config = deserialize_json(config_file.read())
+				if 'dependencies' in raw_plugin_config:
+					dependencies = [l.strip() for l in raw_plugin_config['dependencies']]
 			
 			for dependency in dependencies:
 				load_plugin(dependency, name)

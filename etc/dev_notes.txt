@@ -1,0 +1,10 @@
+Command line invocations:
+
+FIRST: Variable init. levels on launch.
+
+--version					Display the version.
+--help						Show options.
+--init						Install dependencies, incl. Node and Python packages. Create settings.json. Guide through setup. Init. DB.
+--get-plugin <name>			Install a plugin and its dependencies from hub.
+--create-plugin <name>		Create a plugin.
+--prod-conf	<variant>		Set up a production service configuration.

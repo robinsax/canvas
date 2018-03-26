@@ -18,7 +18,7 @@ export('config')(config)
 def plugin_config(plugin_name):
 	from .core.plugins import plugin_base_path
 
-	config_path = os.path.join(plugin_base_path(plugin_name), 'settings.json')
+	config_path = os.path.join(plugin_base_path(plugin_name), 'plugin.json')
 	with open(config_path, 'r') as config_file:
 		plugin_config = Configuration(deserialize_json(config_file.read()))
 		
