@@ -35,7 +35,7 @@ def load_palette():
 	log.debug('Loaded palette: %s', occurrences[-1])
 
 	declarations = []
-	for match in re.finditer(r'@font\s+(.*?)\s+(.*)', palette_data):
+	for match in re.finditer(r'::font\s+(.*?)\s+(.*)', palette_data):
 		name, filename = match.group(1), match.group(2)
 		declarations.append('''
 			@font-face {

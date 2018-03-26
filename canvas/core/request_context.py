@@ -34,7 +34,11 @@ class RequestContext(AttributedDict):
 			current = _request_contexts.pop(ident)
 		return current
 
+	def __init__(self, source):
+		super().__init__(source)
+		self.indexed = ['request', 'cookie', 'session']
+
 	def __getitem__(self, item):
-		if isinstance(item, int):
-			return (self['request'], self['cookie'], self['session'])[:item]
+		if isinstance(item, (int, slice)):
+			return [self[k] for k in self.indexed][item]
 		return super().__getitem__(item)

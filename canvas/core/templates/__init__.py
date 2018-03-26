@@ -13,6 +13,7 @@ from ..plugins import get_path_occurrences
 log = logger(__name__)
 
 _extensions = ['jinja2.ext.do']
+_globals = dict()
 _helpers = dict()
 _filters = dict()
 _render_environment = None
@@ -21,6 +22,13 @@ _render_environment = None
 def jinja_extension(extension):
 	_extensions.append(extension)
 	return extension
+
+@export
+def template_global(item, name=None):
+	if name is None:
+		name = item.__name__
+	_globals[name] = item
+	return item
 
 @export
 def template_helper(func):
@@ -39,8 +47,9 @@ def create_render_environment():
 	template_dirs = get_path_occurrences('assets', 'templates', dir=True)
 	log.debug('Template search paths: %s'%template_dirs)
 	_render_environment = CanvasJinjaEnvironment(
-		template_dirs, 
+		template_dirs,
 		_extensions,
+		_globals,
 		_filters, 
 		_helpers
 	)
@@ -49,7 +58,10 @@ def create_render_environment():
 def render_template(template_path, params=dict(), minify=True):
 	template = _render_environment.get_template(template_path)
 	
-	params['__secrets__'] = dict()	#	TODO: Not using?
+	params.update({
+		'global_dependencies': ['lib/toolkit.min.js', 'canvas.js', 'canvas.css'],
+		'icon_stylesheet': 'font-awesome.min.css'
+	})
 	rendered = template.render(params)
 	
 	if minify:

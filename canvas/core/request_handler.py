@@ -35,7 +35,7 @@ log = logger(__name__)
 
 _identifier = 'canvas/%s Python/%s'%(
 	canvas_version,
-	python_version
+	python_version()
 )
 _asset_cache = dict()
 

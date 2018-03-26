@@ -4,31 +4,53 @@
 		parts.push(Part);
 	}
 
+	//	cv::include core/requests
 	//	cv::include core/views
-	//	cv::include core/pages
+	//	cv::include core/controllers
 	//	cv::include core/dnd
 
 	class Core {
 		constructor(debug){
 			this.debug = debug;
+			this.initialized = false;
+			this.readyCallbacks = [];
+
 			let head = tk('head');
 			this.route = head.attr('cv-route');
 			head.attr('cv-route', null);
 			
-			this._parts = [];
-			tk.iter(parts, (Part) => { this._parts.push(new Part(this)); });
+			this._parts = tk.comp(parts, (Part) => new Part(this));
 			
 			tk.init(() => { this.initDOM(); });
 			tk.inspection(() => { this.inspectDOM(); });
 			tk.log('canvas initialized');
 		}
 
-		initDOM(){
-			this.page = tk('body > .page');
-			
-			tk.iter(this._parts, (part) => {
-				if (part.initDOM){ part.initDOM(this); }
+		set flashMessage(message) {
+			let el = tk.tag('aside', {class: 'flash-message'}, message);
+			tk('body').append(el);
+			tk.timeout(4000, () => {
+				el.remove();
 			});
+		}
+
+		initDOM(){
+			this.initialized = true;
+			this.page = tk('body > .page');
+			this.header = tk('body > .header');
+			
+			tk.iter(this.readyCallbacks, (callback) => {
+				callback();
+			});
+		}
+
+		onceReady(callback) {
+			if (this.initialized){
+				callback();
+			}
+			else {
+				this.readyCallbacks.push(callback);
+			}
 		}
 
 		inspectDOM(){

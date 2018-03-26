@@ -1,7 +1,3 @@
-{% set global_dependencies = ['lib/toolkit.min.js', 'canvas.js', 'canvas.css'] %}
-
-{% block logic %}{% endblock %}
-
 <!DOCTYPE html>
 <html lang="en"{% block html_attributes %}{% endblock %}>
 	<head {% if config.development.debug %}cv-debug {% endif %} cv-route="{{ __route__ }}" {% block head_attributes %}{% endblock %}>
@@ -12,6 +8,8 @@
 			<title>{{ full_title|default('%s - %s'%(title_prefix|default('canvas'), title|default('New Page'))) }}</title>
 			<meta name="description" content="{{ (description|default('The canvas framework'))|normalize_whitespace }}">
 			<link rel="icon" type="image/png" href="{{ h.asset_url('media/site_icon.png') }}"/>
+
+			<link rel="stylesheet" type="text/css" href="{{ h.asset_url('lib/%s'%icon_stylesheet) }}"/>
 		
 			{% block styles %}{% endblock %}
 
@@ -34,6 +32,7 @@
 			</div>
 		{% endblock %}
 		<div class="meta">
+			<i class="fa fa-band-aid"></i>
 			{% block meta_body %}{% endblock %}
 		</div>
 	</body>

@@ -5,6 +5,7 @@ Controller registration and management.
 
 from .exceptions import IllegalEndpointRoute
 from .namespace import export
+from .configuration import config
 from .utils import logger, patch_type
 from .core.request_context import RequestContext
 from .core.responses import create_webpage

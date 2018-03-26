@@ -63,7 +63,7 @@ class ExtendsAliasTag(Extension):
 		return node
 
 class CanvasJinjaEnvironment(Environment):
-	def __init__(self, target_paths, extensions, filters, helpers):
+	def __init__(self, target_paths, extensions, globs, filters, helpers):
 		super().__init__(
 			loader=DeepLoader(target_paths),
 			autoescape=select_autoescape(['html', 'xml']),
@@ -73,6 +73,7 @@ class CanvasJinjaEnvironment(Environment):
 		self.target_paths = target_paths
 		self.filters.update(filters)
 
+		self.globals.update(globs)
 		self.globals.update(
 			config=config,
 			h=helpers

@@ -61,7 +61,7 @@ def get_path_occurrences(*path_parts, include_base=True, dir=False):
 			occurrences.insert(0, plugin_path)
 	
 	if include_base:
-		base_instance_path = os.path.join(__home__, 'canvas', path)
+		base_instance_path = os.path.join(__home__, path)
 		if path_check(base_instance_path):
 			occurrences.insert(0, base_instance_path)
 
