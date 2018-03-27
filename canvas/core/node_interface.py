@@ -4,13 +4,12 @@ Node interface.
 '''
 
 import os
-import re
 import execjs
 
 from ..exceptions import AssetError
 from ..namespace import export
-from .plugins import get_path_occurrences
 from .. import __home__
+from .asset_directives import apply_directives
 
 _node_interface = None
 
@@ -27,17 +26,7 @@ def transpile_jsx(source):
 	if not isinstance(source, str):
 		source = source.decode()
 	
-	for include_directive in re.finditer(r'//\s+cv::include\s+(.+)\s*?\n', source):
-		include = '%s.jsx'%include_directive.group(1).strip()
-
-		occurrences = get_path_occurrences('assets', 'client', include)
-		if len(occurrences) == 0:
-			raise AssetError('Illegal include: %s'%include)
-		
-		with open(occurrences[0], 'r') as include_file:
-			include_source = include_file.read()
-
-		source = source.replace(include_directive.group(0), include_source + '\n')
+	source = apply_directives(source)
 	
 	try:
 		source = _node_interface.call('transpile', source)

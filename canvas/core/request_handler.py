@@ -20,7 +20,7 @@ from ..exceptions import (
 from ..utils import logger, format_exception
 from ..configuration import config
 from .plugins import get_path_occurrences
-from .routing import controller_at
+from .routing import resolve_route
 from .request_parsers import parse_request
 from .request_context import RequestContext
 from .request_errors import get_error_response
@@ -84,7 +84,7 @@ def retrieve_asset(path, recall=False):
 def serve_controller(request):
 	#	Resolve path.
 	route = request.path
-	controller = controller_at(route)
+	controller, variables = resolve_route(route)
 
 	#	Resolve verb.
 	verb = request.method.lower()
@@ -124,6 +124,7 @@ def serve_controller(request):
 		'session': None,
 		'request': request_parameters,
 		'headers': request.headers,
+		'route': variables,
 		'url': {
 			'full': request.url,
 			'route': route

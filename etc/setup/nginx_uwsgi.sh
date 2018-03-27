@@ -1,15 +1,11 @@
 #   Full configuration for hosting with uWSGI + nginx. Takes <user> <domain>.
-#
-#	Run ./etc/scripts/install_dependencies.sh first.
 
 apt-get update
-/usr/bin/yes | apt-get install uwsgi nginx
-
-python3 ./etc/scripts/write_setup_sql.py | sudo -u postgres psql
+apt-get install uwsgi nginx -y
 
 #	Configure uWSGI.
-cp ./etc/configs/uwsgi_config.ini ./canvas_uwsgi.ini
-cat ./etc/configs/uwsgi_config.conf | sed "s/@user/$1/g" > /etc/init/canvas.conf
+cp ./etc/configurations/canvas_uwsgi.ini ./canvas_uwsgi.ini
+cat ./etc/configs/canvas_uwsgi.conf | sed "s/@user/$1/g" > /etc/init/canvas.conf
 
 #   Configure nginx.
 cat ./etc/configs/nginx_config | sed "s/@user/$1/g" | sed "s/@domain/$2/g" > /etc/nginx/sites-available/canvas

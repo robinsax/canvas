@@ -6,7 +6,6 @@
 
 	//	cv::include core/requests
 	//	cv::include core/views
-	//	cv::include core/routing
 	//	cv::include core/dnd
 
 	class Core {

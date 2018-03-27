@@ -16,6 +16,7 @@ from ..exceptions import (
 from ..namespace import export
 from ..configuration import config
 from ..utils import logger
+from .asset_directives import apply_directives
 from .plugins import get_path_occurrences
 
 log = logger(__name__)
@@ -51,7 +52,7 @@ def load_palette():
 
 @export
 def compile_less(source, minify=None):
-	source = _less_header + source
+	source = _less_header + apply_directives(source)
 
 	if minify is None:
 		minify= not config.development.debug

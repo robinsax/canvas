@@ -15,6 +15,7 @@ class ViewPart {
 		core.view.event = (on, selector=null) => this.viewEvent(on, selector);
 		core.view.create = (target, View) => this.createView(target, View);
 		core.view.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
+		core.placeViews = (routing) => this.placeViews(routing);
 
 		tk.comp = (iterable, callback) => this.comp(iterable, callback);
 		tk.ToolkitSelection.prototype.data = function(){ return this.first(false)._cvData.data; };
@@ -176,6 +177,18 @@ class ViewPart {
 		else {
 			this.core.onceReady(create);
 		}
+	}
+
+	placeViews(routing) {
+		tk.iter(routing, (route, definition) => {
+			if (route == '*' || route == this.core.route){
+				tk.iter(definition, (selector, views) => {
+					tk.iter(views, (ViewClass) => {
+						this.core.view.create(selector, ViewClass);
+					});
+				});
+			}
+		});
 	}
 
 	viewEvent(on, selector) {

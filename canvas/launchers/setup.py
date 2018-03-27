@@ -105,7 +105,9 @@ def launch_apply_config(args):
 			fail()
 
 	with step('Creating plugin folder...'):
-		pass
+		path = os.path.join(__home__, config.plugins.directory)
+		if not os.exists(path):
+			os.mkdir(path)
 
 	return True
 	
