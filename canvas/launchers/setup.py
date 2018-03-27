@@ -51,7 +51,7 @@ def launch_setup(args):
 		with open(os.path.join(__home__, 'required_packages'), 'r') as pkg_file:
 			packages = pkg_file.readlines()
 
-		proc = Popen(['npm', 'install', '-g'] + packages, 
+		proc = Popen(['npm', 'install'] + packages, 
 			shell=True, 
 			stdout=PIPE, 
 			stderr=PIPE
