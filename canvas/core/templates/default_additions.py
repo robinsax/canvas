@@ -38,7 +38,7 @@ class OverlayTag(Extension):
 				overridden_template = Const('%s?%d'%(rel_path, i + 1))
 
 		if overridden_template is None:
-			raise TemplateOverlayError(f'{template_path}: nothing to overlay')
+			raise TemplateOverlayError('%s: nothing to overlay'%template_path)
 		node.template = overridden_template
 		return node
 
