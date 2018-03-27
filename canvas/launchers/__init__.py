@@ -67,6 +67,6 @@ def launch(launcher_param, *args):
 			initialize()
 
 		if not launcher(args):
-			print('Usage: --%s %s'%(launcher_param, launcher.__info__.get('argspec', '')))
+			print('Usage: %s %s'%(launcher_param, launcher.__info__.get('argspec', '')))
 
 from . import plugin_creation, setup
