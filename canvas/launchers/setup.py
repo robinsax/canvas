@@ -6,11 +6,11 @@ Setup and configuration.
 import os
 import pip
 import sys
+import json
 import shutil
 
 from subprocess import Popen, PIPE
 
-from ..core.json_io import deserialize_json, serialize_json
 from ..utils import format_exception
 from .. import __home__
 from . import launcher
