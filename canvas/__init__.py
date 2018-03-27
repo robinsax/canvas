@@ -18,4 +18,8 @@ __home__ = os.path.abspath(
 	)
 )
 
-from . import core, launchers, tests
+try:
+	from . import core, tests
+except ImportError: pass
+
+from . import launchers
