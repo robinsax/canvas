@@ -9,8 +9,11 @@ class ViewPart {
 		this.dataStaging = {};
 		this.dataCount = 0;
 
-		core.view = (definition) => this.view(definition);
+		core.views = this.views = {};
+
+		core.view = (name, definition) => this.view(name, definition);
 		core.view.event = (on, selector=null) => this.viewEvent(on, selector);
+		core.view.create = (target, View) => this.createView(target, View);
 		core.view.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
 
 		tk.comp = (iterable, callback) => this.comp(iterable, callback);
@@ -50,11 +53,12 @@ class ViewPart {
 		return result;
 	}
 
-	view(definition) {
+	view(name, definition) {
 		return (ViewClass) => {
 			class AsView extends ViewClass {
 				constructor() {
 					super(...arguments);
+					this._name = name;
 					this.state = this.state || definition.state ||  {};
 					this.templates = this.templates || definition.templates || null;
 					this.template = this.template || definition.template || null;
@@ -124,11 +128,13 @@ class ViewPart {
 
 					ViewPart.instance._resolveData(el);
 
-					tk.iter(ViewClass.prototype._events, (eventDesc) => {
-						el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
-							this[eventDesc.key](tel, event);
+					if (ViewClass.prototype._events) {
+						tk.iter(ViewClass.prototype._events, (eventDesc) => {
+							el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
+								this[eventDesc.key](tel, event);
+							});
 						});
-					});
+					}
 					
 					if (this._node){
 						if (!target){
@@ -146,13 +152,29 @@ class ViewPart {
 				}
 			}
 
-			if (definition.target) {
-				this.core.onceReady(() => {
-					new AsView().render(tk(definition.target));
-				});
-			}
-
 			return AsView;
+		}
+	}
+
+	createView(target, ViewClass) {
+		let view = new ViewClass();
+		this.views[view._name] = view;
+
+		let create = () => {
+			tk.log('Created view ' + view._name);
+			view.render(tk(target));
+		}
+		
+		if (view.dataSource) {
+			this.core.request('GET', view.dataSource)
+				.success((response) => {
+					view.data = response.data;
+					this.core.onceReady(create);
+				})
+				.send();
+		}
+		else {
+			this.core.onceReady(create);
 		}
 	}
 

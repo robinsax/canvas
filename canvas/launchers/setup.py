@@ -108,3 +108,4 @@ def launch_apply_config(args):
 		pass
 
 	return True
+	

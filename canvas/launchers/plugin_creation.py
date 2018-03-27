@@ -7,6 +7,7 @@ import os
 import sys
 
 from ..utils import logger
+from .. import __home__
 from . import launcher
 
 log = logger(__name__)

@@ -6,7 +6,7 @@ Command line invocation.
 import re
 
 from ..namespace import export
-from .. import __home__, __version__
+from .. import __version__
 
 _launchers = dict()
 
