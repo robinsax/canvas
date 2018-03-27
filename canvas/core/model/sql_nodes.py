@@ -43,12 +43,12 @@ class SQLComparison(SQLExpression):
 			if self.operator == '<>':
 				self.operator = 'IS NOT'
 
-		sql = f'{left_sql} {self.operator} {right_sql}'
+		sql = ' '.join([left_sql, self.operator, right_sql])
 
 		if self.grouped:
-			sql = f'({sql})'
+			sql = '(%s)'%sql
 		if self.inverted:
-			sql = f'NOT {sql}'
+			sql = 'NOT %s'%sql
 		return sql
 
 	def group(self):
@@ -86,10 +86,13 @@ class SQLAggregatorCall(SQLExpression):
 		self.weight = weight
 
 	def as_condition(self, values):
-		return f'WHERE {self.column.name} = (SELECT {self.serialize(values)} FROM {self.column.model.__table__})'
-
+		return ' '.join([
+			'WHERE', self.column.name,
+			'= (SELECT', self.serialize(values), 'FROM', self.column.model.__table__, ')'
+		])
+		
 	def serialize(self, values):
-		return f'{self.func}({self.serialize_node(self.column, values)})'
+		return '%s(%s)'%(self.func, self.serialize_node(self.column, values))
 
 	def __gt__(self, other):
 		return self.weight > other.weight
