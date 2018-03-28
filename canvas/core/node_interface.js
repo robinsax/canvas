@@ -1,3 +1,5 @@
+"use strict";
+
 let babel = require('babel-core');
 
 function transpile(source){
