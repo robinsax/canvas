@@ -94,7 +94,7 @@ def launch_apply_config(args):
 		])
 		proc = Popen('psql --username=postgres --password', shell=True,
 			stdin=PIPE, 
-			stdout=PIPE, 
+			stdout=PIPE,
 			stderr=PIPE
 		)
 
@@ -106,7 +106,7 @@ def launch_apply_config(args):
 
 	with step('Creating plugin folder...'):
 		path = os.path.join(__home__, config.plugins.directory)
-		if not os.exists(path):
+		if not os.path.exists(path):
 			os.mkdir(path)
 
 	return True
