@@ -51,7 +51,7 @@ def launch_setup(args):
 		with open(os.path.join(__home__, 'required_packages'), 'r') as pkg_file:
 			packages = pkg_file.readlines()
 
-		proc = Popen(' '.join(['npm', 'install'] + packages), 
+		proc = Popen(' '.join(['npm', 'install'] + [p.strip() for p in packages]), 
 			shell=True, 
 			stdout=PIPE, 
 			stderr=PIPE
@@ -60,7 +60,7 @@ def launch_setup(args):
 		out, err = proc.communicate()
 		print(out.decode().strip())
 		if proc.returncode > 0:
-			print(err)
+			print(err.decode().strip())
 			fail()
 
 	with step('Creating configuration...'):
