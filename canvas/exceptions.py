@@ -6,48 +6,37 @@ Exception definitions.
 from .namespace import export
 
 @export
-class Failure(Exception):
-	pass
+class Failure(Exception): pass
 
 @export 
-class ConfigurationError(Exception):
-	pass
+class ConfigurationError(Exception): pass
 
 @export
-class AssetError(Exception):
-	pass
+class AssetError(Exception): pass
 
 @export
-class Unrecognized(Exception):
-	pass
+class Unrecognized(Exception): pass
 
 @export
-class TemplateNotFound(Exception):
-	pass
+class TemplateNotFound(Exception): pass
 
 @export
-class TemplateOverlayError(Exception):
-	pass
+class TemplateOverlayError(Exception): pass
 
 @export
-class InvalidSchema(Exception):
-	pass
+class InvalidSchema(Exception): pass
 
 @export
-class InvalidConstraint(Exception):
-	pass
+class InvalidConstraint(Exception): pass
 
 @export
-class InvalidQuery(Exception):
-	pass
+class InvalidQuery(Exception): pass
 
 @export
-class UnadaptedType(Exception):
-	pass
+class UnadaptedType(Exception): pass
 
 @export
-class IllegalEndpointRoute(Exception):
-	pass
+class IllegalEndpointRoute(Exception): pass
 
 @export
 class DependencyError(Exception): pass
@@ -61,6 +50,7 @@ class ValidationErrors(Exception):
 		else:
 			self.errors, self.summary = errors_or_summary, summary
 
+#	TODO: What's the deal with 'message' on these?
 @export
 class HTTPException(Exception):
 
@@ -78,6 +68,13 @@ class BadRequest(HTTPException):
 
 	def __init__(self, message):
 		super().__init__('Bad Request', 400, message)
+
+@export
+class Unauthorized(HTTPException):
+
+	def __init__(self, message='', realm=None):
+		headers = {'WWW-Authenticate': 'Basic realm="%s"'%realm} if realm else None
+		super().__init__('Unauthorized', 401, message, headers)
 
 @export
 class NotFound(HTTPException):

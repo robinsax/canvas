@@ -8,14 +8,14 @@ import re
 from ..exceptions import NotFound
 from ..callbacks import define_callback_type, invoke_callbacks
 
-define_callback_type('router', arguments=[dict])
+define_callback_type('routing', arguments=[dict])
 
 _route_map = dict()
 
 def create_routing(route_map):
 	global _route_map
 
-	invoke_callbacks('router', route_map)
+	invoke_callbacks('routing', route_map)
 
 	_route_map = route_map
 

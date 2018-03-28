@@ -11,7 +11,7 @@ from ...exceptions import (
 	InvalidConstraint,
 	ValidationErrors
 )
-from ...namespace import export
+from ...namespace import export, export_ext
 
 _constraint_map = dict()
 
@@ -19,6 +19,7 @@ _constraint_map = dict()
 def get_constraint(name):
 	return _constraint_map.get(name, None)
 
+@export_ext
 class Constraint:
 
 	def __init__(self, name_postfix, error_message):
@@ -47,6 +48,7 @@ class Constraint:
 				self.column.name: self.error_message
 			})
 
+@export
 class RegexConstraint(Constraint):
 
 	def __init__(self, error_message, regex, ignore_case=False, negative=False):
@@ -80,6 +82,7 @@ class RegexConstraint(Constraint):
 
 		return re.match(self.regex, value, flags=flags) is not None
 
+@export
 class RangeConstraint(Constraint):
 
 	def __init__(self, error_message, max_value=None, min_value=None):
@@ -117,6 +120,7 @@ class RangeConstraint(Constraint):
 
 		return 'CHECK (%s)'%ends
 
+@export
 class UniquenessConstraint(Constraint):
 
 	def __init__(self, error_message='Must be unique'):
@@ -125,6 +129,7 @@ class UniquenessConstraint(Constraint):
 	def as_sql(self):
 		return 'UNIQUE'
 
+@export
 class NotNullConstraint(Constraint):
 
 	def __init__(self, error_message='Required'):

@@ -11,8 +11,9 @@ class _ResolveOther(Exception):
 		self.table = table
 
 from ...exceptions import InvalidSchema
-from ...namespace import export
+from ...namespace import export, export_ext
 from ...utils import patch_type
+from ..request_context import RequestContext
 from .model import Model
 from .columns import define_column_types
 from .sql_factory import table_creation
@@ -20,10 +21,11 @@ from .session import _Session
 
 _object_relational_map = dict()
 
-@export
-def _wipe():
+@export_ext
+def wipe_orm(are_you_sure=False):
 	global _all_orm
-	_all_orm = dict()
+	if are_you_sure:
+		_all_orm = dict()
 
 @export
 def model(table_name, schema, accessors=None):
@@ -77,6 +79,13 @@ def dictize(target, omit=[]):
 @export
 def create_session():
 	return _Session()
+
+@export_ext
+def get_some_session():
+	context = RequestContext.get()
+	if context:
+		return context.session
+	return create_session()
 
 def create_object_relational_mapping():
 	session = create_session()

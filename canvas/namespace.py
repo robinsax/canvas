@@ -5,10 +5,12 @@ Root namespace management.
 
 import sys
 
+from . import ext
+
 _root_namespace = sys.modules['canvas']
 _root_namespace.__all__ = []
 
-_ext_namespace = sys.modules['ext']
+_ext_namespace = sys.modules['canvas.ext']
 _ext_namespace.__all__ = []
 
 def _provide_export(name_or_item, namespace):
@@ -30,5 +32,5 @@ def _provide_export(name_or_item, namespace):
 def export(name_or_item):
 	return _provide_export(name_or_item, _root_namespace)
 
-def export_ext(name_or_item)
+def export_ext(name_or_item):
 	return _provide_export(name_or_item, _ext_namespace)

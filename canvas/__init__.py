@@ -2,8 +2,6 @@
 '''
 canvas is a full-stack web application framework designed to make modern web
 application development easier.
-
-This is its back end interface and engine.
 '''
 
 __version__ = '0.2'
@@ -19,7 +17,8 @@ __home__ = os.path.abspath(
 )
 
 try:
-	from . import core, tests
+	#	These imports will fail if dependencies haven't been installed.
+	from . import core, tests, plugins
 except ImportError: pass
 
 from . import launchers

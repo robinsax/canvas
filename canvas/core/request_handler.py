@@ -19,6 +19,10 @@ from ..exceptions import (
 )
 from ..utils import logger, format_exception
 from ..configuration import config
+from ..callbacks import (
+	define_callback_type, 
+	invoke_callbacks
+)
 from .plugins import get_path_occurrences
 from .routing import resolve_route
 from .request_parsers import parse_request
@@ -38,6 +42,8 @@ _identifier = 'canvas/%s Python/%s'%(
 	python_version()
 )
 _asset_cache = dict()
+
+define_callback_type('request_received', arguments=[RequestContext])
 
 def parse_response_tuple(tpl):
 	if not isinstance(tpl, (list, tuple)):
@@ -139,6 +145,8 @@ def serve_controller(request):
 			response.set_cookie(cookie_key, cookie.serialize())
 	
 	try:
+		invoke_callbacks('request_received', context)
+
 		response = handler(context)
 	except BaseException as ex:
 		cleanup()

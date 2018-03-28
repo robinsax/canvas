@@ -22,7 +22,13 @@ def patch_type(cls, destiny):
 	if issubclass(cls, destiny):
 		return cls
 
-	class Patched(cls, destiny): pass
+	class Patched(cls, destiny):
+		def __repr__(self):
+			return '<%s(%s) at 0x%s>'%(
+				cls.__name__, 
+				destiny.__name__, 
+				hex(id(self))
+			)
 	Patched.__name__ = cls.__name__
 
 	return Patched

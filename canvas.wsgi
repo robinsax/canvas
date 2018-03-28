@@ -1,2 +1,3 @@
 
-from canvas import application
+from canvas import initialize, application
+initialize()
