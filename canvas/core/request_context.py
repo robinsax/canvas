@@ -5,13 +5,13 @@ The request context object definition.
 
 from threading import Lock, get_ident
 
-from ..namespace import export
+from ..namespace import export_ext
 from .dictionaries import AttributedDict
 
 _request_contexts = {}
 _lock = Lock()
 
-@export
+@export_ext
 class RequestContext(AttributedDict):
 
 	@classmethod
