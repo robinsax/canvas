@@ -92,7 +92,7 @@ def launch_apply_config(args):
 			),
 			'\q\n'
 		])
-		proc = Popen(['psql', '--username=postgres', '--password'], shell=True,
+		proc = Popen('psql --username=postgres --password', shell=True,
 			stdin=PIPE, 
 			stdout=PIPE, 
 			stderr=PIPE
