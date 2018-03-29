@@ -12,7 +12,7 @@ before_install:
   - python3 canvas --write-setup-sql | sudo -u postgres psql
 
 script:
-  - sudo coverage run canvas --test
+  - coverage run canvas --test
 
 after_success:
   - coveralls
