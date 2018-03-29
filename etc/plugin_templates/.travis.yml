@@ -11,7 +11,7 @@ before_install:
   - cd canvas
   - ./etc/install_dependencies.sh
   - python3 canvas --init --config plugins.directory=.. "plugins.activated=$plugin_name,""
-  - -u postgres python3 canvas --apply-config
+  - sudo -u postgres python3 canvas --apply-config
   - cd ../cvpl-$plugin_name
   - export PYTHONPATH="../canvas"
 
