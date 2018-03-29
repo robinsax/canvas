@@ -103,7 +103,7 @@ def launch_configuration(args):
 	'description': '''Initialize the database (must be run as a user with 
 		configured peer-authentication).'''
 })
-def launch_apply_config(args):
+def launch_init_db(args):
 	from ..configuration import load_config, config
 	load_config()
 

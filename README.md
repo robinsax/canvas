@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
 
-A full-stack web application framework with modern front-end toolchain.
+A modern full-stack web application framework.
 
 ## What's it like?
 
@@ -20,7 +20,8 @@ import canvas as cv
 	'id': model.Column('uuid', primary_key=True),
 	'name': model.Column('text'),
 	'manifest': model.Column('json')
-}, contructor=True)
+})
+@cv.kw_init('name', 'manifest')
 class Breakfast: pass
 
 #	Create an initialization function that cooks a breakfast.

@@ -23,6 +23,9 @@ def kw_init(*attrs):
 	def create_kw_init(cls):
 		inner_init = cls.__init__
 		def new_init(self, *args, **kwargs):
+			for arg, attr in zip(args, attrs):
+				setattr(self, attr, arg)
+
 			for name, value in list(kwargs.items()):
 				if name not in attrs:
 					raise TypeError('Invalid keyword argument %s'%name)
