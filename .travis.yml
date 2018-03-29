@@ -9,11 +9,10 @@ before_install:
   - sudo ./etc/install_dependencies.sh
   - npm conf set strict-ssl false
   - sudo python3 canvas --init
-  - sudo setfacl -m u:postgres:rw ./settings.json
-  - sudo -u postgres python3 canvas --init-db
-
+  - python3 canvas --write-setup-sql | sudo -u postgres psql
+  
 script:
-  - coverage run canvas --test
+  - sudo coverage run canvas --test
 
 after_success:
   - coveralls

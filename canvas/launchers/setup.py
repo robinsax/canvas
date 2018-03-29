@@ -99,39 +99,24 @@ def launch_configuration(args):
 	print('Wrote %d entries'%len(args))
 	return True
 
-@launcher('init-db', {
-	'description': '''Initialize the database (must be run as a user with 
-		configured peer-authentication).'''
+@launcher('write-setup-sql', {
+	'description': 'Output SQL which can be used to initialize the database.'
 })
 def launch_init_db(args):
 	from ..configuration import load_config, config
 	load_config()
 
-	with step('Setting up Postgres...'):
-		psql_input = '\n'.join([
-			'CREATE USER %s;'%config.database.user,
-			'CREATE DATABASE %s;'%config.database.database,
-			"ALTER USER %s WITH PASSWORD '%s';"%(
-				config.database.user, 
-				config.database.password
-			),
-			'GRANT ALL ON DATABASE %s TO %s;'%(
-				config.database.database,
-				config.database.user
-			),
-			'\q\n'
-		])
-		proc = Popen('psql --username=postgres --password', shell=True,
-			stdin=PIPE, 
-			stdout=PIPE,
-			stderr=PIPE
-		)
-
-		out, err = proc.communicate(psql_input.encode())
-		print(out.decode().strip())
-		if len(err) > 0:
-			print(err.decode().strip())
-			fail()
-	
+	print('\n'.join([
+		'CREATE USER %s;'%config.database.user,
+		'CREATE DATABASE %s;'%config.database.database,
+		"ALTER USER %s WITH PASSWORD '%s';"%(
+			config.database.user, 
+			config.database.password
+		),
+		'GRANT ALL ON DATABASE %s TO %s;'%(
+			config.database.database,
+			config.database.user
+		),
+		'\q\n'
+	]))
 	return True
-	
