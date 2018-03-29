@@ -99,8 +99,9 @@ def launch_configuration(args):
 	print('Wrote %d entries'%len(args))
 	return True
 
-@launcher('apply-config', {
-	'description': 'Perform all setup dependent on configuration state'
+@launcher('init-db', {
+	'description': '''Initialize the database (must be run as a user with 
+		configured peer-authentication).'''
 })
 def launch_apply_config(args):
 	from ..configuration import load_config, config
@@ -131,11 +132,6 @@ def launch_apply_config(args):
 		if len(err) > 0:
 			print(err.decode().strip())
 			fail()
-
-	with step('Creating plugin folder...'):
-		path = os.path.join(__home__, config.plugins.directory)
-		if not os.path.exists(path):
-			os.mkdir(path)
-
+	
 	return True
 	
