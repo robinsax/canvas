@@ -25,9 +25,6 @@ class Model:
 
 	def __create__(self): pass
 
-	def __label__(self, session):
-		return self.id
-
 	def __populate__(self):
 		for name, column in self.__class__.__schema__.items():
 			if isinstance(getattr(self, name), Column):
