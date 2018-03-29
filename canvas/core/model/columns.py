@@ -21,7 +21,7 @@ from .sql_nodes import (
 	SQLComparison,
 	SQLAggregatorCall
 )
-from . import _ResolveOther
+from . import _ResolveOther, _object_relational_map
 
 _sentinel = object()
 _column_types = dict()
@@ -76,12 +76,12 @@ class Column(SQLExpression):
 						target_table = _object_relational_map[target_table]
 						target_column = target_table.__schema__[target_column_name]
 					except:
-						raise InvalidSchema('Malformed foreign key: %s'%self.reference_str)
+						raise InvalidSchema('Malformed foreign key target: %s'%target) from None
 					
 					if not target_table.__created__:
 						raise _ResolveOther(target_table)
 					
-					self.is_fk, self.reference = True, target_table
+					self.is_fk, self.reference = True, target_column
 				else:
 					#	Unpack definition.
 					if isinstance(data, str):

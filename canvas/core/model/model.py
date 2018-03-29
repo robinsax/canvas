@@ -5,6 +5,7 @@ The base model class definition.
 
 from ...namespace import export
 from .columns import Column
+from .joins import Join
 
 @export
 class Model:
@@ -16,11 +17,13 @@ class Model:
 			query = query | (accessor == val).group()
 		return session.query(cls, query, one=True)
 	
-	def __on_load__(self):
-		pass
+	@classmethod
+	def join(cls, *augmentations):
+		return Join('INNER', cls, augmentations)
 
-	def __on_create__(self):
-		pass
+	def __load__(self): pass
+
+	def __create__(self): pass
 
 	def __label__(self, session):
 		return self.id

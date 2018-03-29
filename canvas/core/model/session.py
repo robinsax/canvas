@@ -13,7 +13,9 @@ from ...utils import logger
 from ...configuration import config
 from .columns import _sentinel
 from .model import Model
+from .joins import Join
 from .constraints import get_constraint
+from .sql_nodes import SQLAggregatorCall
 from .sql_factory import (
 	table_creation,
 	selection,
@@ -93,10 +95,22 @@ class _Session:
 		
 		remap = reference in self.active_mappings
 		model = self.active_mappings[reference] if remap else model_cls.__new__(model_cls)
+		if not remap:
+			model.__dirty__ = dict()
+			
 		self._map_model(model, row)
 
 		if not remap:
-			model.__on_load__()
+			model.__load__()
+
+		return model
+
+	def _load_joined_model(self, join, row):
+		model = self._load_model(join.model_cls, row)
+
+		augmentation_start = len(join.model_cls.__schema__)
+		for i, augmentation in enumerate(join.augmentations):
+			setattr(model, augmentation.name, row[augmentation_start + i])
 
 		return model
 
@@ -130,7 +144,7 @@ class _Session:
 
 		self._map_model(model, self.cursor.fetchone())
 
-		model.__on_create__()
+		model.__create__()
 		return self
 
 	def detach(self, model):
@@ -149,15 +163,20 @@ class _Session:
 		order = (order_by, not descending) if order_by is not None else None		
 		self.execute(*selection(target, conditions, order))
 
-		if issubclass(target, Model):
+		def from_loader_method(loader_method):
 			if one:
 				row = self.cursor.fetchone()
 				if row is None:
 					return None
 
-				return self._load_model(target, row)
+				return loader_method(target, row)
 			else:
-				return [self._load_model(target, row) for row in self.cursor]
+				return [loader_method(target, row) for row in self.cursor]
+
+		if issubclass(type(target), Model):
+			return from_loader_method(self._load_model)
+		elif isinstance(target, Join):
+			return from_loader_method(self._load_joined_model)
 		else:
 			if isinstance(target, SQLAggregatorCall):
 				one = True

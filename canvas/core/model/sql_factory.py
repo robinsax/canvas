@@ -66,7 +66,7 @@ def selection(target, query, ordering=None):
 	else:
 		raise InvalidQuery('Bad query condition: %s'%repr(query))
 
-	if issubclass(target, Model):
+	if issubclass(type(target), Model):
 		selection = ', '.join(target.__schema__.keys())
 		source = target.__table__
 	elif isinstance(target, Join):

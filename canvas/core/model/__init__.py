@@ -10,6 +10,8 @@ class _ResolveOther(Exception):
 	def __init__(self, table):
 		self.table = table
 
+_object_relational_map = dict()
+
 from ...exceptions import InvalidSchema
 from ...namespace import export, export_ext
 from ...utils import patch_type
@@ -19,7 +21,6 @@ from .columns import define_column_types
 from .sql_factory import table_creation
 from .session import _Session
 
-_object_relational_map = dict()
 
 @export_ext
 def wipe_orm(are_you_sure=False):
@@ -52,13 +53,13 @@ def model(table_name, schema, accessors=None):
 		cls.__table__ = table_name
 		cls.__schema__ = ordered_schema
 		cls.__primary_key__ = primary_key
-		cls.__dirty__ = dict()
 		cls.__created__ = False
 		cls.__accessors__ = [primary_key] if accessors is None else [schema[name] for name in accessors]
 		
 		inner_init = cls.__init__
 		def init_wrap(self, *args, **kwargs):
 			self.__populate__()
+			self.__dirty__ = dict()
 			inner_init(self, *args, **kwargs)
 		cls.__init__ = init_wrap
 

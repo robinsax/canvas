@@ -19,6 +19,6 @@ __home__ = os.path.abspath(
 try:
 	#	These imports will fail if dependencies haven't been installed.
 	from . import core, tests, plugins
-except ImportError: pass
+except ImportError as ex: pass
 
 from . import launchers
