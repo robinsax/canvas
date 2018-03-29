@@ -59,7 +59,6 @@ def model(table_name, schema, accessors=None):
 		inner_init = cls.__init__
 		def init_wrap(self, *args, **kwargs):
 			self.__populate__()
-			self.__dirty__ = dict()
 			inner_init(self, *args, **kwargs)
 		cls.__init__ = init_wrap
 

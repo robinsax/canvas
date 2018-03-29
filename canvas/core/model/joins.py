@@ -8,6 +8,19 @@ Join object definition.
 from ...exceptions import InvalidQuery
 from ...namespace import export_ext
 
+class _JoinInstance:
+
+	def __init__(self, target_model, link_column):
+		self.target_model, self.link_column = target_model, link_column
+		self.columns = []
+
+	def serialize(self):
+		return ' '.join([
+			'JOIN', self.target_model.__table__,
+			'ON', self.link_column.serialize(), '=', self.link_column.reference.serialize()
+		])
+
+#	TODO: This is really only an inner join I think.
 @export_ext
 class Join:
 
@@ -19,25 +32,31 @@ class Join:
 		if len(augmentations) == 0:
 			raise InvalidQuery('Not a join')
 		
-		target_model_columns = self.augmentations[0].model.__schema__.values()
-		self.link_column = None
-		for column in self.model_cls.__schema__.values():
-			if column.is_fk and column.reference in target_model_columns:
-				self.link_column = column
-				break
-		if self.link_column is None:
-			raise InvalidQuery('Cannot link augumented columns to %s'%model_cls.__class__.__table__)
+		self.join_instances = dict()
+		for column in self.augmentations:
+			table = column.model.__table__
+			target_model_columns = column.model.__schema__.values()
+
+			if table not in self.join_instances:
+				link_column = None
+				for check_column in self.model_cls.__schema__.values():
+					if check_column.is_fk and check_column.reference in target_model_columns:
+						link_column = check_column
+						break
+				if link_column is None:
+					raise InvalidQuery('No direct link to %s'%table)
+
+				self.join_instances[table] = _JoinInstance(column.model, link_column)
+
+			self.join_instances[table].columns.append(column)
 
 	def serialize_selection(self):
-		#   Damn check that out...                                                              v
 		column_references = [column.serialize() for column in self.model_cls.__schema__.values()]
-		column_references += [augumentation.serialize() for augumentation in self.augmentations]
+		column_references += [augmentation.serialize() for augmentation in self.augmentations]
 		return ', '.join(column_references)
 
 	def serialize_source(self):
-		return ' '.join([
-			self.model_cls.__table__, 
-			self.type, 'JOIN', 
-			self.link_column.reference.model.__table__,
-			'ON', self.link_column.serialize(), '=', self.link_column.reference.serialize()
-		])
+		return '%s %s'%(
+			self.model_cls.__table__,
+			' '.join([i.serialize() for i in self.join_instances.values()])
+		)

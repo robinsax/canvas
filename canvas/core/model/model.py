@@ -26,6 +26,7 @@ class Model:
 	def __create__(self): pass
 
 	def __populate__(self):
+		self.__dirty__ = dict()
 		for name, column in self.__class__.__schema__.items():
 			if isinstance(getattr(self, name), Column):
 				setattr(self, name, column.get_default())

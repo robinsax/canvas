@@ -1,23 +1,41 @@
 import canvas as cv
 
-@cv.model('thing1s', {
+@cv.model('aaa', {
     'id': cv.Column('uuid', primary_key=True),
     'text': cv.Column('text')
 })
-class Thing1: pass
+class A: pass
 
-@cv.model('thing2s', {
+@cv.model('bbb', {
     'id': cv.Column('serial', primary_key=True),
-    'ref': cv.Column('fk:thing1s.id')
+    'texy': cv.Column('text')
 })
-class Thing2: pass
+class B: pass
+
+@cv.model('ccc', {
+    'id': cv.Column('serial', primary_key=True),
+    'aref': cv.Column('fk:aaa.id'),
+    'bref': cv.Column('fk:bbb.id')
+})
+class C: pass
 
 cv.initialize()
-
 s = cv.create_session()
 
-what_is_this = s.query(Thing2.join(Thing1.text), one=True)
-print(what_is_this.text, what_is_this.id)
+a = A()
+a.text = 'aaaaaaaaaaaaaAAAAA'
 
-what_is_this.text = 'Thing2 changed me'
-s.commit()
+s.save(a).commit()
+
+b = B()
+b.texy = 'tex!boi'
+
+s.save(b).commit()
+
+c = C()
+c.aref = a.id
+c.bref = b.id
+
+s.save(c).commit()
+
+print(['%s=%s'%pair for pair in s.query(C.join(A.text, B.texy), one=True).__dict__.items()])
