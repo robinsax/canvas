@@ -26,12 +26,11 @@ class Page(Controller):
 	def render(self, params=dict(), code=200, headers=dict()):
 		context = RequestContext.get()
 
-		return create_webpage(self.__template__, {
-			**params,
-			**{
-				'__route__': context.url.route
-			}
-		}, code=code, headers=headers)
+		params.update({
+			'__route__': context.url.route
+		})
+		return create_webpage(self.__template__, params, code=code, 
+				headers=headers)
 
 class _ControllerDefinition:
 
