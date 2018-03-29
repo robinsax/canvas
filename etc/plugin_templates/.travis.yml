@@ -9,7 +9,7 @@ before_install:
   - cd ..
   - git clone https://github.com/robinsax/canvas.git
   - cd canvas
-  - ./etc/install_dependencies.sh
+  - sudo ./etc/install_dependencies.sh
   - sudo python3 canvas --init --config plugins.directory=.. "plugins.activated=$plugin_name,""
   - sudo -u postgres python3 canvas --apply-config
   - cd ../cvpl-$plugin_name

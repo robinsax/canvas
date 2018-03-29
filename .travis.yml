@@ -6,8 +6,8 @@ python:
   - '3.5'
 
 before_install:
-  - ./etc/install_dependencies.sh
-  - python3 canvas --init
+  - sudo ./etc/install_dependencies.sh
+  - sudo python3 canvas --init
   - sudo -u postgres python3 canvas --apply-config
 
 script:
