@@ -1,0 +1,57 @@
+{% page %}
+
+{% set title = error.title %}
+
+{% block styles %}
+	{% set style = '''
+		.page {
+			height: 100% !important;
+			
+			.row {
+				position: relative;
+				top: 50%;
+				transform: translateY(-50%);
+
+				.error {
+					display: inline-block;
+					width: 30em;
+
+					.debug-info {
+						padding-top: 1em;
+					}
+				}
+			}
+		}
+	'''|less %}
+	<style type="text/css">
+		{{ style }}
+	</style>
+{% endblock %}
+
+{% block page %}
+	<div class="row align-center">
+		<div class="error">
+			<h3>{{ error.code }} {{ error.title }}</h3>
+			<hr>
+			<p class="align-left subtext">
+				Sorry about that!
+			</p>
+			{% if error.debug_info is defined %}
+				<div class="align-left debug-info">
+					<p>Traceback</p>
+					<code>
+						<pre>{{ error.debug_info.traceback }}</pre>
+					</code>
+					{% if error.debug_info.context is not none %}
+						<p>Context</p>
+						<code>
+							<pre>{{ error.debug_info.context }}</pre>
+						</code>
+					{% else %}
+						<p class="subtext">(No associated request context)</p>
+					{% endif %}
+				</div>
+			{% endif %}
+		</div>
+	</div>
+{% endblock %}

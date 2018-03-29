@@ -1,351 +1,205 @@
 #	coding utf-8
 '''
-Base request handling logic and the WSGI application definition.
+The canvas WSGI application implementation.
 '''
 
-import os
-
-from json.decoder import JSONDecodeError
-from platform import python_version
 from mimetypes import types_map
-from pprint import pformat
+from platform import python_version
 
-from werkzeug import __version__ as werkzeug_version
-from werkzeug.wrappers import BaseRequest, BaseResponse
+from werkzeug import BaseRequest, BaseResponse
 from werkzeug.contrib.securecookie import SecureCookie
 
 from ..exceptions import (
-	RequestParamError, 
-	HeaderKeyError,
-	ValidationErrors,
-	HTTPException,
-	_Redirect
+	HTTPException, 
+	InternalServerError,
+	NotFound,
+	UnsupportedVerb,
+	OversizeEntity,
+	UnsupportedMediaType
 )
-from ..utils import (
-	WrappedDict,
-	register,
-	get_registered,
-	logger,
-	call_registered,
-	format_traceback,
-	deserialize_json,
-	serialize_json
+from ..utils import logger, format_exception
+from ..configuration import config
+from ..callbacks import (
+	define_callback_type, 
+	invoke_callbacks
 )
-from ..model import create_session
-from ..controllers import Page, get_controller
-from .. import __version__ as canvas_version, config
-from .thread_context import *
-from .assets import (
-	get_asset, 
-	render_template
+from .plugins import get_path_occurrences
+from .routing import resolve_route
+from .request_parsers import parse_request
+from .request_context import RequestContext
+from .request_errors import get_error_response
+from .styles import compile_less
+from .node_interface import transpile_jsx
+from .dictionaries import (
+	RequestParameters
 )
-from .cache_control import *
-from . import create_json
+from .. import __version__ as canvas_version
 
-#	Create a logger.
 log = logger(__name__)
 
-#	Declare exports.
-__all__ = [
-	'handle_request'
-]
+_identifier = 'canvas/%s Python/%s'%(
+	canvas_version,
+	python_version()
+)
+_asset_cache = dict()
 
-#	TODO: Contextually appropriate fundamental error responses.
+define_callback_type('request_received', arguments=[RequestContext])
 
-#	Create the server identifier string provided in the `Server` header.
-SERVER_IDENTIFIER = ' '.join([
-	f'Python/{python_version()}',
-	f'Werkzeug/{werkzeug_version}', 
-	f'Canvas/{canvas_version}'
-])
-#	The key under which the cookie session is stored.
-COOKIE_KEY = 'canvas_session'
+def parse_response_tuple(tpl):
+	if not isinstance(tpl, (list, tuple)):
+		tpl = (tpl,)
+	
+	corrected = ['', 200, None, 'text/plain']
+	for i in range(len(tpl)):
+		corrected[i] = tpl[i]
+	
+	data, status, headers, mimetype = corrected
+	if headers is None:
+		headers = dict()
+
+	response_object = BaseResponse(
+		response=data,
+		status=status,
+		headers=headers,
+		mimetype=mimetype
+	)
+
+	return response_object
+
+def report_error(ex, context=None):
+	log.error(format_exception(ex))
+
+def retrieve_asset(path, recall=False):
+	occurrences = get_path_occurrences('assets', 'client', path[1:])
+	if len(occurrences) == 0:
+		return None
+
+	with open(occurrences[-1], 'rb') as asset_file:
+		asset_data = asset_file.read()
+	
+	if recall:
+		if path.endswith('.less'):
+			asset_data = compile_less(asset_data.decode())
+		if path.endswith('.jsx'):
+			asset_data = transpile_jsx(asset_data)
+		
+	if not config.development.debug:
+		_asset_cache[path] = asset_data
+	return asset_data
+
+def serve_controller(request):
+	#	Resolve path.
+	route = request.path
+	controller, variables = resolve_route(route)
+
+	#	Resolve verb.
+	verb = request.method.lower()
+	if verb not in controller.__verbs__:
+		raise UnsupportedVerb(verb, [v.upper() for v in controller.__verbs__])
+	handler = getattr(controller, 'on_{}'.format(verb))
+
+	#	Resolve parameters.
+	if verb == 'get':
+		request_parameters = request.args
+	else:
+		body_size = request.headers.get('Content-Length', 0)
+		if body_size > config.security.max_bytes_receivable:
+			raise OversizeEntity(body_size)
+		elif body_size == 0:
+			request_parameters = dict()
+		else:
+			body_data = request.get_data(as_text=True)
+			content_type = request.headers.get('Content-Type')
+
+			request_parameters = parse_request(body_data, content_type)
+	request_parameters = RequestParameters(request_parameters)
+
+	#	Resolve cookie.
+	cookie_key, secret = config.security.cookie_key, config.security.cookie_secret
+	secret = secret.encode('utf-8')
+
+	cookie_data = request.cookies.get(cookie_key, None)
+	if cookie_data:
+		cookie = SecureCookie.unserialize(cookie_data, secret)
+	else:
+		cookie = SecureCookie(secret_key=secret)
+
+	#	Create context and handle.
+	context = RequestContext({
+		'cookie': cookie,
+		'session': None,
+		'request': request_parameters,
+		'headers': request.headers,
+		'route': variables,
+		'url': {
+			'full': request.url,
+			'route': route
+		}
+	})
+	RequestContext.put(context)
+
+	def cleanup(response=None):
+		RequestContext.pop()
+
+		if response and cookie.should_save:
+			response.set_cookie(cookie_key, cookie.serialize())
+	
+	try:
+		invoke_callbacks('request_received', context)
+
+		response = handler(context)
+	except BaseException as ex:
+		cleanup()
+		report_error(ex, context)
+		diag_ex = ex
+		if not isinstance(ex, HTTPException):
+			ex = InternalServerError(True)
+		ex.diag = (diag_ex, context)
+		raise ex
+	
+	response = parse_response_tuple(response)
+	cleanup(response)
+	return response
+
+def serve_asset(request):
+	path = request.path[len(config.customization.asset_route_prefix) + 1:]
+	#	TODO: check cache control
+
+	asset_data = retrieve_asset(path)
+	if asset_data is None:
+		if path.endswith('.css'):
+			asset_data = retrieve_asset(path.replace('.css', '.less'), True)
+		if path.endswith('.js'):
+			asset_data = retrieve_asset(path.replace('.js', '.jsx'), True)
+	if asset_data is None:
+		raise NotFound(request.path)
+	
+	mimetype = types_map.get('.%s'%path.split('.')[-1], 'text/plain')
+	#	TODO: add cache control
+	return BaseResponse(
+		response=asset_data,
+		status=200,
+		mimetype=mimetype
+	)
 
 def handle_request(environ, start_response):
-	'''
-	The callable WSGI application.
+	request = BaseRequest(environ)
+	route = request.path
 
-	Invokes either the controller or asset request handler, expecting them to 
-	return a tuple containing:
-	```
-	response, status, headers, mimetype
-	```
-	'''
-	req = BaseRequest(environ)
-	cookie = None
-
-	#	Invoke pre-handling callbacks.
-	call_registered('request_received', req)
-
-	try:
-		if req.path.startswith('/assets/'):
-			#	Serve an asset.
-			response = _handle_asset_request(req)
-		else:
-			#	Dispatch a controller.
-
-			#	Encode the configured secret key to bytes.
-			secret_key = config['cookie_secret_key'].encode('utf-8')
-
-			#	Retrieve the cookie if there is one.
-			cookie_data = req.cookies.get(COOKIE_KEY, None)
-			if cookie_data is None:
-				#	Create an empty cookie.
-				cookie = SecureCookie(secret_key=secret_key)
-			else:
-				#	Parse the cookie data.
-				cookie = SecureCookie.unserialize(cookie_data, secret_key)
-
-			#	Invoke controller dispatcher.
-			response = _handle_controller_request(req, cookie)
-	except BaseException as e:
-		#	We can't serve at all. A common cause is an error in the base 
-		#	template.
-		_on_error(req, e, {}, level=log.critical)
-		response = ('Internal Server Error', 500, {}, 'text/plain')
-
-	#	Delete the request context to thread ID mapping if there is one.
-	remove_thread_context()
-
-	#	Unpack the response.
-	data, status, headers, mimetype = response
-
-	#	Add the `Server` authentication header.
-	headers['Server'] = SERVER_IDENTIFIER
-
-	#	Create the response object.
-	response_obj = BaseResponse(**{
-		'response': data,
-		'status': status,
-		'headers': headers,
-		'mimetype': mimetype
-	})
-
-	if cookie is not None and cookie.should_save:
-		#	Set the cookie.
-		response_obj.set_cookie(COOKIE_KEY, cookie.serialize())
-	
-	call_registered('pre_response_dispatch', response_obj)
-
-	#	Invoke the response callable.
-	return response_obj(environ, start_response)
-
-def _on_error(req, error, ctx, level=log.error):
-	'''
-	Log a request error and invoke the error callback.
-	
-	Return the traceback string to be sent to the client if debug mode is 
-	enabled.
-	'''
-	#	Remove shortcuts from context.
-	remove = []
-	for k in ctx:
-		if k.startswith('big_'):
-			remove.append(k)
-	for k in remove:
-		del ctx[k]
-
-	#	Suppress huge inputs.
-	if 'request' in ctx:
-		request = ctx['request']
-		remove = []
-		for key, value in request.items():
-			#	TODO: Configure.
-			if isinstance(value, str) and len(value) > 500:
-				remove.append(key)
-		for key in remove:
-			request[key] = f'{request[key][:500]}...'
-
-	#	Invoke callbacks individually with error protection.
-	for callback in get_registered('request_error'):
+	if route.startswith('/%s'%config.customization.asset_route_prefix):
 		try:
-			callback(error, ctx)
-		except BaseException as e:
-			#	That's too bad.
-			log.critical(f'Request error callback {callback.__name__} failed: '
-					+ f'{e.__class__.__name__}: {str(e)}')
-
-	#	Format and log.
-	tb_str = format_traceback(error)
-	ctx_str = pformat(ctx)
-	level(os.linesep.join([
-		f'Request error on: {req.path}',
-		'-- Traceback --',
-		tb_str,
-		'-- Context --',
-		ctx_str
-	]))
-
-	#	Return the formatted traceback string.
-	return tb_str
-
-def _handle_asset_request(req):
-	'''
-	Handle an asset retrieval request.
-	'''
-	#	Assert asset must be served.
-	if not config['debug'] and 'If-Modified-Since' in req.headers:
-		if is_cache_valid(req.headers['If-Modified-Since']):
-			#	Return a `Not Modified` status.
-			return '', 304, {}, 'text/plain'
-
-	#	Remove the `/asset/` prefix.
-	path = req.path[8:]
-
-	#	Retrieve the asset.
-	data = get_asset(path)
-
-	#	Assert existance.
-	if data is None:
-		return 'Not Found', 404, {}, 'text/plain'
-	
-	#	Evaluate the mimetype.
-	mimetype = types_map.get('.' + path.split('.')[-1], 'text/plain')
-
-	#	TODO: Test cache control.
-	return data, 200, get_cache_control_headers(), mimetype
-
-def _handle_controller_request(req, cookie):
-	#	Parse request context.
-	is_get = req.method == 'GET'
-	is_api_request = req.path.startswith('/api/')
-	
-	#	Create parameters dictionary.
-	if is_get:
-		params = req.args
+			response = serve_asset(request)
+		except HTTPException as ex:
+			if ex.status_code > 499:
+				report_error(ex)
+			response = parse_response_tuple(ex.response())
 	else:
-		body = req.get_data(as_text=True)
-		if len(body) == 0:
-			params = {}
-		else:
-			try:
-				params = deserialize_json(body)
-			except JSONDecodeError:
-				return 'Expecting JSON', 415, {}, 'text/plain'
-	params = WrappedDict(params, RequestParamError)
-
-	#	Create a database session.
-	session = create_session()
+		try:
+			response = serve_controller(request)
+		except HTTPException as ex:
+			if ex.status_code > 499 and not (isinstance(ex, InternalServerError) and ex.reraise):
+				report_error(ex)
+			response = parse_response_tuple(get_error_response(ex, route, *ex.diag))
 	
-	#	Wrap the headers dictionary.
-	headers = WrappedDict(req.headers, HeaderKeyError)
-
-	#	Create the request context.
-	ctx = {
-		'cookie': cookie,
-		'session': session,
-		'request': params,
-		'headers': headers,
-		'url': req.url,
-		'big_3': (params, cookie, session)
-	}
-	#	Allow callbacks to modify.
-	call_registered('context_created', ctx)
-
-	#	Add the thread ID request context mapping entry.
-	register_thread_context(ctx)
-
-	try:
-		#	Retrieve the controller.
-		controller = get_controller(req.path)
-
-		#	Allow callbacks to raise exceptions if there is something wrong 
-		#	with the context.
-		call_registered('pre_controller_dispatch', controller, ctx)
-
-		#	Dispatch controller.
-		response = controller.get(ctx) if is_get else controller.post(ctx)
-
-		#	Controllers won't nessesarily return a complete response tuple. 
-		#	Populate with defaults if they dont.
-		if not isinstance(response, (tuple, list)):
-			response = [response,]
-		else:
-			response = list(response)
-		
-		if len(response) == 4:
-			return response
-		elif len(response) == 3:
-			return response + ['text/plain']
-		elif len(response) == 2:
-			return response + [{}, 'text/plain']
-		else:
-			return response + [200, {}, 'text/plain']
-
-	except _Redirect as e:
-		#	A redirection occured.
-		if headers.get('X-Canvas-View-Request', None) == '1':
-			#	This request was an in-browser AJAX so a normal redirect won't 
-			#	work; invoke a core action.
-			return create_json('success', {
-				'action': 'redirect',
-				'url': e.target
-			})
-		else:
-			#	Return a standard redirect response.
-			return '', e.code, {
-				'Location': e.target
-			}, ''
-	except ValidationErrors as e:
-		#	Return the canonical model-constraint-violation response.
-		data = {}
-		if e.summary is not None:
-			data['error_summary'] = e.summary
-		if e.error_dict is not None:
-			data['errors'] = e.error_dict
-		return create_json('failure', data, status=422)
-	except HTTPException as e:
-		#	A status-coded exception was raised.
-		error, error_desc, error_code = (e, e.desc, e.code)
-	except BaseException as e:
-		#	An unexpected exception was raised.
-		error, error_desc, error_code = (e, 'Internal Server Error', 500)
-	
-	#	Create the error data.
-	error_data = {
-		'code': error_code,
-		'description': error_desc
-	}
-	#	...and add it to context.
-	ctx['error'] = error_data
-	
-	#	Log the error and retrieve the traceback string.
-	tb_str = _on_error(req, error, ctx)
-	
-	#	TODO: This dictionary is out of control.
-
-	if is_api_request or not is_get:
-		#	Client is expecting JSON.
-		if config['debug']:
-			#	We are going to send the context as part of the error data, 
-			#	remove the reference to prevent a circular reference.
-			del ctx['error']
-
-			#	Add the debug information to the error response.
-			error_data['debug_info'] = {
-				'traceback': tb_str,
-				'context': ctx
-			}
-		return create_json('error', error_data, **{
-			'status': error_code,
-			#	This will guarenteed serialize anything.
-			'fallback_serializer': lambda o: o.__repr__()
-		})
-	else:
-		#	Client is expecting a page; render the error template.
-		return render_template('pages/error.html', response=True, template_params={
-			**ctx,
-			**{
-				'debug_info': {
-					'traceback': tb_str,
-					'context': pformat(ctx)
-				},
-				#	Emulate a page for the base template.
-				'__page__': {
-					**config['client_dependencies'],
-					**{
-						'description': config['description']
-					}
-				}
-			}
-		}, status=error_code)
+	response.headers['Server'] = _identifier
+	return response(environ, start_response)

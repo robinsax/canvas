@@ -1,7 +1,6 @@
 #	Core.
 werkzeug
 psycopg2
-lxml
 #	Asset rendering.
 jinja2
 htmlmin

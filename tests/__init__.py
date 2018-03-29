@@ -1,14 +1,11 @@
-#   coding utf-8
+#	coding utf-8
 '''
-Unit tests on the canvas core.
+Unit tests on the canvas backend.
 '''
 
+import canvas as cv
 from . import (
-    utils,
-    thread_contexts,
-    assets,
-    controllers,
-    model,
-    combined,
-	misc
+	dictionaries
 )
+
+cv.run_tests()
