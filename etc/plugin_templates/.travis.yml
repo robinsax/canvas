@@ -11,8 +11,8 @@ before_install:
   - cd canvas
   - sudo ./etc/install_dependencies.sh
   - npm conf set strict-ssl false
-  - sudo python3 canvas --init --config plugins.directory=.. "plugins.activated=$plugin_name,"
-  - sudo -u postgres python3 canvas --apply-config
+  - python3 canvas --init --config plugins.directory=.. "plugins.activated=$plugin_name,"
+  - python3 canvas --write-setup-sql | sudo -u postgres psql
   - cd ../cvpl-$plugin_name
   - export PYTHONPATH="../canvas"
 
