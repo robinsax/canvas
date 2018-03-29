@@ -7,6 +7,7 @@ python:
 
 before_install:
   - sudo ./etc/install_dependencies.sh
+  - npm conf set strict-ssl false
   - sudo python3 canvas --init
   - sudo chmod -R 666 ./settings.json
   - sudo -u postgres python3 canvas --init-db
