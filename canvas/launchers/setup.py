@@ -71,6 +71,34 @@ def launch_setup(args):
 
 	return True
 
+@launcher('config', {
+	'argspec': '<key=value, ...>',
+	'description': 'Apply a set of key, value configuration pairs. Key levels are delimited with ".". List values are joined with ",".'
+})
+def launch_configuration(args):
+	with open(os.path.join(__home__, 'settings.json')) as config_file:
+		raw_config = json.load(config_file)
+	
+	try:
+		for item in args:
+			key, value = item.split('=')
+			if ',' in value:
+				value = [s for s in value.split(',') if len(s.strip()) > 0]
+			levels = key.split('.')
+			current = raw_config
+			for level in levels[:-1]:
+				current = current[level]
+			current[levels[-1]] = value
+	except:
+		return False
+
+	to_write = json.dumps(raw_config, indent=4).replace('    ', '\t')
+	with open(os.path.join(__home__, 'settings.json'), 'w') as config_file:
+		config_file.write(to_write)
+	
+	print('Wrote %d entries'%len(args))
+	return True
+
 @launcher('apply-config', {
 	'description': 'Perform all setup dependent on configuration state'
 })

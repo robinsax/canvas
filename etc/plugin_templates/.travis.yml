@@ -1,24 +1,22 @@
 sudo: required
+dist: trusty
 
 language: python
 python:
-  - '3.6'
+  - '3.5'
 
 before_install:
   - cd ..
   - git clone https://github.com/robinsax/canvas.git
   - cd canvas
-  - python3.6 -m pip install -r requirements.txt
-  - sudo ./etc/scripts/ubuntu_trusty_setup.sh
-  - sudo ./etc/scripts/configure_plugin_test.sh $plugin_name
-  - cd ../canvas-pl-$plugin_name
-  - python3.6 -m pip install -r requirements.txt
+  - ./etc/install_dependencies.sh
+  - python3 canvas --init --config plugins.directory=.. "plugins.activated=$plugin_name,""
+  - -u postgres python3 canvas --apply-config
+  - cd ../cvpl-$plugin_name
   - export PYTHONPATH="../canvas"
 
 script:
-  - coverage-3.6 run -m canvas --run_tests $plugin_name
+  - coverage run -m canvas --test $plugin_name
 
 after_success:
-  # This may seem excessive but it isn't
-  - python3.6 -m pip install python-coveralls
-  - which coveralls | xargs cat | python3.6
+  - coveralls
