@@ -4,12 +4,12 @@ Request parsing method definitions.
 '''
 
 from ..exceptions import UnsupportedMediaType
-from ..namespace import export
+from ..namespace import export_ext
 from .json_io import deserialize_json
 
 _parsers = dict()
 
-@export
+@export_ext
 def request_parser(*mimetypes):
 	def request_parser_wrap(func):
 		for mimetype in mimetypes:

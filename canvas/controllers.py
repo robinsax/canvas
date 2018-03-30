@@ -39,10 +39,10 @@ class _ControllerDefinition:
 		self.routes, self.attrs = routes, attrs
 
 @export
-def controller(*routes, _destiny=Controller, _attrs=dict()):
+def controller(*routes, _destiny=Controller, **attrs):
 	def controller_wrap(cls):
 		patched = patch_type(cls, _destiny)
-		definition = _ControllerDefinition(patched, routes, _attrs)
+		definition = _ControllerDefinition(patched, routes, **attrs)
 		_definitions.append(definition)
 		
 		return patched
@@ -55,7 +55,7 @@ def endpoint(*routes, **attrs):
 		if not route.startswith(route_prefix):
 			raise IllegalEndpointRoute(route)
 
-	return controller(*routes, _destiny=Endpoint, _attrs=attrs)
+	return controller(*routes, _destiny=Endpoint, **attrs)
 
 @export
 def page(*routes, template=None, **attrs):
@@ -64,7 +64,7 @@ def page(*routes, template=None, **attrs):
 	
 	attrs['template'] = template
 
-	return controller(*routes, _destiny=Page, _attrs=attrs)
+	return controller(*routes, _destiny=Page, **attrs=attrs)
 
 @page('/', template='welcome.html')
 class DefaultWelcomePage: pass
