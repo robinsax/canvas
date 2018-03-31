@@ -42,7 +42,7 @@ class _ControllerDefinition:
 def controller(*routes, _destiny=Controller, **attrs):
 	def controller_wrap(cls):
 		patched = patch_type(cls, _destiny)
-		definition = _ControllerDefinition(patched, routes, **attrs)
+		definition = _ControllerDefinition(patched, routes, attrs)
 		_definitions.append(definition)
 		
 		return patched
@@ -64,7 +64,7 @@ def page(*routes, template=None, **attrs):
 	
 	attrs['template'] = template
 
-	return controller(*routes, _destiny=Page, **attrs=attrs)
+	return controller(*routes, _destiny=Page, **attrs)
 
 @page('/', template='welcome.html')
 class DefaultWelcomePage: pass
