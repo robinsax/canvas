@@ -13,6 +13,8 @@
 		
 			{% block styles %}{% endblock %}
 
+			<script type="text/javascript">document.createElement('cv-view');</script>
+
 			{% for dependency in global_dependencies + (dependencies|default([])) %}
 				{% if dependency.endswith('.css') %}
 					<link rel="stylesheet" type="text/css" href="{{ h.asset_url(dependency) }}"/>
@@ -30,9 +32,11 @@
 			<div class="page">
 				{% block page %}{% endblock %}
 			</div>
+			<footer class="footer">
+				{% block footer %}{% endblock %}
+			</footer>
 		{% endblock %}
 		<div class="meta">
-			<i class="fa fa-band-aid"></i>
 			{% block meta_body %}{% endblock %}
 		</div>
 	</body>

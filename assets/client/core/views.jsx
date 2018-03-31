@@ -10,12 +10,13 @@ class ViewPart {
 		this.dataCount = 0;
 
 		core.views = this.views = {};
+		this._viewDefinitions = {};
 
 		core.view = (name, definition) => this.view(name, definition);
 		core.view.event = (on, selector=null) => this.viewEvent(on, selector);
-		core.view.create = (target, View) => this.createView(target, View);
 		core.view.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
-		core.placeViews = (routing) => this.placeViews(routing);
+
+		tk(window).on('load', () => this.createViews());
 
 		tk.comp = (iterable, callback) => this.comp(iterable, callback);
 		tk.ToolkitSelection.prototype.data = function(){ return this.first(false)._cvData.data; };
@@ -59,7 +60,6 @@ class ViewPart {
 			class AsView extends ViewClass {
 				constructor() {
 					super(...arguments);
-					this._name = name;
 					this.state = this.state || definition.state ||  {};
 					this.templates = this.templates || definition.templates || null;
 					this.template = this.template || definition.template || null;
@@ -72,11 +72,7 @@ class ViewPart {
 					this._created = false;
 				}
 
-				select() {
-					return this._node;
-				}
-
-				render(target=null) {
+				render() {
 					if (this._rendering){ return; }
 					this._rendering = true;
 
@@ -85,6 +81,11 @@ class ViewPart {
 							this[ViewClass.prototype._onCreate]();
 						}
 						this._created = true;
+
+						tk.listener(this, 'data')
+							.changed(() => {
+								this.render();
+							});
 					}
 					
 					let watch = (data, callback) => {
@@ -138,56 +139,50 @@ class ViewPart {
 					}
 					
 					if (this._node){
-						if (!target){
-							target = this._node.parents(false);
-						}
-						this._node.remove();
+						this._node.replace(el);
 					}
 					this._node = el;
-					if (target){
-						target.append(this._node);
-					}
 					
 					this._rendering = false;
 					return this._node;
 				}
 			}
-
+			
+			this._viewDefinitions[name] = AsView;
 			return AsView;
 		}
 	}
 
-	createView(target, ViewClass) {
-		let view = new ViewClass();
-		this.views[view._name] = view;
-
-		let create = () => {
-			tk.log('Created view ' + view._name);
-			view.render(tk(target));
-		}
-		
-		if (view.dataSource) {
-			this.core.request('GET', view.dataSource)
-				.success((response) => {
-					view.data = response.data;
-					this.core.onceReady(create);
-				})
-				.send();
-		}
-		else {
-			this.core.onceReady(create);
-		}
-	}
-
-	placeViews(routing) {
-		tk.iter(routing, (route, definition) => {
-			if (route == '*' || route == this.core.route){
-				tk.iter(definition, (selector, views) => {
-					tk.iter(views, (ViewClass) => {
-						this.core.view.create(selector, ViewClass);
-					});
-				});
+	createViews() {
+		tk('cv-view').iter((el) => {
+			let name = el.attr('cv-name');
+			let ViewClass = this._viewDefinitions[name];
+			if (!ViewClass) {
+				tk.warn('No Such View: ' + name);
+				return;
 			}
+
+			let label = el.attr('cv-label') || name,
+				view = new ViewClass()
+			this.views[label] = view;
+
+			let create = () => {
+				tk.log('Created View ' + name + ' (as ' + label + ')');
+				el.replace(view.render());
+			}
+			
+			if (view.dataSource){
+				this.core.request('GET', view.dataSource)
+					.success((response) => {
+						view.data = response.data;
+						this.core.onceReady(create);
+					})
+					.send();
+			}
+			else {
+				this.core.onceReady(create);
+			}
+			
 		});
 	}
 

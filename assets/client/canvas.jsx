@@ -35,8 +35,9 @@
 
 		initDOM(){
 			this.initialized = true;
-			this.page = tk('body > .page');
-			this.header = tk('body > .header');
+			this.page = tk('body > div.page');
+			this.header = tk('body > header.header');
+			this.footer = tk('body > footer.footer');
 			
 			tk.iter(this.readyCallbacks, (callback) => {
 				callback();

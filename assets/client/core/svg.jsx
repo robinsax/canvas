@@ -4,8 +4,8 @@ class SVGPart {
 		tk.inspection((el) => { this.replaceSVGs(el); });
 	}
 
-	replaceSVGs(root) {
-		root.children('img[src]').iter((el) => {
+	replaceSVGs(check) {
+		check.reduce('img[src]').iter((el) => {
 			let src = el.attr('src');
 			if (src.lastIndexOf('.svg') == src.length - 4){
 				cv.request('GET', src)
@@ -18,6 +18,6 @@ class SVGPart {
 						el.replace(svg);
 					}).send();
 			}
-		})
+		});
 	}
 }

@@ -4,6 +4,10 @@
 
 {% block styles %}
 	{% set style = '''
+		.header {
+			display: none;
+		}
+
 		.page {
 			height: 100% !important;
 			
@@ -31,14 +35,13 @@
 {% block page %}
 	<div class="row align-center">
 		<div class="error">
-			<h3>{{ error.code }} {{ error.title }}</h3>
-			<hr>
-			<p class="align-left subtext">
+			<h2 class="align-left">{{ error.code }} {{ error.title }}</h2>
+			<p class="align-right subtext">
 				Sorry about that!
 			</p>
 			{% if error.debug_info is defined %}
 				<div class="align-left debug-info">
-					<p>Traceback</p>
+					<h3>Traceback</h3>
 					<code>
 						<pre>{{ error.debug_info.traceback }}</pre>
 					</code>
