@@ -182,7 +182,7 @@ class _Session:
 				one = True
 			
 			if one:
-				return self.cursor.fetchone()[0]
+				return self.cursor.fetchone()
 			else:
 				return [r[0] for r in self.cursor.fetchall()]
 

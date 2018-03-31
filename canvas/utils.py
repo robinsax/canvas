@@ -39,8 +39,9 @@ def kw_init(*attrs):
 
 			inner_init(*args, **kwargs)
 		cls.__init__ = new_init
+
+		return cls
 	return create_kw_init
-	
 
 def patch_type(cls, destiny):
 	if issubclass(cls, destiny):

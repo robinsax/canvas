@@ -24,6 +24,7 @@ from ..callbacks import (
 	invoke_callbacks
 )
 from .plugins import get_path_occurrences
+from .model import create_session
 from .routing import resolve_route
 from .request_parsers import parse_request
 from .request_context import RequestContext
@@ -127,7 +128,7 @@ def serve_controller(request):
 	#	Create context and handle.
 	context = RequestContext({
 		'cookie': cookie,
-		'session': None,
+		'session': create_session(),
 		'request': request_parameters,
 		'headers': request.headers,
 		'route': variables,

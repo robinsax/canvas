@@ -7,6 +7,7 @@
 	//	cv::include core/requests
 	//	cv::include core/views
 	//	cv::include core/dnd
+	//	cv::include core/svg
 
 	class Core {
 		constructor(debug){
@@ -18,10 +19,9 @@
 			this.route = head.attr('cv-route');
 			head.attr('cv-route', null);
 			
-			this._parts = tk.comp(parts, (Part) => new Part(this));
+			tk.iter(parts, (Part) => new Part(this));
 			
 			tk.init(() => { this.initDOM(); });
-			tk.inspection(() => { this.inspectDOM(); });
 			tk.log('canvas initialized');
 		}
 
@@ -50,12 +50,6 @@
 			else {
 				this.readyCallbacks.push(callback);
 			}
-		}
-
-		inspectDOM(){
-			tk.iter(this._parts, (part) => {
-				if (part.inspectDOM){ part.inspectDOM(this); }
-			});
 		}
 	}
 

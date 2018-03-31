@@ -15,7 +15,6 @@ from .sql_nodes import (
 from .columns import Column
 from .model import Model
 from .joins import Join
-from .type_adapters import _adapted_types
 from .columns import _sentinel
 
 def table_creation(model_cls):
@@ -66,7 +65,7 @@ def selection(target, query, ordering=None):
 	else:
 		raise InvalidQuery('Bad query condition: %s'%repr(query))
 
-	if issubclass(type(target), Model):
+	if issubclass(target, Model):
 		selection = ', '.join(target.__schema__.keys())
 		source = target.__table__
 	elif isinstance(target, Join):

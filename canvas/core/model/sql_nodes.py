@@ -3,6 +3,8 @@
 SQL statement node definitions.
 '''
 
+from .type_adapters import _adapted_types
+
 class SQLExpression:
 	
 	def serialize_node(self, node, values):

@@ -12,9 +12,9 @@ class Model:
 
 	@classmethod
 	def get(cls, reference_value, session):
-		query = (cls.__accessors__[0] == val).group()
+		query = (cls.__accessors__[0] == reference_value).group()
 		for accessor in cls.__accessors__[1:]:
-			query = query | (accessor == val).group()
+			query = query | (accessor == reference_value).group()
 		return session.query(cls, query, one=True)
 	
 	@classmethod
@@ -22,7 +22,6 @@ class Model:
 		return Join('INNER', cls, augmentations)
 
 	def __load__(self): pass
-
 	def __create__(self): pass
 
 	def __populate__(self):

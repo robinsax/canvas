@@ -1,0 +1,15 @@
+#31353D 	-> background
+#94A6BF		-> title, highlight, theme1, link
+#F2EDE6		-> text, theme2
+#383E59		-> theme3, visited-link
+#BDA392		-> subtext, input, focused-input
+
+red 		-> error
+orange		-> warning
+green 		-> success
+
+'Helvetica' -> text-font, title-font
+
+1000px 		-> breakpoint1
+700px		-> breakpoint2
+450px		-> breakpoint3
