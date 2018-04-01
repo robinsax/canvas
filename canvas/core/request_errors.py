@@ -22,7 +22,7 @@ def get_error_response(pure_ex, route, ex, context=None):
 	
 	api_route = '/%s'%config.customization.api_route_prefix
 	if route.startswith(api_route):
-		return create_json('failure', error_data, **{
+		return create_json('error', error_data, **{
 			'code': pure_ex.status_code,
 			'headers': pure_ex.headers
 		})
