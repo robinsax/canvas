@@ -5,10 +5,10 @@ apt-get install uwsgi nginx -y
 
 #	Configure uWSGI.
 cp ./etc/configurations/canvas_uwsgi.ini ./canvas_uwsgi.ini
-cat ./etc/configs/canvas_uwsgi.conf | sed "s/@user/$1/g" > /etc/init/canvas.conf
+cat ./etc/configurations/canvas_uwsgi.conf | sed "s/@user/$1/g" > /etc/init/canvas.conf
 
 #   Configure nginx.
-cat ./etc/configs/nginx_config | sed "s/@user/$1/g" | sed "s/@domain/$2/g" > /etc/nginx/sites-available/canvas
+cat ./etc/configurations/nginx_config | sed "s/@user/$1/g" | sed "s/@domain/$2/g" > /etc/nginx/sites-available/canvas
 ln -s /etc/nginx/sites-available/canvas /etc/nginx/sites-enabled
 
 mkdir /var/log/uwsgi
