@@ -8,6 +8,7 @@
 	//	cv::include core/views
 	//	cv::include core/dnd
 	//	cv::include core/svg
+	//	cv::include core/slide
 
 	class Core {
 		constructor(debug){
@@ -51,6 +52,14 @@
 			else {
 				this.readyCallbacks.push(callback);
 			}
+		}
+
+		addInspector(callback) {
+			this.onceReady(() => {
+				callback(tk('body').children());
+			});
+
+			tk.inspection(callback);
 		}
 	}
 

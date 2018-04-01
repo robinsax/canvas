@@ -66,12 +66,16 @@ p, li {
 
 .subtext {
 	color: @subtext;
-	font-size: 10pt;
+	font-size: 11pt;
+}
+
+.large-text {
+	font-size: 20pt;
 }
 
 //	Heading styles.
 h1, h2, h3, h4 {
-	margin: 0.75em 0em;
+	margin: 0.25em 0em 0.5em 0em;
 	font-size: 40pt; 
 	font-weight: normal;
 	font-family: @title-font;
@@ -272,34 +276,30 @@ h4 { font-size: 16pt; }
 	margin-right: 15px;
 }
 
+.button-margin {
+	padding: 0px 10px;
+}
+
 //	Buttons and button groups.
 .button {
 	display: inline-block;
 	vertical-align: middle;
-	height: 40px;
-	margin-right: 10px;
-	padding: 0px 15px;
-	font-size: 15pt;
-	line-height: 40px;
+	height: 38px;
+	margin: 0px 10px;
+	padding: 0px 12px;
+	font-size: 13pt;
+	line-height: 38px;
 	color: @background;
 	background-color: @theme1;
-	border-bottom: 4px solid @theme1;
 	transition: .1s color;
 	text-align: center;
 	text-decoration: none;
 	
-	&.confirm {
+	&.good {
 		background-color: @success;
 	}
-	&.cancel {
+	&.bad {
 		background-color: @error;
-	}
-
-	&.texted:not(.icon-right) .icon {
-		margin-right: 10px;
-	}
-	&.texted.icon-right .icon {
-		margin-left: 10px;
 	}
 
 	&.open {
@@ -308,13 +308,13 @@ h4 { font-size: 16pt; }
 	
 	&:hover {
 		cursor: pointer;
-		border-bottom: 4px solid @theme2;
+		background-color: @highlight;
 	}
 
 	&.small {
 		height: 25px;
-		font-size: 10pt;
 		line-height: 25px;
+		font-size: 10pt;
 	}
 }
 
@@ -351,6 +351,8 @@ h4 { font-size: 16pt; }
 .row {
 	width: 100%;
 	position: relative;
+
+	text-align: center;
 }
 
 .component {
@@ -358,7 +360,6 @@ h4 { font-size: 16pt; }
 	vertical-align: top;
 	padding: 15px;
 	margin: 15px;
-	background-color: @background;
 	overflow-wrap: break-word;
 
 	&.flat {
