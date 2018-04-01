@@ -20,6 +20,7 @@ from .model import initialize_model
 from . import responses
 
 application = handle_request
+export('application')(application)
 
 define_callback_type('pre_init', arguments=False)
 define_callback_type('init', arguments=False)
