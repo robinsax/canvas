@@ -34,13 +34,13 @@ class Constraint:
 		_constraint_map[self.name] = self
 	
 	def as_client_parsable(self):
-		raise NotImplemented()
+		raise NotImplementedError()
 
 	def as_sql(self):
-		raise NotImplemented()
+		raise NotImplementedError()
 
 	def check(self, model_obj, value):
-		raise NotImplemented()
+		raise NotImplementedError()
 
 	def check_with_throw(self, model, value):
 		if not self.check(model, value):
@@ -136,7 +136,7 @@ class NotNullConstraint(Constraint):
 		super().__init__('existance', error_message)
 
 	def as_sql(self):
-		return 'NOT NULL'
+		return 'CHECK (%s IS NOT NULL)'%self.column.name
 
 	def check(self, model, value):
 		return value is not None

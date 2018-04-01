@@ -3,7 +3,12 @@
 Request parsing method definitions.
 '''
 
-from ..exceptions import UnsupportedMediaType
+from json import JSONDecodeError
+
+from ..exceptions import (
+	UnsupportedMediaType, 
+	BadRequest
+)
 from ..namespace import export_ext
 from .json_io import deserialize_json
 
@@ -26,6 +31,6 @@ def parse_request(body, mimetype):
 @request_parser('application/json')
 def parse_json_request(body):
 	try:
-		return deserialize_json(body_data)
+		return deserialize_json(body)
 	except JSONDecodeError as ex:
 		raise BadRequest('Invalid body syntax') from None

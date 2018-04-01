@@ -24,7 +24,7 @@ class SQLExpression:
 		return 'WHERE %s'%self.serialize(values)
 
 	def serialize(self, values):
-		raise NotImplemented()
+		raise NotImplementedError()
 
 class SQLComparison(SQLExpression):
 

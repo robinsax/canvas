@@ -35,7 +35,7 @@ def table_creation(model_cls):
 		for constraint in column.constraints:
 			try:
 				sql_repr = constraint.as_sql()
-			except NotImplemented: 
+			except NotImplementedError: 
 				continue
 			
 			column_sql = ' '.join([

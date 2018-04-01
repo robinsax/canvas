@@ -54,10 +54,10 @@ class TypeAdapter:
 		return adapt(obj).getquoted()
 
 	def adapt(self, obj):
-		raise NotImplemented()
+		raise NotImplementedError()
 
 	def cast(self, value):
-		raise NotImplemented()
+		raise NotImplementedError()
 
 @type_adapter('JSON', JSON_OID, list, dict)
 class JSONAdapter:

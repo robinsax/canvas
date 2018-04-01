@@ -11,6 +11,7 @@ from werkzeug.contrib.securecookie import SecureCookie
 
 from ..exceptions import (
 	HTTPException, 
+	ValidationErrors,
 	InternalServerError,
 	NotFound,
 	UnsupportedVerb,
@@ -29,6 +30,7 @@ from .routing import resolve_route
 from .request_parsers import parse_request
 from .request_context import RequestContext
 from .request_errors import get_error_response
+from .responses import create_json
 from .styles import compile_less
 from .node_interface import transpile_jsx
 from .dictionaries import (
@@ -103,7 +105,7 @@ def serve_controller(request):
 	if verb == 'get':
 		request_parameters = request.args
 	else:
-		body_size = request.headers.get('Content-Length', 0)
+		body_size = int(request.headers.get('Content-Length', 0))
 		if body_size > config.security.max_bytes_receivable:
 			raise OversizeEntity(body_size)
 		elif body_size == 0:
@@ -149,6 +151,9 @@ def serve_controller(request):
 		invoke_callbacks('request_received', context)
 
 		response = handler(context)
+	except ValidationErrors as ex:
+		#	TODO: XML plugin should be able to override.
+		response = create_json('failure', ex.dictize(), 422, None)
 	except BaseException as ex:
 		cleanup()
 		report_error(ex, context)

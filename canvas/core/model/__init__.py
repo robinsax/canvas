@@ -55,7 +55,7 @@ def model(table_name, schema, accessors=None):
 		cls.__primary_key__ = primary_key
 		cls.__created__ = False
 		cls.__accessors__ = [primary_key] if accessors is None else [schema[name] for name in accessors]
-		
+
 		inner_init = cls.__init__
 		def init_wrap(self, *args, **kwargs):
 			self.__populate__()

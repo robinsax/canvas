@@ -85,7 +85,7 @@ class _Session:
 					if not constr.check(model, to_check):
 						error_dict[name] = constr.error_message
 						break
-				except NotImplemented: pass
+				except NotImplementedError: pass
 		
 		if len(error_dict) > 0:
 			raise ValidationErrors(error_dict)
@@ -124,7 +124,7 @@ class _Session:
 		try:
 			self.cursor.execute(sql, values)
 		except IntegrityError as ex:
-			constraint = get_constraint(e.diag.constraint_name)
+			constraint = get_constraint(ex.diag.constraint_name)
 			try:
 				raise ValidationErrors({
 					constraint.column.name: constraint.error_message
@@ -173,7 +173,7 @@ class _Session:
 			else:
 				return [loader_method(target, row) for row in self.cursor]
 
-		if issubclass(type(target), Model):
+		if issubclass(target, Model):
 			return from_loader_method(self._load_model)
 		elif isinstance(target, Join):
 			return from_loader_method(self._load_joined_model)

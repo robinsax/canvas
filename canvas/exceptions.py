@@ -50,6 +50,14 @@ class ValidationErrors(Exception):
 		else:
 			self.errors, self.summary = errors_or_summary, summary
 
+	def	dictize(self):
+		rep = dict()
+		if self.errors:
+			rep['errors'] = self.errors
+		if self.summary:
+			rep['summary'] = self.summary
+		return rep
+
 #	TODO: What's the deal with 'message' on these?
 @export
 class HTTPException(Exception):
