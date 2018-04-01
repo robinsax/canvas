@@ -1,7 +1,7 @@
 #   Full configuration for hosting with uWSGI + nginx. Takes <user> <domain>.
 
 apt-get update
-apt-get install uwsgi nginx -y
+apt-get install uwsgi nginx uwsgi-plugin-python -y
 
 #	Configure uWSGI.
 cp ./etc/configurations/uwsgi_config.ini ./canvas_uwsgi.ini
