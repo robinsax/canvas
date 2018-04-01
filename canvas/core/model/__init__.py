@@ -73,7 +73,7 @@ def dictize(target, omit=[]):
 		return [dictize(item) for item in target]
 	
 	return {
-		name: getattr(target, name, None) for name in target.__class__.__columns__ if name not in omit
+		name: getattr(target, name, None) for name in target.__class__.__schema__ if name not in omit
 	}
 
 @export
