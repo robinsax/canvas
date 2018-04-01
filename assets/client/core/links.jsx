@@ -1,9 +1,16 @@
 @part
-class SlidePart {
+class LinkPart {
 	constructor(core) {
+		this.core = core;
+
 		core.addInspector((check) => {
 			this.registerSlides(check);
-		})
+			this.classifyOpen(check);
+		});
+	}
+
+	classifyOpen(check) {
+		check.reduce('a').classify('open', (el) => el.attr('href') == this.core.route);
 	}
 
 	registerSlides(check) {

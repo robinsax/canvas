@@ -8,7 +8,7 @@
 	//	cv::include core/views
 	//	cv::include core/dnd
 	//	cv::include core/svg
-	//	cv::include core/slide
+	//	cv::include core/links
 
 	class Core {
 		constructor(debug){
