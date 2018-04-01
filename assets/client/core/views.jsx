@@ -15,6 +15,7 @@ class ViewPart {
 		core.view = (name, definition) => this.view(name, definition);
 		core.view.event = (on, selector=null) => this.viewEvent(on, selector);
 		core.view.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
+		core.view.onRender = (target, key, property) => this.viewOnRender(target, key, property);
 
 		tk(window).on('load', () => this.createViews());
 
@@ -142,6 +143,11 @@ class ViewPart {
 						this._node.replace(el);
 					}
 					this._node = el;
+					this.root = this._node;
+
+					if (ViewClass.prototype._onRender) {
+						this[ViewClass.prototype._onRender]();
+					}
 					
 					this._rendering = false;
 					return this._node;
@@ -204,5 +210,9 @@ class ViewPart {
 
 	viewOnCreate(target, key, descriptor) {
 		target._onCreate = key;
+	}
+
+	viewOnRender(target, key, descriptor) {
+		target._onRender = key;
 	}
 }

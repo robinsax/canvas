@@ -10,7 +10,7 @@ from .templates import render_template
 
 @export
 def create_json(status, data=None, code=200, headers=None):
-	if data:
+	if data is not None:
 		body = serialize_json({
 			'status': status,
 			'data': data
