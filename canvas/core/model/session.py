@@ -156,7 +156,7 @@ class _Session:
 
 		return self.detach(model)
 
-	def query(self, target, conditions=True, one=False, order_by=None, descending=False):
+	def query(self, target, conditions=True, one=False, count=None, order_by=None, descending=False):
 		if conditions is False:
 			return None if one else []
 		
@@ -171,7 +171,12 @@ class _Session:
 
 				return loader_method(target, row)
 			else:
-				return [loader_method(target, row) for row in self.cursor]
+				result = []
+				for i, row in enumerate(self.cursor):
+					result.append(loader_method(target, row))
+					if count is not None and i >= count:
+						break
+				return result
 
 		if issubclass(target, Model):
 			return from_loader_method(self._load_model)
