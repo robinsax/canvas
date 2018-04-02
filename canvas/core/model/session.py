@@ -173,9 +173,9 @@ class _Session:
 			else:
 				result = []
 				for i, row in enumerate(self.cursor):
-					result.append(loader_method(target, row))
 					if count is not None and i >= count:
 						break
+					result.append(loader_method(target, row))
 				return result
 
 		if issubclass(target, Model):
