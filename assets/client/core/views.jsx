@@ -68,6 +68,7 @@ class ViewPart {
 						this.template = this.templates.root;
 					}
 					this.data = this.data || definition.data || {};
+					this.dataSource = this.dataSource || definition.dataSource || null;
 
 					this._rendering = false;
 					this._created = false;

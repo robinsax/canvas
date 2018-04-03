@@ -115,7 +115,8 @@ def serve_controller(request):
 			content_type = request.headers.get('Content-Type')
 
 			request_parameters = parse_request(body_data, content_type)
-	request_parameters = RequestParameters(request_parameters)
+	if isinstance(request_parameters, dict):
+		request_parameters = RequestParameters(request_parameters)
 
 	#	Resolve cookie.
 	cookie_key, secret = config.security.cookie_key, config.security.cookie_secret
