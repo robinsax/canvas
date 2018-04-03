@@ -59,3 +59,7 @@ def asset_url(subroute):
 	if not subroute.startswith('/'):
 		subroute = '/%s'%subroute
 	return '/assets%s'%subroute
+
+@template_helper
+def sort_dependencies(dependencies):
+	return sorted(dependencies, key=lambda d: 'lib/' not in d)

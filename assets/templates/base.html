@@ -15,7 +15,7 @@
 
 			<script type="text/javascript">document.createElement('cv-view');</script>
 
-			{% for dependency in global_dependencies + (dependencies|default([])) %}
+			{% for dependency in h.sort_dependencies(global_dependencies + (dependencies|default([]))) %}
 				{% if dependency.endswith('.css') %}
 					<link rel="stylesheet" type="text/css" href="{{ h.asset_url(dependency) }}"/>
 				{% else %}
