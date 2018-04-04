@@ -10,6 +10,7 @@ from ..exceptions import (
 	BadRequest
 )
 from ..namespace import export_ext
+from .dictionaries import RequestParameters
 from .json_io import deserialize_json
 
 _parsers = dict()
@@ -31,6 +32,8 @@ def parse_request(body, mimetype):
 @request_parser('application/json')
 def parse_json_request(body):
 	try:
-		return deserialize_json(body)
+		obj = deserialize_json(body)
 	except JSONDecodeError as ex:
 		raise BadRequest('Invalid body syntax') from None
+
+	return RequestParameters(obj) if isinstance(obj, dict) else obj

@@ -78,7 +78,7 @@ class Column(SQLExpression):
 					except:
 						raise InvalidSchema('Malformed foreign key target: %s'%target) from None
 					
-					if not target_table.__created__:
+					if not issubclass(target_table, self.model) and not target_table.__created__:
 						raise _ResolveOther(target_table)
 					
 					self.is_fk, self.reference = True, target_column

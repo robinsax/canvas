@@ -33,9 +33,6 @@ from .request_errors import get_error_response
 from .responses import create_json
 from .styles import compile_less
 from .node_interface import transpile_jsx
-from .dictionaries import (
-	RequestParameters
-)
 from .. import __version__ as canvas_version
 
 log = logger(__name__)
@@ -115,8 +112,6 @@ def serve_controller(request):
 			content_type = request.headers.get('Content-Type')
 
 			request_parameters = parse_request(body_data, content_type)
-	if isinstance(request_parameters, dict):
-		request_parameters = RequestParameters(request_parameters)
 
 	#	Resolve cookie.
 	cookie_key, secret = config.security.cookie_key, config.security.cookie_secret

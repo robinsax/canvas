@@ -6,20 +6,20 @@ Implicit JSON serialization and deserialization.
 import json
 
 from ..exceptions import Unrecognized
-from ..namespace import export
+from ..namespace import export, export_ext
 
 _serializers = []
 _deserializers = []
 
-@export
+@export_ext
 def json_serializer(*types):
 	def json_serializer_wrap(func):
 		func.__serializes__ = types
-		_serializers.append(types)
+		_serializers.append(func)
 		return func
 	return json_serializer_wrap
 
-@export
+@export_ext
 def json_deserializer(func):
 	_deserializers.append(func)
 	return func
@@ -29,13 +29,13 @@ def serialize_json(obj, fallback=None):
 	def serialize_default(value):
 		for serializer in _serializers:
 			for typ in serializer.__serializes__:
-				if isinstance(obj, typ):
-					return serializer(obj)
+				if isinstance(value, typ):
+					return serializer(value)
 
 		if fallback:
-			return fallback(obj)
+			return fallback(value)
 
-		raise TypeError(type(obj))
+		raise TypeError(type(value))
 	
 	return json.dumps(obj, default=serialize_default)
 

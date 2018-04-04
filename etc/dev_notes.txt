@@ -8,3 +8,7 @@ FIRST: Variable init. levels on launch.
 --get-plugin <name>			Install a plugin and its dependencies from hub.
 --create-plugin <name>		Create a plugin.
 --prod-conf	<variant>		Set up a production service configuration.
+
+
+
+TODO: An @expect decorator for endpoint input validation

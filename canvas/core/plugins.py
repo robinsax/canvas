@@ -46,7 +46,7 @@ def load_plugins():
 			plugins_namespace.__path__.append(path)
 			__import__('canvas.plugins.%s'%name)
 		except ModuleNotFoundError:
-			raise DependencyError('Plugin not found: %s'%plugin_label) from None
+			raise DependencyError('Plugin not found: %s'%plugin_label)
 
 	for plugin in config.plugins.activated:
 		load_plugin(plugin)

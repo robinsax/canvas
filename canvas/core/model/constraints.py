@@ -112,7 +112,7 @@ class RangeConstraint(Constraint):
 				self.max_value
 			))
 		if self.min_value is not None:
-			ends.append('%s <= %s'%(
+			ends.append('%s >= %s'%(
 				column_reference, 
 				self.min_value
 			))

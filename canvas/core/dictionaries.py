@@ -26,7 +26,7 @@ class RequestParameters(AttributedDict):
 
 	def __getitem__(self, item):
 		if item not in self:
-			raise UnprocessableEntity('Missing request parameter {}'.format(item))
+			raise UnprocessableEntity('Missing request parameter %s'%item)
 		return super().__getitem__(item)
 
 class Configuration(AttributedDict):
