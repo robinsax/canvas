@@ -104,7 +104,7 @@ def create_object_relational_mapping():
 				column.resolve()
 			except _ResolveOther as recurser:
 				create_model_and_table(recurser.table)
-				column.resolve(model_cls)
+				column.resolve()
 
 		session.execute(*table_creation(model_cls))
 		model_cls.__created__ = True
