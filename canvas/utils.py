@@ -11,7 +11,8 @@ from .namespace import export
 
 @export
 def logger(name):
-	return logging.getLogger(name)
+	log = logging.getLogger(name)
+	return log
 
 @export
 def format_exception(ex):

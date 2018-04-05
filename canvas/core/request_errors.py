@@ -12,7 +12,8 @@ from .responses import create_json, create_webpage
 def get_error_response(pure_ex, route, ex, context=None):
 	error_data = {
 		'code': pure_ex.status_code,
-		'title': pure_ex.title
+		'title': pure_ex.title,
+		'description': str(pure_ex)
 	}
 	if config.development.debug:
 		error_data['debug_info'] = {

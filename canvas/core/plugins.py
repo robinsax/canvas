@@ -16,6 +16,7 @@ from .json_io import deserialize_json
 
 log = logger(__name__)
 
+@export
 def plugin_base_path(name):
 	name = name.split('.')[-1]
 	return os.path.join(__home__, config.plugins.directory, 'cvpl-%s'%name)
@@ -50,8 +51,8 @@ def load_plugins():
 
 	for plugin in config.plugins.activated:
 		load_plugin(plugin)
-		
 
+#	TODO: Make descending.
 @export
 def get_path_occurrences(*path_parts, include_base=True, dir=False):
 	path = os.path.join(*path_parts)

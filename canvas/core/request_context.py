@@ -13,6 +13,7 @@ _lock = Lock()
 
 @export_ext
 class RequestContext(AttributedDict):
+	__propagate__ = False
 
 	@classmethod
 	def get(cls):

@@ -115,7 +115,7 @@ class UnsupportedMediaType(HTTPException):
 @export
 class UnprocessableEntity(HTTPException):
 
-	def __init__(self, message):
+	def __init__(self, message='', errors=None):
 		super().__init__('Unprocessable Entity', 422, message)
 
 @export

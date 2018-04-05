@@ -24,6 +24,7 @@ from ..callbacks import (
 	define_callback_type, 
 	invoke_callbacks
 )
+from .dictionaries import AttributedDict
 from .plugins import get_path_occurrences
 from .model import create_session
 from .routing import resolve_route
@@ -129,11 +130,11 @@ def serve_controller(request):
 		'session': create_session(),
 		'request': request_parameters,
 		'headers': request.headers,
-		'route': variables,
-		'url': {
+		'route': AttributedDict(variables),
+		'url': AttributedDict({
 			'full': request.url,
 			'route': route
-		}
+		})
 	})
 	RequestContext.put(context)
 
@@ -149,7 +150,12 @@ def serve_controller(request):
 		response = handler(context)
 	except ValidationErrors as ex:
 		#	TODO: XML plugin should be able to override.
-		response = create_json('failure', ex.dictize(), 422, None)
+		data = ex.dictize()
+		data.update({
+			'code': 422,
+			'title': 'Validation Errors'
+		})
+		response = create_json('failure', data, 422, None)
 	except BaseException as ex:
 		cleanup()
 		report_error(ex, context)

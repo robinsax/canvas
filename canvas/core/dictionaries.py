@@ -15,7 +15,8 @@ class AttributedDict(dict):
 		return self[attr]
 
 	def __setitem__(self, attr, value):
-		if type(value) == dict:
+		propagate = getattr(self.__class__, '__propagate__', True)
+		if propagate and type(value) == dict:
 			value = self.__class__(value)
 		super().__setitem__(attr, value)
 	
