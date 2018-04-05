@@ -18,6 +18,8 @@ export('config')(config)
 def plugin_config(plugin_name):
 	from .core.plugins import plugin_base_path
 
+	plugin_name = plugin_name.split('.')[-1]
+
 	config_path = os.path.join(plugin_base_path(plugin_name), 'plugin.json')
 	with open(config_path, 'r') as config_file:
 		plugin_config = Configuration(deserialize_json(config_file.read()))
@@ -31,7 +33,6 @@ def plugin_config(plugin_name):
 					dest[key] = value
 
 		update_section(config.plugins[plugin_name], plugin_config)
-
 	return plugin_config
 
 def load_config():
