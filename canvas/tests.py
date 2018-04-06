@@ -3,15 +3,20 @@
 Testing interface definition.
 '''
 
-from .exceptions import Failure
-from .namespace import export
+from werkzeug.test import Client
+from werkzeug.wrappers import BaseResponse
+
 from .utils import logger, format_exception
 
 log = logger(__name__)
 
 _tests = []
 
-@export
+class Failure(Exception): pass
+
+def fail(message):
+	raise Failure(message)
+
 def test(name):
 	def test_wrap(func):
 		func.__test__ = name
@@ -19,23 +24,27 @@ def test(name):
 		return func
 	return test_wrap
 
-@export
 def assertion(name, condition):
 	log.info('\t%s', name)
 	if not condition:
-		raise Failure('Failed assertion: {}'.format(name))
+		raise Failure('Failed assertion %s'%name)
 
-@export
 def raise_assertion(name, cls, trigger):
 	log.info('\t%s', name)
 	try:
 		trigger()
 	except cls:
 		return
-	raise Failure('Failed raise assertion: {}'.format(name))
+	raise Failure('Failed raise assertion: %s'%name)
 
-@export
+def create_client():
+	from . import application
+	return Client(application, BaseResponse)
+
 def run_tests():
+	from .core import initialize_controllers
+	initialize_controllers()
+	
 	passed, failed = 0, 0
 	log.info('Running %d tests', len(_tests))
 

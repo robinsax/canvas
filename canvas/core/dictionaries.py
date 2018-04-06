@@ -23,6 +23,9 @@ class AttributedDict(dict):
 	def __setattr__(self, attr, value):
 		self[attr] = value
 
+class LazyAttributedDict(AttributedDict):
+	__propagate__ = False
+
 class RequestParameters(AttributedDict):
 
 	def __getitem__(self, item):

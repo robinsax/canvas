@@ -3,10 +3,7 @@
 Exception definitions.
 '''
 
-from .namespace import export
-
-@export
-class Failure(Exception): pass
+from .namespace import export, export_ext
 
 @export 
 class ConfigurationError(Exception): pass
@@ -15,6 +12,7 @@ class ConfigurationError(Exception): pass
 class AssetError(Exception): pass
 
 @export
+@export_ext
 class Unrecognized(Exception): pass
 
 @export

@@ -90,7 +90,7 @@ def launch(args):
 	launcher = None
 	while k < len(args):
 		launcher = get_launcher(args[k])
-		if launcher is None:
+		if launcher is None or launcher not in _launchers:
 			print_usage()
 		k += 1
 

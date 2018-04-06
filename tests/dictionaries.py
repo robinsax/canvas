@@ -3,14 +3,15 @@
 Tests on special dictionaries.
 '''
 
-import canvas as cv
+import canvas.tests as cvt
 
+from canvas.exceptions import UnprocessableEntity
 from canvas.core.dictionaries import (
 	Configuration,
 	RequestParameters
 )
 
-@cv.test('Configuration object')
+@cvt.test('Configuration object')
 def test_configuration():
 	configuration = Configuration({
 		'key1': 1,
@@ -20,29 +21,29 @@ def test_configuration():
 		}
 	})
 
-	cv.assertion(
+	cvt.assertion(
 		'Copy and __getitem__ correct',
 		configuration.key1 == 1
 	)
 
-	cv.assertion(
+	cvt.assertion(
 		'Propagation occurrs', 
 		configuration.key2.sub1 == 2
 	)
 
-@cv.test('RequestParameters object')
+@cvt.test('RequestParameters object')
 def test_request_parameters():
 	request_parameters = RequestParameters({
 		'key1': 1
 	})
 
-	cv.assertion(
+	cvt.assertion(
 		'Copy occurs',
 		request_parameters['key1']
 	)
 
-	cv.raise_assertion(
+	cvt.raise_assertion(
 		'UnprocessableEntity occurs', 
-		cv.UnprocessableEntity,
+		UnprocessableEntity,
 		lambda: request_parameters['key2']
 	)

@@ -3,6 +3,6 @@
 Unit tests on the $plugin_name plugin for canvas.
 '''
 
-import canvas as cv
+import canvas.tests as cvt
 
 pass

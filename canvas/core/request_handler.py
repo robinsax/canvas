@@ -44,7 +44,7 @@ _identifier = 'canvas/%s Python/%s'%(
 )
 _asset_cache = dict()
 
-define_callback_type('request_received', arguments=[RequestContext])
+define_callback_type('request_received', arguments=[RequestContext], ext=True)
 
 def parse_response_tuple(tpl):
 	if not isinstance(tpl, (list, tuple)):
@@ -207,7 +207,13 @@ def handle_request(environ, start_response):
 		except HTTPException as ex:
 			if ex.status_code > 499 and not (isinstance(ex, InternalServerError) and ex.reraise):
 				report_error(ex)
-			response = parse_response_tuple(get_error_response(ex, route, *ex.diag))
+			
+			if len(ex.diag) > 1:
+				source_ex, context = ex.diag
+			else:
+				source_ex, *empty = ex.diag
+				context = None
+			response = parse_response_tuple(get_error_response(ex, source_ex, route, context))
 	
 	response.headers['Server'] = _identifier
 	return response(environ, start_response)

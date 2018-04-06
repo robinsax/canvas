@@ -3,9 +3,8 @@
 Unit tests on the canvas backend.
 '''
 
-import canvas as cv
+import canvas.tests as cvt
+
 from . import (
 	dictionaries
 )
-
-cv.run_tests()

@@ -6,7 +6,7 @@ already in the root package.
 
 from werkzeug.serving import run_simple
 
-from ..namespace import export
+from ..namespace import export, export_ext
 from ..callbacks import define_callback_type, invoke_callbacks
 from ..controllers import create_controllers
 from ..configuration import load_config
@@ -28,11 +28,15 @@ define_callback_type('post_init', arguments=False)
 
 _route_map = None
 
-@export
+@export_ext
 def get_routing():
 	return _route_map
 
-@export
+@export_ext
+def get_controller(route):
+	return _route_map.get(route, None)
+
+@export_ext
 def get_controllers():
 	controllers = []
 	for route, controller in _route_map.items():
@@ -40,9 +44,14 @@ def get_controllers():
 			controllers.append(controller)
 	return controllers
 
+def initialize_controllers():
+	global _route_map
+	
+	_route_map = create_controllers()
+	create_routing(_route_map)
+
 @export
 def initialize():
-	global _route_map
 	if _route_map is not None:
 		return
 
@@ -57,9 +66,7 @@ def initialize():
 	create_render_environment()
 	load_palette()
 
-	_route_map = create_controllers()
-	create_routing(_route_map)
-
+	initialize_controllers()
 	initialize_model()
 
 	invoke_callbacks('post_init')
