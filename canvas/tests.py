@@ -3,14 +3,12 @@
 Testing interface definition.
 '''
 
-from werkzeug.test import Client
-from werkzeug.wrappers import BaseResponse
-
 from .utils import logger, format_exception
 
 log = logger(__name__)
 
 _tests = []
+_assertions = [0]
 
 class Failure(Exception): pass
 
@@ -29,30 +27,47 @@ def assertion(name, condition):
 	if not condition:
 		raise Failure('Failed assertion %s'%name)
 
+	_assertions[0] += 1
+
 def raise_assertion(name, cls, trigger):
 	log.info('\t%s', name)
 	try:
 		trigger()
 	except cls:
+		_assertions[0] += 1
 		return
+	
 	raise Failure('Failed raise assertion: %s'%name)
 
-def create_client():
+def create_client():	
+	from werkzeug.test import Client
+	from werkzeug.wrappers import BaseResponse
+	
 	from . import application
+
 	return Client(application, BaseResponse)
 
-def run_tests():
+def reset_controllers():
 	from .core import initialize_controllers
+
 	initialize_controllers()
-	
+
+def reset_model():
+	from .core.model import initialize_model
+
+	initialize_model()
+
+def run_tests():
 	passed, failed = 0, 0
 	log.info('Running %d tests', len(_tests))
 
 	for test in _tests:
+		_assertions[0] = 0
 		log.info('Running test: %s', test.__test__)
 
 		try:
 			test()
+			log.info('\tPassed! (%d assertions)'%_assertions[0])
 			passed += 1
 		except Failure as ex:
 			log.warning('\tFailed!\n%s', format_exception(ex))
