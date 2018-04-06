@@ -24,6 +24,7 @@ from ..callbacks import (
 	define_callback_type, 
 	invoke_callbacks
 )
+from ..controllers import Endpoint
 from .dictionaries import AttributedDict
 from .plugins import get_path_occurrences
 from .model import create_session
@@ -104,15 +105,18 @@ def serve_controller(request):
 		request_parameters = request.args
 	else:
 		body_size = int(request.headers.get('Content-Length', 0))
+		content_type = request.headers.get('Content-Type')
+		expected_type = controller.__expects__
+
+		if issubclass(type(controller), Endpoint) and expected_type not in content_type:
+			raise UnsupportedMediaType('Expected %s'%expected_type.upper())
+
 		if body_size > config.security.max_bytes_receivable:
 			raise OversizeEntity(body_size)
 		elif body_size == 0:
-			request_parameters = dict()
+			request_parameters = RequestParameters() if 'json' in content_type else None
 		else:
-			body_data = request.get_data(as_text=True)
-			content_type = request.headers.get('Content-Type')
-
-			request_parameters = parse_request(body_data, content_type)
+			request_parameters = parse_request(request.get_data(as_text=True), content_type)
 
 	#	Resolve cookie.
 	cookie_key, secret = config.security.cookie_key, config.security.cookie_secret

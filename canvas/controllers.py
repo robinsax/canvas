@@ -9,6 +9,7 @@ from .configuration import config
 from .utils import logger, patch_type
 from .core.request_context import RequestContext
 from .core.responses import create_webpage
+from . import __verbs__
 
 _definitions = []
 
@@ -49,12 +50,13 @@ def controller(*routes, _destiny=Controller, **attrs):
 	return controller_wrap
 
 @export
-def endpoint(*routes, **attrs):
+def endpoint(*routes, expects='json', **attrs):
 	route_prefix = '/%s'%config.customization.api_route_prefix
 	for route in routes:
 		if not route.startswith(route_prefix):
 			raise IllegalEndpointRoute(route)
 
+	attrs['expects'] = expects
 	return controller(*routes, _destiny=Endpoint, **attrs)
 
 @export
@@ -63,7 +65,6 @@ def page(*routes, template=None, **attrs):
 		template = '%s.html'%routes[0][1:]
 	
 	attrs['template'] = template
-
 	return controller(*routes, _destiny=Page, **attrs)
 
 @page('/', template='welcome.html')
@@ -77,14 +78,14 @@ def create_controllers():
 			setattr(instance, '__%s__'%key, value)
 
 		supported_verbs = []
-		for verb in ['get', 'post', 'put', 'patch', 'delete', 'options']:
+		for verb in __verbs__:
 			if hasattr(instance, 'on_%s'%verb):
 				supported_verbs.append(verb)
 		instance.__verbs__ = supported_verbs
 
 		for route in definition.routes:
 			route_map[route] = instance
-
+		
 		log.debug('Created controller %s (Verbs: %s, Routes: %s)', instance.__class__.__name__, supported_verbs, definition.routes)
 	
 	return route_map

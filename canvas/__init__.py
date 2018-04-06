@@ -15,6 +15,7 @@ __home__ = os.path.abspath(
 		os.path.dirname(inspect.getfile(sys.modules[__name__]))
 	)
 )
+__verbs__ = ['get', 'post', 'put', 'patch', 'delete', 'options']
 
 try:
 	#	These imports will fail if dependencies haven't been installed.
