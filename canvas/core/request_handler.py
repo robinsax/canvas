@@ -25,7 +25,7 @@ from ..callbacks import (
 	invoke_callbacks
 )
 from ..controllers import Endpoint
-from .dictionaries import AttributedDict
+from .dictionaries import AttributedDict, RequestParameters
 from .plugins import get_path_occurrences
 from .model import create_session
 from .routing import resolve_route
@@ -102,7 +102,7 @@ def serve_controller(request):
 
 	#	Resolve parameters.
 	if verb == 'get':
-		request_parameters = request.args
+		request_parameters = RequestParameters(request.args)
 	else:
 		body_size = int(request.headers.get('Content-Length', 0))
 		content_type = request.headers.get('Content-Type')
