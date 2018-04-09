@@ -100,10 +100,11 @@ class DragAndDropPart {
 
 		core.drag = (el, params) => { return new Drag(el, params); };
 		core.drop = (el, params) => { return new Drop(el, params); };
+		core.onceReady(() => { this.beginDnd(); });
 	}
 	
-	initDOM(core) {
-		core.page.on({
+	beginDnd(core) {
+		tk('body').on({
 			mouseup: () => {
 				if (Drag.current != null){
 					Drag.current.end();

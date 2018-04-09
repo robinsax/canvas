@@ -35,5 +35,5 @@ def parse_json_request(body):
 		obj = deserialize_json(body)
 	except JSONDecodeError as ex:
 		raise BadRequest('Invalid body syntax') from None
-
-	return RequestParameters(obj) if isinstance(obj, dict) else obj
+	
+	return RequestParameters(obj) if isinstance(obj, dict) else obj 

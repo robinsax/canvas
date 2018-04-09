@@ -147,7 +147,7 @@ class ViewPart {
 					this.root = this._node;
 
 					if (ViewClass.prototype._onRender) {
-						this[ViewClass.prototype._onRender]();
+						this[ViewClass.prototype._onRender](el);
 					}
 					
 					this._rendering = false;
