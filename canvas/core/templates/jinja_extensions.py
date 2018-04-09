@@ -15,7 +15,7 @@ from ...exceptions import (
 	TemplateNotFound, 
 	TemplateOverlayError
 )
-from ...namespace import export
+from ...namespace import export_ext
 from ...configuration import config
 
 class DeepLoader(BaseLoader):
@@ -53,7 +53,7 @@ class DeepLoader(BaseLoader):
 			source = src_f.read().decode('utf-8')
 		return source, path, lambda: mod_time == os.path.getmtime(path)
 
-@export
+@export_ext
 class ExtendsAliasTag(Extension):
 	extension = None
 

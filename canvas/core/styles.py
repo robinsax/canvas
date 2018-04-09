@@ -21,10 +21,13 @@ from .plugins import get_path_occurrences
 
 log = logger(__name__)
 
+_palette = dict()
 _less_header = None
 
 def load_palette():
 	global _less_header
+	global _palette
+
 	palette = config.customization.palette
 
 	occurrences = get_path_occurrences('assets', 'palettes', '%s.palette'%palette)
@@ -47,8 +50,14 @@ def load_palette():
 	for match in re.finditer(r'(.*?)\s+->\s+(.*?)\r*(?:\n|$|&)', palette_data):
 		value, labels = match.group(1), match.group(2)
 		for label in [l.strip() for l in labels.split(',')]:
+			_palette[label] = value
 			declarations.append('@%s: %s;'%(label, value))
+
 	_less_header = '\n'.join(declarations) + '\n'
+
+@export
+def get_palette():
+	return _palette
 
 @export
 def compile_less(source, minify=None):
