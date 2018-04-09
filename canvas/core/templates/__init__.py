@@ -5,7 +5,7 @@ Jinja extentions and template actualization.
 
 from htmlmin import minify as minify_html
 
-from ...namespace import export
+from ...namespace import export, export_ext
 from ...utils import logger
 from ...configuration import config
 from ..plugins import get_path_occurrences
@@ -18,7 +18,7 @@ _helpers = dict()
 _filters = dict()
 _render_environment = None
 
-@export
+@export_ext
 def jinja_extension(extension):
 	_extensions.append(extension)
 	return extension
