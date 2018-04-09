@@ -33,9 +33,9 @@ class step:
 		else:
 			print('Done')
 
-@launcher('init', {
-	'description': "Install canvas's dependencies and create its configuration"
-})
+@launcher('init',
+	description="Install canvas's dependencies and create a configuration file"
+)
 def launch_setup(args):
 	with step('Installing Python requirements...'):
 		with open(os.path.join(__home__, 'requirements.txt'), 'r') as req_file:
@@ -65,16 +65,16 @@ def launch_setup(args):
 
 	with step('Creating configuration...'):
 		shutil.copyfile(
-			os.path.join(__home__, 'default_settings.json'), 
+			os.path.join(__home__, 'etc', 'default_settings.json'), 
 			os.path.join(__home__, 'settings.json')
 		)
 
 	return True
 
-@launcher('config', {
-	'argspec': '<key=value, ...>',
-	'description': 'Apply a set of key, value configuration pairs. Key levels are delimited with ".". List values are joined with ",".'
-})
+@launcher('config',
+	argspec='<key=value, ...>',
+	description='Apply a set of key, value configuration pairs. Key levels are delimited with ".". List values are joined with ",".'
+)
 def launch_configuration(args):
 	with open(os.path.join(__home__, 'settings.json')) as config_file:
 		raw_config = json.load(config_file)
@@ -99,9 +99,9 @@ def launch_configuration(args):
 	print('Wrote %d entries'%len(args))
 	return True
 
-@launcher('write-setup-sql', {
-	'description': 'Output SQL which can be used to initialize the database.'
-})
+@launcher('write-setup-sql',
+	description='Output SQL which can be used to initialize the database.'
+)
 def launch_init_db(args):
 	from ..configuration import load_config, config
 	load_config()

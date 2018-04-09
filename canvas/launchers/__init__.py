@@ -13,25 +13,25 @@ from .. import __home__, __version__
 _launchers = dict()
 
 @export
-def launcher(name, info):
+def launcher(name, **info):
 	def launcher_wrap(func):
 		func.__info__ = info
 		_launchers[name] = func
 		return func
 	return launcher_wrap
 
-@launcher('version', {
-	'description': 'Show the current version'
-})
+@launcher('version',
+	description='Show the current version'
+)
 def show_version(args):
 	print('canvas %s'%__version__)
 	return True
 
-@launcher('serve', {
-	'argspec': '<port>', 
-	'description': 'Launch the development server', 
-	'init': True
-})
+@launcher('serve',
+	argspec='<port>', 
+	description='Launch the development server', 
+	init=True
+)
 def launch_serve(args):
 	from ..core import serve
 
@@ -43,11 +43,11 @@ def launch_serve(args):
 	serve(port)
 	return True
 
-@launcher('test', {
-	'argspec': '<?plugin>',
-	'description': 'Run unit tests on the core or a plugin',
-	'init': True
-})
+@launcher('test',
+	argspec='<?plugin>',
+	description='Run unit tests on the core or a plugin',
+	init=True
+)
 def launch_tests(args):
 	from ..core.plugins import plugin_base_path
 
@@ -69,12 +69,12 @@ def launch(args):
 			first = '--%s %s'%(name, launcher.__info__.get('argspec', ''))
 			first = '%s%s%s'%(first, ' '*(30 - len(first)), launcher.__info__.get('description', ''))
 			return first
-
+		
 		print(' '.join([
 			'Usage:',
-			'python canvas [',
+			'python3 canvas [',
 				'\n\t' + '\n\t'.join([
-					create_string(name, launcher) for name, launcher in _launchers.items()
+					create_string(name, _launchers[name]) for name in sorted(_launchers.keys())
 				]),
 			'\n]'
 		]))
@@ -107,4 +107,4 @@ def launch(args):
 		if not launcher(args_here):
 			print_usage()
 
-from . import plugin_creation, setup
+from . import plugin_creation, setup, doc_builder

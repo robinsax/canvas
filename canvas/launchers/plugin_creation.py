@@ -12,11 +12,11 @@ from . import launcher
 
 log = logger(__name__)
 
-@launcher('create-plugin', {
-	'argspec': '<name>', 
-	'description': 'Create a plugin template', 
-	'init': True
-})
+@launcher('create-plugin',
+	argspec='<name>', 
+	description='Create a plugin template', 
+	init=True
+)
 def launch_plugin_creation(args):
 	from ..core.plugins import plugin_base_path
 
