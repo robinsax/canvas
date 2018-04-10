@@ -8,7 +8,6 @@ import sys
 
 from ..namespace import export
 from ..tests import run_tests
-from ..core.plugins import load_plugins
 from .. import __home__, __version__
 
 _launchers = dict()
