@@ -6,6 +6,7 @@ Plugin management.
 import os
 import re
 import sys
+import traceback
 
 from ..exceptions import DependencyError
 from ..namespace import export
@@ -46,8 +47,11 @@ def load_plugins():
 		try:
 			plugins_namespace.__path__.append(path)
 			__import__('canvas.plugins.%s'%name)
-		except ModuleNotFoundError:
-			raise DependencyError('Plugin not found: %s'%plugin_label)
+		except ModuleNotFoundError as ex:
+			length = len(list(traceback.walk_tb(ex.__traceback__)))
+			if length == 1:
+				raise DependencyError('Plugin not found: %s'%plugin_label)
+			raise ex
 
 	for plugin in config.plugins.activated:
 		load_plugin(plugin)

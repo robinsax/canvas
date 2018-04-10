@@ -15,10 +15,13 @@ _definitions = []
 
 log = logger(__name__)
 
+@export
 class Controller: pass
 
+@export
 class Endpoint(Controller): pass
 
+@export
 class Page(Controller):
 
 	def on_get(self, context):

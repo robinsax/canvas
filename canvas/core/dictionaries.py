@@ -4,7 +4,9 @@ Special dictionary definitions.
 '''
 
 from ..exceptions import UnprocessableEntity
+from ..namespace import export_ext
 
+@export_ext
 class AttributedDict(dict):
 
 	def __init__(self, content=dict()):
@@ -23,9 +25,11 @@ class AttributedDict(dict):
 	def __setattr__(self, attr, value):
 		self[attr] = value
 
+@export_ext
 class LazyAttributedDict(AttributedDict):
 	__propagate__ = False
 
+@export_ext
 class RequestParameters(AttributedDict):
 
 	def __getitem__(self, item):
@@ -33,6 +37,7 @@ class RequestParameters(AttributedDict):
 			raise UnprocessableEntity('Missing request parameter %s'%item)
 		return super().__getitem__(item)
 
+@export_ext
 class Configuration(AttributedDict):
 
 	def __init__(self, content=dict()):

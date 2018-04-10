@@ -16,6 +16,7 @@ def _register(func, type_name):
 	#	Register.
 	_callbacks[type_name].append(func)
 
+@export_ext
 def define_callback_type(type_name, arguments=[], ext=False):
 	#	TODO: Allow argspec inspector.
 
@@ -28,6 +29,7 @@ def define_callback_type(type_name, arguments=[], ext=False):
 
 	return type_name
 
+@export_ext
 def invoke_callbacks(type_name, *args, **kwargs):
 	if type_name not in _callbacks:
 		return

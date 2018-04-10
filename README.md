@@ -24,8 +24,10 @@ import canvas as cv
     'name': model.Column('text'),
     'ingredients': model.Column('json')
 })
-@cv.kw_init('name', 'ingredients')
-class Breakfast: pass
+class Breakfast:
+
+    def __init__(self, name, ingredients):
+        self.name, self.ingredients = name, ingredients
 
 #   Create an initialization function that cooks a breakfast if there isn't
 #   one already.
@@ -68,13 +70,6 @@ class BreakfastView {
         alert('Yum!');
     }
 }
-
-//  Declare where the view should be rendered.
-cv.placeViews({
-    '*': {
-        '.page': ['breakfastView']
-    }
-});
 ```
 
 ## Setup

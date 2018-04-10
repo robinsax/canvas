@@ -66,8 +66,8 @@ def initialize():
 	create_render_environment()
 	load_palette()
 
-	initialize_controllers()
 	initialize_model()
+	initialize_controllers()
 
 	invoke_callbacks('post_init')
 
