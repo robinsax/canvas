@@ -23,11 +23,15 @@ def define_callback_type(type_name, arguments=[], ext=False):
 	def psuedo(func):
 		_register(func, type_name)
 		return func
-	
+
+	def psuedo_invoke(*args, **kwargs):
+		invoke_callbacks(type_name, *args, **kwargs)
+	psuedo.invoke = psuedo_invoke
+
 	export_fn = export_ext if ext else export
 	export_fn('on_%s'%type_name)(psuedo)
 
-	return type_name
+	return psuedo
 
 @export_ext
 def invoke_callbacks(type_name, *args, **kwargs):

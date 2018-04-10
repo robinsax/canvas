@@ -55,17 +55,24 @@ def create_render_environment():
 	)
 
 @export
-def render_template(template_path, params=dict(), minify=True):
+def render_template(template_path, params=dict(), return_data=False, minify=True):
 	template = _render_environment.get_template(template_path)
+	data = None
 	
 	params.update({
 		'global_dependencies': ['lib/toolkit.min.js', 'canvas.js', 'canvas.css'],
 		'icon_stylesheet': 'font-awesome.min.css'
 	})
+	if return_data:
+		data = dict()
+		params['__data__'] = data
 	rendered = template.render(params)
 	
 	if minify:
 		rendered = minify_html(rendered, remove_all_empty_space=True)
+	
+	if return_data:
+		return rendered, data
 	return rendered
 
 from . import default_additions

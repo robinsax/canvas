@@ -59,7 +59,8 @@ def launch_tests(args):
 	sys.path.insert(0, import_from)
 	import tests
 	
-	run_tests()
+	if not run_tests():
+		sys.exit(1)
 	return True
 
 @export
