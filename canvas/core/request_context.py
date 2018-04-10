@@ -6,14 +6,13 @@ The request context object definition.
 from threading import Lock, get_ident
 
 from ..namespace import export_ext
-from .dictionaries import AttributedDict
+from .dictionaries import LazyAttributedDict
 
 _request_contexts = {}
 _lock = Lock()
 
 @export_ext
-class RequestContext(AttributedDict):
-	__propagate__ = False
+class RequestContext(LazyAttributedDict):
 
 	@classmethod
 	def get(cls):
