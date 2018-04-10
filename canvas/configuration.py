@@ -15,8 +15,6 @@ from . import __home__
 
 _importer_configs = dict()
 
-log = logger(__name__)
-
 config = Configuration()
 export('config')(config)
 
@@ -42,10 +40,6 @@ def plugin_config(plugin_name):
 	if plugin_name in config.plugins:
 		update_section(config.plugins[plugin_name], plugin_config)
 	
-	log.debug('Computed plugin configuration for %s:\n%s'%(
-		plugin_name,
-		pprint.pformat(plugin_config)
-	))
 	return plugin_config
 
 def add_importer_config(target_name, content):

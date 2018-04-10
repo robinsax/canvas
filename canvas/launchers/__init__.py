@@ -8,6 +8,7 @@ import sys
 
 from ..namespace import export
 from ..tests import run_tests
+from ..core.plugins import load_plugins
 from .. import __home__, __version__
 
 _launchers = dict()
@@ -64,11 +65,11 @@ def launch_tests(args):
 	return True
 
 @export
-def launch(args):
+def launch(args):	
 	def print_usage():
 		def create_string(name, launcher):
 			first = '--%s %s'%(name, launcher.__info__.get('argspec', ''))
-			first = '%s%s%s'%(first, ' '*(30 - len(first)), launcher.__info__.get('description', ''))
+			first = '%s%s%s'%(first, ' '*(35 - len(first)), launcher.__info__.get('description', ''))
 			return first
 		
 		print(' '.join([
@@ -87,6 +88,16 @@ def launch(args):
 			return None
 		return launcher_match.group(1) 
 
+	
+	if '-i' in args:
+		from ..core import initialize
+		initialize()
+
+		args.remove('-i')
+	
+	if len(args) == 0:
+		print_usage()
+
 	k = 0
 	launcher = None
 	while k < len(args):
@@ -101,6 +112,7 @@ def launch(args):
 			k += 1
 
 		launcher = _launchers[launcher]
+
 		if launcher.__info__.get('init', False):
 			from ..core import initialize
 			initialize()

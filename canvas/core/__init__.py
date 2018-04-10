@@ -22,9 +22,9 @@ from . import responses
 application = handle_request
 export('application')(application)
 
-define_callback_type('pre_init', arguments=False)
-define_callback_type('init', arguments=False)
-define_callback_type('post_init', arguments=False)
+define_callback_type('pre_init')
+define_callback_type('init')
+define_callback_type('post_init')
 
 _route_map = None
 
@@ -59,7 +59,7 @@ def initialize():
 
 	load_config()
 	load_plugins()
-
+	
 	invoke_callbacks('init')
 
 	create_node_interface()
