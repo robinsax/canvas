@@ -106,14 +106,16 @@ def serve_controller(request):
 	else:
 		body_size = int(request.headers.get('Content-Length', 0))
 		content_type = request.headers.get('Content-Type')
+		expected_type = controller.__expects__
 
 		if body_size > config.security.max_bytes_receivable:
 			raise OversizeEntity(body_size)
 		elif body_size == 0:
-			request_parameters = RequestParameters() if 'json' in content_type else None
+			request_parameters = RequestParameters() if 'json' in expected_type else None
 		else:
-			expected_type = controller.__expects__
-			if issubclass(type(controller), Endpoint) and expected_type not in content_type:
+			should_assert = content_type and issubclass(type(controller), Endpoint)
+
+			if should_assert and expected_type not in content_type:
 				raise UnsupportedMediaType('Expected %s'%expected_type.upper())
 
 			request_parameters = parse_request(request.get_data(as_text=True), content_type)
