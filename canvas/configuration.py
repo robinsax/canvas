@@ -4,12 +4,18 @@ Configuration storage and management.
 '''
 
 import os
+import pprint
 import logging
 
 from .namespace import export
 from .core.json_io import deserialize_json
 from .core.dictionaries import Configuration
+from .utils import logger
 from . import __home__
+
+_importer_configs = dict()
+
+log = logger(__name__)
 
 config = Configuration()
 export('config')(config)
@@ -23,17 +29,27 @@ def plugin_config(plugin_name):
 	config_path = os.path.join(plugin_base_path(plugin_name), 'plugin.json')
 	with open(config_path, 'r') as config_file:
 		plugin_config = Configuration(deserialize_json(config_file.read()))
-		
-	if plugin_name in config.plugins:
-		def update_section(source, dest):
-			for key, value in source.items():
-				if isinstance(value, Configuration):
-					update_section(value, dest[key])
-				else:
-					dest[key] = value
 
+	def update_section(source, dest):
+		for key, value in source.items():
+			if isinstance(value, dict):
+				update_section(value, dest[key])
+			else:
+				dest[key] = value
+
+	if plugin_name in _importer_configs:
+		update_section(_importer_configs[plugin_name], plugin_config)
+	if plugin_name in config.plugins:
 		update_section(config.plugins[plugin_name], plugin_config)
+	
+	log.debug('Computed plugin configuration for %s:\n%s'%(
+		plugin_name,
+		pprint.pformat(plugin_config)
+	))
 	return plugin_config
+
+def add_importer_config(target_name, content):
+	_importer_configs[target_name] = content
 
 def load_config():
 	with open(os.path.join(__home__, 'settings.json'), 'r') as config_file:

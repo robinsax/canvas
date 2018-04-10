@@ -11,7 +11,7 @@ import traceback
 from ..exceptions import DependencyError
 from ..namespace import export
 from ..utils import logger
-from ..configuration import config
+from ..configuration import config, add_importer_config
 from .. import __home__
 from .json_io import deserialize_json
 
@@ -33,9 +33,14 @@ def load_plugins():
 			with open(config_path) as config_file:
 				raw_plugin_config = deserialize_json(config_file.read())
 				if 'dependencies' in raw_plugin_config:
-					dependencies = [l.strip() for l in raw_plugin_config['dependencies']]
+					dependencies = raw_plugin_config['dependencies']
+				else:
+					dependencies = tuple()
 			
 			for dependency in dependencies:
+				if isinstance(dependency, (tuple, list)):
+					dependency, importer_config = dependency
+					add_importer_config(dependency, importer_config)
 				load_plugin(dependency, name)
 
 		sys.path.insert(0, path)
