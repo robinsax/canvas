@@ -3,7 +3,7 @@
 Testing interface definition.
 '''
 
-from .utils import logger, format_exception
+from ..utils import logger, format_exception
 
 log = logger(__name__)
 
@@ -40,20 +40,17 @@ def raise_assertion(name, cls, trigger):
 	raise Failure('Failed raise assertion: %s'%name)
 
 def create_client():	
-	from werkzeug.test import Client
-	from werkzeug.wrappers import BaseResponse
+	from .client import CanvasTestClient
 	
-	from . import application
-
-	return Client(application, BaseResponse)
+	return CanvasTestClient()
 
 def reset_controllers():
-	from .core import initialize_controllers
+	from ..core import initialize_controllers
 
 	initialize_controllers()
 
 def reset_model():
-	from .core.model import initialize_model
+	from ..core.model import initialize_model
 
 	initialize_model()
 
