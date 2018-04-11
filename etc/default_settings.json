@@ -24,5 +24,9 @@
 		"api_route_prefix": "api",
 		"defer_scripts": true,
 		"palette": "default"
+	},
+	"datetime": {
+		"default_input_format": "%Y-%m-%dT%H:%M:%S",
+		"output_format": "%Y-%m-%dT%H:%M:%S"
 	}
 }

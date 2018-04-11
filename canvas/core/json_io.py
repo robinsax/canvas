@@ -5,6 +5,8 @@ Implicit JSON serialization and deserialization.
 
 import json
 
+from datetime import datetime
+
 from ..exceptions import Unrecognized
 from ..namespace import export, export_ext
 
@@ -54,3 +56,9 @@ def deserialize_json(data):
 		return dct
 
 	return json.loads(data, object_hook=deserialize_hook)
+
+@json_serializer(datetime)
+def serialize_datetime(datetime_obj):
+	from ..configuration import config
+
+	return datetime_obj.strftime(config.datetime.output_format)

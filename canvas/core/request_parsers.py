@@ -4,6 +4,7 @@ Request parsing method definitions.
 '''
 
 from base64 import b64decode
+from datetime import datetime
 from json import JSONDecodeError
 from mimetypes import guess_extension
 
@@ -11,11 +12,22 @@ from ..exceptions import (
 	UnsupportedMediaType, 
 	BadRequest
 )
-from ..namespace import export_ext
+from ..namespace import export, export_ext
+from ..configuration import config
 from .dictionaries import LazyAttributedDict, RequestParameters
 from .json_io import deserialize_json
 
 _parsers = dict()
+
+@export
+def parse_datetime(datetime_str, format_str=None):
+	if not format_str:
+		format_str = config.datetime.default_input_format
+	
+	try:
+		return datetime.strptime(datetime_str, format_str)
+	except:
+		raise BadRequest('Invalid datetime %s'%datetime_str) from None
 
 @export_ext
 def request_parser(*mimetypes):
@@ -40,6 +52,7 @@ def parse_json_request(body):
 	
 	return RequestParameters(obj) if isinstance(obj, dict) else obj 
 
+'''
 @request_parser('x-cv-files/json')
 def parse_fileupload_request(body):
 	try:
@@ -57,3 +70,4 @@ def parse_fileupload_request(body):
 			'filename': file_dict['filename']
 		}))
 	return result
+'''
