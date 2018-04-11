@@ -55,7 +55,7 @@ def table_creation(model_cls):
 	])
 	return statement, ()
 
-def selection(target, query, ordering=None):
+def selection(target, query, ordering, for_):
 	values = []
 	
 	if query is True:
@@ -94,8 +94,13 @@ def selection(target, query, ordering=None):
 		column, ascending = ordering
 		statement = ' '.join([
 			statement,
-			'ORDER BY', column.serialize(), 'ASC' if ascending else 'DESC', ';'
+			'ORDER BY', column.serialize(), 'ASC' if ascending else 'DESC'
 		])
+	if for_ is not None:
+		statement = ' '.join((
+			statement,
+			'FOR %s'%for_
+		))
 
 	statement += ';'
 	return statement, values

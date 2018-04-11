@@ -156,12 +156,17 @@ class _Session:
 
 		return self.detach(model)
 
-	def query(self, target, conditions=True, one=False, count=None, order_by=None, descending=False):
+	def query(self, target, conditions=True, one=False, count=None, order_by=None, descending=False, for_update=False, for_share=False):
 		if conditions is False:
 			return None if one else []
 		
+		for_ = None
+		if for_share:
+			for_ = 'SHARE'
+		if for_update:
+			for_ = 'UPDATE'
 		order = (order_by, not descending) if order_by is not None else None		
-		self.execute(*selection(target, conditions, order))
+		self.execute(*selection(target, conditions, order, for_))
 
 		def from_loader_method(loader_method):
 			if one:
@@ -191,17 +196,23 @@ class _Session:
 			else:
 				return [r[0] for r in self.cursor.fetchall()]
 
-	def commit(self):
-		to_commit = list(self.active_mappings.items())
+	def _commit_one(self, model):
+		if len(model.__dirty__) > 0:
+			self._precheck_constraints(model)
 
-		for ref, model in to_commit:
-			if len(model.__dirty__) > 0:
-				self._precheck_constraints(model)
+			self.execute(*row_update(model))
 
-				self.execute(*row_update(model))
+			self._update_reference(model)
+			model.__dirty__ = dict()
 
-				self._update_reference(model)
-				model.__dirty__ = dict()
+	def commit(self, model=None):
+		if model is None:
+			to_commit = list(self.active_mappings.items())
+
+			for ref, model in to_commit:
+				self._commit_one(model)
+		else:
+			self._commit_one(model)
 		
 		self.connection.commit()
 		return self
