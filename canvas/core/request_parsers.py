@@ -20,12 +20,9 @@ from .json_io import deserialize_json
 _parsers = dict()
 
 @export
-def parse_datetime(datetime_str, format_str=None):
-	if not format_str:
-		format_str = config.datetime.default_input_format
-	
+def parse_datetime(datetime_str):
 	try:
-		return datetime.strptime(datetime_str, format_str)
+		return datetime.strptime(datetime_str, config.datetime.input_format)
 	except:
 		raise BadRequest('Invalid datetime %s'%datetime_str) from None
 
