@@ -14,10 +14,10 @@ class CanvasTestClient(Client):
 
 	def __init__(self):
 		super().__init__(application, BaseResponse)
-		
+
 	def get_json(self, url):
 		response = self.get(url)
-		response.json = deserialize_json(response.data)
+		response.json = deserialize_json(response.data.decode())
 		response.ok = response.status_code == 200
 		return response
 
@@ -26,7 +26,7 @@ class CanvasTestClient(Client):
 			content_type = 'application/json'
 			json = serialize_json(json)
 		response = self.put(url, content_type=content_type, data=json)
-		response.json = deserialize_json(response.data)
+		response.json = deserialize_json(response.data.decode())
 		response.ok = response.status_code == 200
 		return response
 
@@ -35,6 +35,6 @@ class CanvasTestClient(Client):
 			content_type = 'application/json'
 			json = serialize_json(json)
 		response = self.post(url, content_type=content_type, data=json)
-		response.json = deserialize_json(response.data)
+		response.json = deserialize_json(response.data.decode())
 		response.ok = response.status_code == 200
 		return response
