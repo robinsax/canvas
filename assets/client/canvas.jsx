@@ -9,7 +9,8 @@
 	//	cv::include core/dnd
 	//	cv::include core/svg
 	//	cv::include core/links
-
+	//	cv::include core/forms
+	
 	class Core {
 		constructor(debug){
 			this.debug = debug;
@@ -63,9 +64,11 @@
 		}
 	}
 
-	window.tk = toolkit.create();
-	let debug = tk('head').attr('cv-debug') != null;
-	tk.config.debug = debug;
+	let debug = document.getElementsByTagName('head')[0].hasAttribute('cv-debug');
+	window.tk = toolkit.create({
+		debug: debug,
+		iteration: {ignoreKeys: ['_watched']}
+	});
 
 	window.cv = new Core(debug);
 })();

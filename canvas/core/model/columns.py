@@ -51,7 +51,7 @@ def define_column_types():
 class Column(SQLExpression):
 	#	This is an expression because a column can be boolean.
 
-	def __init__(self, type_str, constraints=[], default=_sentinel, primary_key=False):
+	def __init__(self, type_str, constraints=tuple(), default=_sentinel, primary_key=False):
 		self.type_str = type_str
 
 		self.constraints = constraints

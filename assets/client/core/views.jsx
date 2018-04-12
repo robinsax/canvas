@@ -6,22 +6,19 @@ class ViewPart {
 		ViewPart.instance = this;
 		this.core = core;
 
-		this.dataStaging = {};
-		this.dataCount = 0;
-
 		core.views = this.views = {};
 		this._viewDefinitions = {};
 
 		core.view = (name, definition) => this.view(name, definition);
-		core.view.event = (on, selector=null) => this.viewEvent(on, selector);
+		core.view.event = (on, selector=null) => {
+			tk.warn('cv.view.event is deprecated, use cv.event');
+			return this.viewEvent(on, selector);
+		}
+		core.event = (on, selector=null) => this.viewEvent(on, selector)
 		core.view.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
 		core.view.onRender = (target, key, property) => this.viewOnRender(target, key, property);
 
 		tk(window).on('load', () => this.createViews());
-
-		tk.comp = (iterable, callback) => this.comp(iterable, callback);
-		tk.ToolkitSelection.prototype.data = function(){ return this.first(false)._cvData.data; };
-		tk.ToolkitSelection.prototype.index = function(){ return this.first(false)._cvData.index; };
 	}
 
 	_resolveData(root) {
@@ -34,26 +31,6 @@ class ViewPart {
 
 			el.first(false)._cvData = data;
 		});
-	}
-
-	comp(iterable, callback) {
-		let result = [];
-		for (let i = 0; i < iterable.length; i++){
-			let item = callback(iterable[i], i);
-			if (item !== undefined){
-				if (item._virtual) {
-					//	Attach data.
-					let data = {
-						data: iterable[i],
-						index: i
-					};
-					this.dataStaging[this.dataCount++] = data;
-					item.attributes['_cv-data'] = this.dataCount - 1;
-				}
-				result.push(item);
-			}
-		}
-		return result;
 	}
 
 	view(name, definition) {

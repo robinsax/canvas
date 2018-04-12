@@ -113,7 +113,7 @@ def serve_controller(request):
 		elif body_size == 0:
 			request_parameters = RequestParameters() if 'json' in expected_type else None
 		else:
-			should_assert = content_type and issubclass(type(controller), Endpoint)
+			should_assert = content_type and expected_type != '*'
 
 			if should_assert and expected_type not in content_type:
 				raise UnsupportedMediaType('Expected %s'%expected_type.upper())
@@ -137,6 +137,7 @@ def serve_controller(request):
 		'request': request_parameters,
 		'headers': request.headers,
 		'route': AttributedDict(variables),
+		'verb': verb,
 		'url': AttributedDict({
 			'full': request.url,
 			'route': route

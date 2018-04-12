@@ -14,6 +14,9 @@
 			{% block styles %}{% endblock %}
 
 			<script type="text/javascript">document.createElement('cv-view');</script>
+			<script type="text/javascript">
+				{{ __model_serializations__ }}
+			</script>
 
 			{% for dependency in h.sort_dependencies(global_dependencies + (dependencies|default([]))) %}
 				{% if dependency.endswith('.css') %}
