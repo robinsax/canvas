@@ -36,7 +36,7 @@ class RequestContext(LazyAttributedDict):
 
 	def __init__(self, source):
 		super().__init__(source)
-		self.indexed = ['request', 'cookie', 'session']
+		self.indexed = ['request', 'cookie', 'session', 'route']
 
 	def __getitem__(self, item):
 		if isinstance(item, (int, slice)):
