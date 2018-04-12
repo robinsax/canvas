@@ -50,5 +50,6 @@ def get_error_response(http_ex, source_ex, route, context):
 		})
 	else:
 		return create_webpage('error.html', {
+			'__route__': route,
 			'error': error_dict
 		}, code=http_ex.status_code, headers=http_ex.headers)
