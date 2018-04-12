@@ -21,18 +21,6 @@ class ViewPart {
 		tk(window).on('load', () => this.createViews());
 	}
 
-	_resolveData(root) {
-		root.children('[_cv-data]').iter((el) => {
-			let k = el.attr('_cv-data');
-			let data = this.dataStaging[k + ''];
-
-			el.attr('_cv-data', null);
-			delete this.dataStaging[k];
-
-			el.first(false)._cvData = data;
-		});
-	}
-
 	view(name, definition) {
 		return (ViewClass) => {
 			class AsView extends ViewClass {
@@ -106,8 +94,6 @@ class ViewPart {
 					let el = tk.template(this.template)
 						.data(this.data, this.state, this.templates)
 						.render();
-
-					ViewPart.instance._resolveData(el);
 
 					if (ViewClass.prototype._events) {
 						tk.iter(ViewClass.prototype._events, (eventDesc) => {

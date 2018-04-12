@@ -22,7 +22,6 @@ class SVGPart {
 				el.replace(svg);
 			}
 
-
 			if (src.lastIndexOf('.svg') == src.length - 4){
 				if (this.cache[src]){
 					swap(this.cache[src]);
