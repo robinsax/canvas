@@ -61,7 +61,7 @@ def load_plugins():
 	for plugin in config.plugins.activated:
 		load_plugin(plugin)
 
-#	TODO: Make descending.
+#	TODO: Make descending and export ext.
 @export
 def get_path_occurrences(*path_parts, include_base=True, dir=False):
 	path = os.path.join(*path_parts)
@@ -79,3 +79,7 @@ def get_path_occurrences(*path_parts, include_base=True, dir=False):
 			occurrences.insert(0, base_instance_path)
 
 	return occurrences
+
+@export
+def get_path(*path_parts, include_base=True, is_dir=False):
+	return get_path_occurrences(*path_parts, include_base=include_base, dir=is_dir)[0]
