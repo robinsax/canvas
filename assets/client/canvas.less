@@ -91,52 +91,41 @@ h4 { font-size: 16pt; }
 }
 
 .field {
-	margin-bottom: 2em;
+	margin-bottom: 1.5em;
 
-	.icon {
-		width: 2.5em;
-		padding-left: 0px;
-		margin-right: 1em;
-		font-size: 16pt;
-	}
-
-	.label {
+	label {
+		vertical-align: top;
 		display: inline-block;
-		width: 100px;
+		width: 8em;
 		margin-right: 1em;
-		text-align: left;
+		text-align: right;
 	}
 
-	.error-desc {
-		display: none;
+	&.required {
+		label:after {
+			content: '*';
+			color: @highlight;
+		}
+	}
+
+	.error-message {
 		margin-top: 0.5em;
-		max-width: 40em;
+		margin-left: 9em;
+		width: 10em;
 		text-align: left;
 	}
 
 	&.error {
 		margin-bottom: 1em;
 
-		input, textarea {
+		.input {
 			border: 2px solid @error;
 		}
-
-		.error-desc {
-			display: inline-block;
-		}
-	}
-	
-	&.textarea {
-		.icon, .label {
-			vertical-align: top;
-		}
 	}
 
-	input,
-	select,
-	textarea {
-		height: 40px;
-		max-width: 450px;
+	.input {
+		height: 2em;
+		width: 18em;
 		padding: 0px 10px;
 		outline: none;
 		border: none;
@@ -146,63 +135,10 @@ h4 { font-size: 16pt; }
 		background-color: @input;
 		transition: color .5s, background-color .5s;
 
-		&.error-highlight {
-			background-color: @error;
-		}
-
 		&:hover {
 			background-color: @focused-input;
 		}
 	}
-
-	//	Field-type specific styles.
-	textarea {
-		height: 200px;
-		padding: 10px;
-	}
-
-	.checkbox-wrap {
-		display: inline-block;
-		max-width: 450px;
-		height: 40px;
-		text-align: left;
-
-		input[type="checkbox"] {
-			position: relative;
-			top: 5px;
-			height: 18px;
-			width: 30px;
-			margin: 0px;
-		}
-	}
-	
-	.form-width {
-		max-width: 450px;
-	}
-
-	//	Field component scaling mixins based on icon/label/error border
-	//	presence.
-	.field_variant(@sel, @lwidth){
-		&.@{sel} {
-			input:not([type="checkbox"]), select, textarea, .form-width, .checkbox-wrap {
-				width: e('calc(100% - ')@{lwidth}e('px)');
-			}
-		}
-	}
-
-	.field_variant_error(@sel, @lwidth){
-		&.@{sel} .error-desc {
-			width: e('calc(100% - ')@{lwidth}e('px)');
-			margin-left: @{lwidth}px;
-		}
-	}
-
-	.field_variant('iconed:not(.labeled)', 50);
-	.field_variant_error('iconed.error:not(.labeled)', 54);
-	.field_variant('labeled:not(.iconed)', 130);
-	.field_variant_error('labeled.error:not(.iconed)', 134);
-	.field_variant('iconed.labeled', 180);
-	.field_variant_error('labeled.iconed.error', 184);
 }
 
 //	Modal styles.
@@ -211,10 +147,16 @@ h4 { font-size: 16pt; }
 	top: 0px;
 	width: 100%;
 	height: 100%;
+	z-index: 99;
 	background-color: rgba(0, 0, 0, 0.5);
-	cursor: default !important;
+	display: none;
+
+	&.open {
+		display: block;
+	}
 
 	.panel {
+		z-index: 100;
 		display: inline-block;
 		position: relative;
 		padding: 10px;
@@ -222,17 +164,6 @@ h4 { font-size: 16pt; }
 		left: 50%;
 		background-color: @background;
 		transform: translate(-50%, -50%);
-		cursor: default;
-
-		.closer {
-			cursor: pointer;
-			float: right;
-		}
-	}
-
-	//	TODO: What is this style.
-	.error .error-desc {
-		display: block !important;
 	}
 }
 
@@ -281,14 +212,19 @@ h4 { font-size: 16pt; }
 }
 
 //	Buttons and button groups.
-.button {
+button {
+	border: none;
+	outline: none;
 	display: inline-block;
 	vertical-align: middle;
-	height: 38px;
+	
+	height: 1.5em;
+	line-height: 1.5em;
+
 	margin: 0px 10px;
 	padding: 0px 12px;
 	font-size: 13pt;
-	line-height: 38px;
+	font-family: @text-font;
 	color: @background;
 	background-color: @theme1;
 	transition: .1s color;
@@ -301,7 +237,6 @@ h4 { font-size: 16pt; }
 	&.bad {
 		background-color: @error;
 	}
-
 	&.open {
 		background-color: @theme2;
 	}
@@ -309,12 +244,6 @@ h4 { font-size: 16pt; }
 	&:hover {
 		cursor: pointer;
 		background-color: @highlight;
-	}
-
-	&.small {
-		height: 25px;
-		line-height: 25px;
-		font-size: 10pt;
 	}
 }
 

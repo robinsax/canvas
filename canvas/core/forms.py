@@ -13,11 +13,11 @@ def serialize_form_models(model_classes):
 			constraints = []
 			for constraint in column.constraints:
 				try:
-					constraints.append(constraint.as_validator())
+					constraints.append((constraint.as_validator(), constraint.error_message))
 				except NotImplementedError: pass
 			form_dict[name] = {
 				'type': column.input_type,
-				'contraints': constraints
+				'validators': constraints
 			}
 		models_dict[model_cls.__table__] = form_dict
 	return serialize_json(models_dict)

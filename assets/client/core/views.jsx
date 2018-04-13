@@ -11,19 +11,6 @@ class ViewPart {
 
 		core.view = (name, definition) => this.view(name, definition);
 
-		core.view.event = (on, selector=null) => {
-			tk.warn('cv.view.event is deprecated, use cv.event');
-			return this.viewEvent(on, selector);
-		}
-		core.view.onCreate = (target, key, property) => {
-			tk.warn('cv.view.onCreate is deprecated, use cv.onCreate');
-			return this.viewOnCreate(target, key, property);
-		}
-		core.view.onRender = (target, key, property) => {
-			tk.warn('cv.view.onRender is deprecated, use cv.onRender');
-			this.viewOnRender(target, key, property);
-		}
-
 		core.event = (on, selector=null) => this.viewEvent(on, selector)
 		core.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
 		core.onRender = (target, key, property) => this.viewOnRender(target, key, property);
@@ -33,7 +20,7 @@ class ViewPart {
 
 	view(name, definition) {
 		return (ViewClass) => {
-			class AsView extends ViewClass {
+			class View extends ViewClass {
 				constructor() {
 					super(...arguments);
 					this.state = this.state || definition.state ||  {};
@@ -47,6 +34,22 @@ class ViewPart {
 
 					this._rendering = false;
 					this._created = false;
+				}
+
+				fetch() {
+					if (!this.dataSource) {
+						throw 'No source';
+					}
+					cv.request('GET', this.dataSource)
+						.success((response) => {
+							this.data = response.data;
+							this.render();
+						})
+						.send();
+				}
+
+				select() {
+					return this._node;
 				}
 
 				render() {
@@ -128,8 +131,8 @@ class ViewPart {
 				}
 			}
 			
-			this._viewDefinitions[name] = AsView;
-			return AsView;
+			this._viewDefinitions[name] = View;
+			return View;
 		}
 	}
 

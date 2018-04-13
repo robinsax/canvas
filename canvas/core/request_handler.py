@@ -69,7 +69,15 @@ def parse_response_tuple(tpl):
 	return response_object
 
 def report_error(ex, context=None):
-	log.error(format_exception(ex))
+	should_report = (
+		not isinstance(ex, HTTPException) or
+		(
+			(ex.status_code > 499 or config.development.log_client_errors) and
+			not (isinstance(ex, InternalServerError) and ex.reraise)
+		)
+	)
+	if should_report:
+		log.error(format_exception(ex))
 
 def retrieve_asset(path, recall=False):
 	occurrences = get_path_occurrences('assets', 'client', path[1:])
@@ -156,6 +164,7 @@ def serve_controller(request):
 
 		response = handler(context)
 	except ValidationErrors as ex:
+		report_error(ex, context)
 		#	TODO: XML plugin should be able to override.
 		data = ex.dictize()
 		data.update({
@@ -205,15 +214,13 @@ def handle_request(environ, start_response):
 		try:
 			response = serve_asset(request)
 		except HTTPException as ex:
-			if ex.status_code > 499:
-				report_error(ex)
+			report_error(ex)
 			response = parse_response_tuple(ex.response())
 	else:
 		try:
 			response = serve_controller(request)
 		except HTTPException as ex:
-			if ex.status_code > 499 and not (isinstance(ex, InternalServerError) and ex.reraise):
-				report_error(ex)
+			report_error(ex)
 			
 			if len(ex.diag) > 1:
 				source_ex, context = ex.diag

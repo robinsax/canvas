@@ -8,7 +8,7 @@ from .namespace import export
 from .configuration import config
 from .utils import logger, patch_type
 from .core.request_context import RequestContext
-from .core.responses import create_webpage
+from .core.responses import create_page
 from .core.forms import serialize_form_models
 from . import __verbs__
 
@@ -35,7 +35,7 @@ class Page(Controller):
 			'__route__': context.url.route,
 			'__models__': serialize_form_models(self.__models__)
 		})
-		return create_webpage(self.__template__, params, code=code, headers=headers)
+		return create_page(self.__template__, params, code=code, headers=headers)
 
 class _ControllerDefinition:
 

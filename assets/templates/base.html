@@ -15,8 +15,12 @@
 
 			<script type="text/javascript">
 				document.createElement('cv-view');
-				var _modelDefinitions = {{ __models__ }};
 			</script>
+			{% if __models__ is defined %}
+				<script type="text/javascript">
+					var modelDefinitions = {{ __models__ }};
+				</script>
+			{% endif %}
 
 			{% for dependency in h.sort_dependencies(global_dependencies + (dependencies|default([]))) %}
 				{% if dependency.endswith('.css') %}

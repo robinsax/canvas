@@ -40,6 +40,10 @@ def plugin_config(plugin_name):
 	if plugin_name in config.plugins:
 		update_section(config.plugins[plugin_name], plugin_config)
 	
+	#	Update the core.
+	if 'core' in plugin_config:
+		update_section(plugin_config.core, config)
+	
 	return plugin_config
 
 def add_importer_config(target_name, content):

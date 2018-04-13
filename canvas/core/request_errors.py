@@ -8,7 +8,7 @@ from ..utils import format_exception
 from ..callbacks import define_callback_type, invoke_callbacks
 from .dictionaries import LazyAttributedDict
 from .json_io import serialize_json
-from .responses import create_json, create_webpage
+from .responses import create_json, create_page
 
 define_callback_type('error', (LazyAttributedDict,), ext=True)
 
@@ -49,7 +49,7 @@ def get_error_response(http_ex, source_ex, route, context):
 			'headers': http_ex.headers
 		})
 	else:
-		return create_webpage('error.html', {
+		return create_page('error.html', {
 			'__route__': route,
 			'error': error_dict
 		}, code=http_ex.status_code, headers=http_ex.headers)

@@ -21,10 +21,15 @@ _parsers = dict()
 
 @export
 def parse_datetime(datetime_str):
-	try:
-		return datetime.strptime(datetime_str, config.datetime.input_format)
-	except:
-		raise BadRequest('Invalid datetime %s'%datetime_str) from None
+	if not isinstance(config.datetime.input_format, (list, tuple)):
+		config.datetime.input_format = (config.datetime.input_format,)
+
+	for fmt in config.datetime.input_format:
+		try:
+			return datetime.strptime(datetime_str, fmt)
+		except: pass
+	
+	raise BadRequest('Invalid datetime %s'%datetime_str) from None
 
 @export_ext
 def request_parser(*mimetypes):

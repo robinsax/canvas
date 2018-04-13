@@ -37,6 +37,6 @@ def create_redirect(target_url, code=302, headers=dict()):
 		return None, code, headers, None
 
 @export
-def create_webpage(template_path, params=dict(), code=200, headers=dict()):
+def create_page(template_path, params=dict(), code=200, headers=dict()):
 	rendered_template = render_template(template_path, params)
 	return rendered_template, code, headers, 'text/html'
