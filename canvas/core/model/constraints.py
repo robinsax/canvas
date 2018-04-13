@@ -33,7 +33,7 @@ class Constraint:
 
 		_constraint_map[self.name] = self
 	
-	def as_client_parsable(self):
+	def as_validator(self):
 		raise NotImplementedError()
 
 	def as_sql(self):
@@ -56,7 +56,7 @@ class RegexConstraint(Constraint):
 		self.regex = regex
 		self.ignore_case, self.negative = ignore_case, negative
 
-	def as_client_parsable(self):
+	def as_validator(self):
 		as_flag = lambda b: '1' if b else '0'
 
 		return 'regex:%s:%s:%s'(
@@ -96,10 +96,10 @@ class RangeConstraint(Constraint):
 
 		self.max_value, self.min_value = max_value, min_value
 
-	def as_client_parsable(self):
-		return 'range:%s,%s'%(
-			'null' if self.max_value is None else self.max_value,
-			'null' if self.min_value is None else self.min_value
+	def as_validator(self):
+		return 'range:%s:%s'%(
+			'-' if self.max_value is None else self.max_value,
+			'-' if self.min_value is None else self.min_value
 		)
 
 	def as_sql(self):
@@ -135,6 +135,9 @@ class NotNullConstraint(Constraint):
 	def __init__(self, error_message='Required'):
 		super().__init__('existance', error_message)
 
+	def as_validator(self):
+		return 'required'
+	
 	def as_sql(self):
 		return 'CHECK (%s IS NOT NULL)'%self.column.name
 

@@ -9,6 +9,7 @@ from .configuration import config
 from .utils import logger, patch_type
 from .core.request_context import RequestContext
 from .core.responses import create_webpage
+from .core.forms import serialize_form_models
 from . import __verbs__
 
 _definitions = []
@@ -31,10 +32,10 @@ class Page(Controller):
 		context = RequestContext.get()
 
 		params.update({
-			'__route__': context.url.route
+			'__route__': context.url.route,
+			'__models__': serialize_form_models(self.__models__)
 		})
-		return create_webpage(self.__template__, params, code=code, 
-				headers=headers)
+		return create_webpage(self.__template__, params, code=code, headers=headers)
 
 class _ControllerDefinition:
 
@@ -63,11 +64,14 @@ def endpoint(*routes, expects='json', **attrs):
 	return controller(*routes, _destiny=Endpoint, **attrs)
 
 @export
-def page(*routes, template=None, **attrs):
+def page(*routes, template=None, models=tuple(), **attrs):
 	if template is None:
 		template = '%s.html'%routes[0][1:]
 	
-	attrs['template'] = template
+	attrs.update({
+		'template': template,
+		'models': models
+	})
 	return controller(*routes, _destiny=Page, **attrs)
 
 @page('/', template='welcome.html')
