@@ -3,6 +3,8 @@
 SQL serialization.
 '''
 
+import inspect
+
 from ...exceptions import (
 	InvalidQuery,
 	UnadaptedType
@@ -65,7 +67,7 @@ def selection(target, query, ordering, for_):
 	else:
 		raise InvalidQuery('Bad query condition: %s'%repr(query))
 
-	if issubclass(target, Model):
+	if inspect.isclass(target) and issubclass(target, Model):
 		selection = ', '.join(target.__schema__.keys())
 		source = target.__table__
 	elif isinstance(target, Join):

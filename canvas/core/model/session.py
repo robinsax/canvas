@@ -3,6 +3,8 @@
 The session class definition.
 '''
 
+import inspect
+
 from psycopg2 import (
 	IntegrityError, 
 	connect
@@ -183,7 +185,7 @@ class _Session:
 					result.append(loader_method(target, row))
 				return result
 
-		if issubclass(target, Model):
+		if inspect.isclass(target) and issubclass(target, Model):
 			return from_loader_method(self._load_model)
 		elif isinstance(target, Join):
 			return from_loader_method(self._load_joined_model)
