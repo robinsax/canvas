@@ -9,6 +9,8 @@ from datetime import datetime
 
 from ..exceptions import Unrecognized
 from ..namespace import export, export_ext
+from .model.model import Model
+from .model import dictize
 
 _serializers = []
 _deserializers = []
@@ -31,7 +33,7 @@ def serialize_json(obj, fallback=None):
 	def serialize_default(value):
 		for serializer in _serializers:
 			for typ in serializer.__serializes__:
-				if isinstance(value, typ):
+				if isinstance(value, typ) or issubclass(type(value), typ):
 					return serializer(value)
 
 		if fallback:
@@ -62,3 +64,7 @@ def serialize_datetime(datetime_obj):
 	from ..configuration import config
 
 	return datetime_obj.strftime(config.datetime.output_format)
+
+@json_serializer(Model)
+def serialize_model(model):
+	return serialize_json(dictize(model))
