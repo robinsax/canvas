@@ -106,7 +106,7 @@ class ViewPart {
 
 					let el = tk.template(this.template)
 						.data(this.data, this.state, this.templates)
-						.render();
+						.render(this);
 
 					if (ViewClass.prototype._events) {
 						tk.iter(ViewClass.prototype._events, (eventDesc) => {

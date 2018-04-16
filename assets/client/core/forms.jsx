@@ -1,4 +1,5 @@
 let formPartInstance = null;
+let _sentinel = {};
 
 class Validator {
 	constructor(errorMessage) {
@@ -127,8 +128,11 @@ class Field {
 
 	}
 
-	value() {
-		return this.node.children('.input').value();
+	value(toSet=_sentinel) {
+		if (toSet == _sentinel) {
+			return this.node.children('.input').value();
+		}
+		this.node.children('.input').value(toSet);
 	}
 
 	//	TODO: Cleanup.
@@ -361,6 +365,19 @@ class FormPart {
 					});
 
 					return pass;
+				}
+
+				clear() {
+					tk.iter(this.fields, (name, field) => {
+						field.value('');
+					});
+				}
+
+				fill(content) {
+					tk.iter(content, (key, value) => {
+						let field = this.fields[key];
+						field && field.value(value);
+					});
 				}
 
 				submit() {

@@ -102,6 +102,7 @@ class _Session:
 			
 		self._map_model(model, row)
 
+		model.__session__ = self
 		if not remap:
 			model.__load__()
 
@@ -146,11 +147,16 @@ class _Session:
 
 		self._map_model(model, self.cursor.fetchone())
 
+		model.__session__ = None
+
 		model.__create__()
 		return self
 
 	def detach(self, model):
 		del self.active_mappings[self._row_reference(model)]
+
+		model.__session__ = None
+
 		return self
 
 	def delete(self, model):
