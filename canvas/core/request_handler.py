@@ -114,7 +114,7 @@ def serve_controller(request):
 	else:
 		body_size = int(request.headers.get('Content-Length', 0))
 		content_type = request.headers.get('Content-Type')
-		expected_type = controller.__expects__
+		expected_type = getattr(controller, '__expects__', 'json')
 
 		if body_size > config.security.max_bytes_receivable:
 			raise OversizeEntity(body_size)
@@ -227,7 +227,7 @@ def handle_request(environ, start_response):
 			else:
 				source_ex, *empty = ex.diag
 				context = None
-			response = parse_response_tuple(get_error_response(ex, source_ex, route, context))
+			response = parse_response_tuple(get_error_response(ex, source_ex, route, request.method.lower(), context))
 	
 	response.headers['Server'] = _identifier
 	return response(environ, start_response)

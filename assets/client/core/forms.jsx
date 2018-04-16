@@ -1,7 +1,36 @@
 let formPartInstance = null;
 
-class RegexValidator {
-	constructor(repr) {
+class Validator {
+	constructor(errorMessage) {
+		this.errorMessage = errorMessage;
+	}
+
+	validate(value) {
+		throw 'Not implemented';
+	}
+}
+
+class FileTypeValidator extends Validator {
+	constructor(repr, errorMessage) {
+		super(errorMessage);
+		this.type = repr;
+	}
+
+	validate(value) {
+		let pass = true;
+		tk.iter([].slice.call(value), file => {
+			if (file.type != this.type) {
+				pass = false;
+				return false;
+			}
+		});
+		return pass;
+	}
+}
+
+class RegexValidator extends Validator {
+	constructor(repr, errorMessage) {
+		super(errorMessage);
 		let parts = repr.split(':');
 		this.regex = new RegExp(decodeURIComponent(parts[0]), +parts[1] > 0 ? 'i' : '');
 		this.negation = +parts[2] > 0;
@@ -12,8 +41,9 @@ class RegexValidator {
 	}
 }
 
-class RangeValidator {
-	constructor(repr) {
+class RangeValidator extends Validator {
+	constructor(repr, errorMessage) {
+		super(errorMessage);
 		let parts = repr.split(':');
 		this.min = parts[0] == '-' ? null : +parts[0];
 		this.max = parts[1] == '-' ? null : +parts[1];
@@ -24,14 +54,21 @@ class RangeValidator {
 	}
 }
 
-class RequiredValidator {
-	validate(value) {
+class RequiredValidator extends Validator {
+	constructor(repr) {
+		super('Required');
+	}
+
+	validate(value, field) {
+		if (field.type == 'file') {
+			return value.length > 0;
+		}
 		return value != null;
 	}
 }
 
 class Field {
-	constructor(options) {
+	constructor(options, form) {
 		let nameToTitle = (n) => {
 			return n.replace(/(_|^)(\w)/g, (m, s, l) => (' ' + l.toUpperCase()));
 		}
@@ -43,31 +80,34 @@ class Field {
 		this.required = false;
 
 		tk.iter(this.validators, (validator, i) => {
-			let repr = validator[0],
+			if (!(validator instanceof Validator)) {
+				let repr = validator[0],
 				splitI = repr.indexOf(':'),
 				type = repr.substring(0, splitI);
 
-			if (splitI < 0){
-				type = repr;
-				repr = '';
+				if (splitI < 0){
+					type = repr;
+					repr = '';
+				}
+				else {
+					repr = repr.substring(splitI);
+				}
+					
+				let Class = formPartInstance.validatorTypes[type];
+				if (!Class) {
+					throw 'Unknown validator type ' + type;
+				}
+				let instance = new Class(repr);
+				instance.errorMessage = validator[1];
+				this.validators[i] = validator = instance;
 			}
-			else {
-				repr = repr.substring(splitI);
-			}
-				
-			let Class = formPartInstance.validatorTypes[type];
-			if (!Class) {
-				throw 'Unknown validator type ' + type;
-			}
-			let instance = new Class(repr);
-			instance.errorMessage = validator[1];
-
-			this.validators[i] = instance;
-			if (instance instanceof RequiredValidator) {
+			
+			if (validator instanceof RequiredValidator) {
 				this.required = true;
 			}
 		});
 
+		this.form = form;
 		this.error = null;
 		this.node = null;
 		this.errorNode = null;
@@ -111,7 +151,7 @@ class Field {
 		}
 
 		tk.iter(this.validators, validator => {
-			if (!validator.validate(this.value())){
+			if (!validator.validate(this.value(), this)){
 				this.error = validator.errorMessage;
 			}
 		});
@@ -131,8 +171,11 @@ class Field {
 	bind(el) {
 		let input = el.children('[name="' + this.name + '"]');
 		input.on({
-			keyup: () => {
+			keyup: (el, event) => {
 				this.validate();
+				if ((event.keyCode || event.which) == 13) {
+					this.form.submit();
+				}
 			},
 			change: () => {
 				this.validate();
@@ -157,6 +200,13 @@ class FormPart {
 		this.validatorTypes = {};
 		core.forms = this.forms = {};
 
+		core.RegexValidator = RegexValidator;
+		core.RangeValidator = RangeValidator;
+		core.RequiredValidator = RequiredValidator;
+		core.FileTypeValidator = FileTypeValidator;
+
+		core.readFile = (file, success) => this.readFile(file, success);
+
 		core.form = (name, options) => this.form(name, options);
 		core.validator = (type) => this.registerValidatorType(type);
 
@@ -166,6 +216,14 @@ class FormPart {
 		core.onceReady(() => { this.defineDefaultValidatorTypes() });
 		tk(window).on('load', () => this.createForms());
 	}
+
+	readFile(file, success) {
+		let reader = new FileReader();
+		reader.onload = event => {
+			success(event.target.result);
+		}
+		return reader.readAsBinaryString(file);
+	} 
 
 	registerValidatorType(type) {
 		return target => { this.validatorTypes[type] = target; }
@@ -215,12 +273,22 @@ class FormPart {
 						</div>);
 					this.target = options.target || cv.route;
 					this.method = options.method || 'POST';
+					this.uninclude = options.uninclude || [];
 					
 					let fieldData = definition || {};
 					if (options.fields) {
+						//	TODO: Nasty.
 						if (!definition) {
-							tk.iter(options.fields, (name, data) => {
-								fieldData[name] = data;
+							tk.iter(options.fields, select => {
+								let override = {};
+								if (select instanceof Array){
+									override = select[1];
+									select = select[0];
+								}
+								fieldData[select] = {};
+								tk.iter(override, (key, value) => {
+									fieldData[select][key] = value;
+								});
 							})
 						}
 						else {
@@ -231,7 +299,7 @@ class FormPart {
 									override = select[1];
 									select = select[0];
 								}
-								filteredFieldData[select] = fieldData[select];
+								filteredFieldData[select] = fieldData[select] || {};
 								tk.iter(override, (key, value) => {
 									filteredFieldData[select][key] = value;
 								});
@@ -244,7 +312,7 @@ class FormPart {
 					this.fields = {};
 					tk.iter(fieldData, (name, data) => {
 						data.name = name;
-						this.fields[name] = new Field(data);
+						this.fields[name] = new Field(data, this);
 					});
 
 					this.node = null;
@@ -302,6 +370,10 @@ class FormPart {
 
 					let data = {};
 					tk.iter(this.fields, (name, field) => {
+						if (this.uninclude.indexOf(name) >= 0){
+							return;
+						}
+						
 						let value = field.value();
 						if (value != null) {
 							data[name] = value;

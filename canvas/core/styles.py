@@ -61,7 +61,7 @@ def get_palette():
 
 @export
 def compile_less(source, minify=None):
-	source = _less_header + apply_directives(source)
+	source = _less_header + apply_directives(source, 'less')
 
 	if minify is None:
 		minify= not config.development.debug

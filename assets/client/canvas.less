@@ -90,8 +90,20 @@ h4 { font-size: 16pt; }
 	color: @error;
 }
 
+.form {
+	display: inline-block;
+	vertical-align: top;
+
+	padding: 1em;
+	width: 30em;
+}
+
 .field {
+	display: inline-block;
+	vertical-align: top;
+
 	margin-bottom: 1.5em;
+	width: 28em;
 
 	label {
 		vertical-align: top;
@@ -110,7 +122,7 @@ h4 { font-size: 16pt; }
 
 	.error-message {
 		margin-top: 0.5em;
-		margin-left: 9em;
+		margin-left: 10em;
 		width: 10em;
 		text-align: left;
 	}
@@ -135,9 +147,21 @@ h4 { font-size: 16pt; }
 		background-color: @input;
 		transition: color .5s, background-color .5s;
 
+		font-family: @text-font;
+
 		&:hover {
 			background-color: @focused-input;
 		}
+	}
+
+	textarea.input {
+		padding: 10px;
+		height: 15em;
+		resize: none;
+	}
+
+	input[type="file"].input {
+		line-height: 2em;
 	}
 }
 

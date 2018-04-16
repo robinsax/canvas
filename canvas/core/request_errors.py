@@ -12,7 +12,7 @@ from .responses import create_json, create_page
 
 define_callback_type('error', (LazyAttributedDict,), ext=True)
 
-def get_error_response(http_ex, source_ex, route, context):
+def get_error_response(http_ex, source_ex, route, verb, context):
 	error_dict = {
 		'code': http_ex.status_code,
 		'title': http_ex.title,
@@ -43,7 +43,7 @@ def get_error_response(http_ex, source_ex, route, context):
 	if error_data.response:
 		return error_data.response
 	
-	if in_api_realm:
+	if in_api_realm or verb != 'get':
 		return create_json('error', error_dict, **{
 			'code': http_ex.status_code,
 			'headers': http_ex.headers

@@ -26,7 +26,7 @@ def transpile_jsx(source):
 	if not isinstance(source, str):
 		source = source.decode()
 	
-	source = apply_directives(source)
+	source = apply_directives(source, 'jsx')
 	
 	try:
 		source = _node_interface.call('transpile', source)

@@ -2,6 +2,7 @@
 	"development": {
 		"debug": true,
 		"log_level": "debug",
+		"log_client_errors": false,
 		"log_emitted_sql": true
 	},
 	"security": {

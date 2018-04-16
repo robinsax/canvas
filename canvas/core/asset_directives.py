@@ -9,9 +9,9 @@ import re
 from ..exceptions import AssetError
 from .plugins import get_path_occurrences
 
-def apply_directives(source):
+def apply_directives(source, asset_ext):
 	for include_directive in re.finditer(r'//\s+cv::include\s+(.+)\s*?\n', source):
-		include = '%s.jsx'%include_directive.group(1).strip()
+		include = '%s.%s'%(include_directive.group(1).strip(), asset_ext)
 
 		occurrences = get_path_occurrences('assets', 'client', include)
 		if len(occurrences) == 0:
