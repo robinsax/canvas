@@ -10,6 +10,7 @@
 	//	cv::include core/svg
 	//	cv::include core/links
 	//	cv::include core/forms
+	//	cv::include core/tooltip
 	
 	class Core {
 		constructor(debug){
