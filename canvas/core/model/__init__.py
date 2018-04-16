@@ -21,7 +21,6 @@ from .columns import define_column_types
 from .sql_factory import table_creation
 from .session import _Session
 
-
 @export_ext
 def wipe_orm(are_you_sure=False):
 	global _all_orm

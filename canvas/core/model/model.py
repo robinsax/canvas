@@ -4,6 +4,7 @@ The base model class definition.
 '''
 
 from ...namespace import export
+from ..json_io import json_serializer, serialize_json
 from .columns import Column
 from .joins import Join
 
@@ -34,3 +35,10 @@ class Model:
 		if attr in self.__class__.__schema__ and attr not in self.__dirty__:
 			self.__dirty__[attr] = getattr(self, attr)
 		super().__setattr__(attr, value)
+
+
+@json_serializer(Model)
+def serialize_model(model):
+	from . import dictize
+	
+	return serialize_json(dictize(model))
