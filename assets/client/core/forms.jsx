@@ -270,14 +270,14 @@ class FormPart {
 						definition = modelDefinitions[options.model];
 					}
 					this.modelName = options.model || null;
-					this.template = options.template || (fields => 
+					this.template = this.template || options.template || (fields => 
 						<div class="form">
 							{ fields }
 							<input type="submit">Submit</input>
 						</div>);
-					this.target = options.target || cv.route;
-					this.method = options.method || 'POST';
-					this.uninclude = options.uninclude || [];
+					this.target = this.target || options.target || cv.route;
+					this.method = this.method || options.method || 'POST';
+					this.uninclude = this.uninclude || options.uninclude || [];
 					
 					let fieldData = definition || {};
 					if (options.fields) {
@@ -380,7 +380,7 @@ class FormPart {
 					});
 				}
 
-				submit() {
+				submit(includeData={}) {
 					if (!this.validate()){
 						return;
 					}
@@ -396,6 +396,7 @@ class FormPart {
 							data[name] = value;
 						}
 					});
+					tk.iter(includeData, (k, v) => { data[k] = v; });
 
 					cv.request(this.method, this.target).json(data)
 						.failure((response) => {
