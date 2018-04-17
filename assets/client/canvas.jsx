@@ -1,9 +1,10 @@
 (() => {
-	let parts = [];
-	part = (Part) => {
-		parts.push(Part);
-	}
+	let _sentinel = {},
+		core = null,
+		parts = [];
+	part = (Part) => { parts.push(Part); }
 
+	//	cv::include core/utils
 	//	cv::include core/requests
 	//	cv::include core/views
 	//	cv::include core/dnd
@@ -14,6 +15,7 @@
 	
 	class Core {
 		constructor(debug){
+			core = this;
 			this.debug = debug;
 			this.initialized = false;
 			this.readyCallbacks = [];

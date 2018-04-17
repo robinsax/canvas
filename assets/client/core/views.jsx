@@ -1,141 +1,119 @@
 @part
 class ViewPart {
-	static instance = null;
 
 	constructor(core) {
-		ViewPart.instance = this;
 		this.core = core;
-
-		core.views = this.views = {};
 		this._viewDefinitions = {};
 
 		core.view = (name, definition) => this.view(name, definition);
+		core.views = this.views = {};
+
+		core.utils.resolveEvents = (instance, cls, el) => this.resolveEvents(instance, cls, el);
 
 		core.event = (on, selector=null) => this.viewEvent(on, selector)
-		core.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
-		core.onRender = (target, key, property) => this.viewOnRender(target, key, property);
+		core.onCreate = core.utils.createMethodDecorator('_onCreate');
+		core.onRender = core.utils.createMethodDecorator('_onRender');
 
-		this.defineDefaultViews(core.event);
+		this.defineDefaultViews(core);
 
 		tk(window).on('load', () => this.createViews());
 	}
 
-	view(name, definition) {
+	resolveEvents(instance, cls, el) {
+		utils.iterateMethodDecorated(instance, cls, '_events', eventDesc => {
+			if (el.is(eventDesc.selector)) {
+				el.on(eventDesc.on, (tel, event) => {
+					instance[eventDesc.key](tel, event);
+				});	
+			}
+			el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
+				instance[eventDesc.key](tel, event);
+			});
+		});
+	}
+
+	view(name, options) {
+		let utils = this.core.utils;
+
 		return (ViewClass) => {
 			class View extends ViewClass {
 				constructor() {
 					super(...arguments);
-					this.state = this.state || definition.state ||  {};
-					this.templates = this.templates || definition.templates || null;
-					this.template = this.template || definition.template || null;
+					utils.applyOptionalizedArguments(this, options, this.updateOptionDefaults({
+						state: {},
+						templates: null,
+						template: (() => ''),
+						data: null,
+						dataSource: null
+					}));
 					if (!this.template && this.templates) {
 						this.template = this.templates.root;
 					}
-					this.data = this.data || definition.data || {};
-					this.dataSource = this.dataSource || definition.dataSource || null;
 
-					this._rendering = false;
-					this._created = false;
-				}
-
-				fetch() {
-					if (!this.dataSource) {
-						throw 'No source';
-					}
-					cv.request('GET', this.dataSource)
-						.success((response) => {
-							this.data = response.data;
-							this.render();
-						})
-						.send();
-				}
-
-				select() {
-					return this._node;
-				}
-
-				render() {
-					if (this._rendering){ return; }
-					this._rendering = true;
-
-					if (!this._created) {
-						if (ViewClass.prototype._onCreate) {
-							this[ViewClass.prototype._onCreate]();
-						}
-						this._created = true;
-
-						tk.listener(this, 'data')
-							.changed(() => {
-								this.render();
-							});
-					}
-					
-					let watch = (data, callback) => {
-						if (data instanceof Array){
-							if (data._watched){ return; }
-							data._watched = true;
-							
-							tk.listener(data)
-								.added((item) => {
-									watch(item, callback);
-									callback();
-								})
-								.removed((item) => {
-									callback();
-								});
-						}
-						else if (typeof data == 'object' && data !== null) {
-							if (data._watched){ return; }
-							data._watched = true;
-				
-							tk.iter(data, (property, value) => {
-								if (property == '_watch'){
-									return;
-								}
-								watch(value, callback);
-								tk.listener(data, property)
-									.changed((value) => {
-										callback();
-									});
-							});
-						}
-					}
-					let render = () => { this.render(); };
-					let data = this.data;
-			
-					watch(this.data, render);
-					watch(this.state, render);
-
-					let el = tk.template(this.template)
-						.data(this.data, this.state, this.templates)
-						.render(this);
-
-					if (ViewClass.prototype._events) {
-						tk.iter(ViewClass.prototype._events, eventDesc => {
-							if (el.is(eventDesc.selector)) {
-								el.on(eventDesc.on, (tel, event) => {
-									this[eventDesc.key](tel, event);
-								});	
+					this.base = {
+						fetch: () => {
+							if (!this.dataSource) {
+								throw 'Cannot fetch without dataSource';
 							}
-							el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
-								this[eventDesc.key](tel, event);
-							});
-						});
-					}
-					
-					if (this._node){
-						this._node.replace(el);
-					}
-					this._node = el;
-					this.root = this._node;
 
-					if (ViewClass.prototype._onRender) {
-						this[ViewClass.prototype._onRender](el);
+							cv.request('GET', this.dataSource)
+								.success(response => {
+									this.data = response.data;
+								})
+								.send();
+						},
+						select: () => this.node,
+						render: () => {
+							if (this._rendering){ return; }
+							this._rendering = true;
+
+							let boundRender = () => this.render(),
+								utils = this.core.utils;
+
+							if (!this._created) {
+								utils.invokeMethodDecoratorated(this, ViewClass, '_onCreate');
+								this._created = true;
+
+								tk.listener(this, 'data').changed(boundRender);
+								tk.listener(this, 'state').changed(boundRender);
+							}			
+							utils.installObjectObservers(this.data, boundRender);
+							utils.installObjectObservers(this.state, boundRender);
+
+							let el = tk.template(this.template)
+								.data(this.data, this.state, this.templates)
+								.render();
+
+							utils.resolveEvents(this, ViewClass, el);
+							
+							if (this.node && !this.node.parents('body').empty){
+								this.node.replace(el);
+							}
+							this.node = el;
+
+							utils.invokeMethodDecoratorated(this, ViewClass, '_onRender', el);
+
+							this._rendering = false;
+							return this.node;
+						}
 					}
 					
-					this._rendering = false;
-					return this._node;
+					Object.defineProperties(this, {
+						_rendering: {
+							value: false,
+							enumerable: value
+						},
+						_created: {
+							value: false,
+							enumerable: value
+						}
+					});
+					this.node = null;
 				}
+
+				fetch() { this.base.fetch(); }
+				select() { return this.base.select(); }
+				render() { return this.base.render(); }
 			}
 			
 			this._viewDefinitions[name] = View;
@@ -144,35 +122,27 @@ class ViewPart {
 	}
 
 	createViews() {
-		tk('cv-view').iter((el) => {
-			let name = el.attr('cv-name');
-			let ViewClass = this._viewDefinitions[name];
+		tk('cv-view').iter(el => {
+			let name = el.attr('cv-name'), 
+				ViewClass = this._viewDefinitions[name];
+
 			if (!ViewClass) {
 				tk.warn('No Such View: ' + name);
 				return;
 			}
 
 			let label = el.attr('cv-label') || name,
-				view = new ViewClass()
+				view = new ViewClass();
 			this.views[label] = view;
 
-			let create = () => {
-				tk.log('Created View ' + name + ' (as ' + label + ')');
+			this.core.onceReady(() => {
+				tk.log('Created View ' + name + (label ? ' (as ' + label + ')' : ''));
 				el.replace(view.render());
-			}
+			});
 			
 			if (view.dataSource){
-				this.core.request('GET', view.dataSource)
-					.success((response) => {
-						view.data = response.data;
-						this.core.onceReady(create);
-					})
-					.send();
+				view.fetch();
 			}
-			else {
-				this.core.onceReady(create);
-			}
-			
 		});
 	}
 
@@ -181,32 +151,27 @@ class ViewPart {
 			selector = on;
 			on = 'click';
 		}
-		
-		return (target, key, descriptor) => {
-			target._events = target._events || [];
-			target._events.push({
+
+		return this.core.utils.createMethodDecorator('_events', key => {
+			return {
 				selector: selector,
 				on: on,
 				key: key
-			});
-		}
-	}
-
-	viewOnCreate(target, key, descriptor) {
-		target._onCreate = key;
-	}
-
-	viewOnRender(target, key, descriptor) {
-		target._onRender = key;
+			}
+		});
 	}
 	
-	defineDefaultViews(eventDec) {
+	defineDefaultViews(core) {
 		class ModalView {
-			constructor(className=null) {
-				this.className = className;
+			constructor() {
 				this.isOpen = false;
 			}
-		
+			
+			updateOptionDefaults(options) {
+				options.className = null;
+				return options;
+			}
+			
 			template() {
 				return <div class={ "modal" + (this.className ? " " + this.className : "") + (this.isOpen ? " open" : "") }>
 					<div class="panel">
@@ -216,7 +181,7 @@ class ViewPart {
 				</div>
 			}
 		
-			@eventDec('.modal, .close')
+			@core.event('.modal, .close')
 			close() {
 				this.isOpen = false;
 				this.select().classify('open', false);
@@ -227,7 +192,7 @@ class ViewPart {
 				this.select().classify('open');
 			}
 		
-			@eventDec('.panel')
+			@core.event('.panel')
 			keepOpen(el, event) {
 				event.stopPropagation();
 			}
