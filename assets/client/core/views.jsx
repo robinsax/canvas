@@ -15,6 +15,8 @@ class ViewPart {
 		core.onCreate = (target, key, property) => this.viewOnCreate(target, key, property);
 		core.onRender = (target, key, property) => this.viewOnRender(target, key, property);
 
+		this.defineDefaultViews(core.event);
+
 		tk(window).on('load', () => this.createViews());
 	}
 
@@ -109,7 +111,12 @@ class ViewPart {
 						.render(this);
 
 					if (ViewClass.prototype._events) {
-						tk.iter(ViewClass.prototype._events, (eventDesc) => {
+						tk.iter(ViewClass.prototype._events, eventDesc => {
+							if (el.is(eventDesc.selector)) {
+								el.on(eventDesc.on, (tel, event) => {
+									this[eventDesc.key](tel, event);
+								});	
+							}
 							el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
 								this[eventDesc.key](tel, event);
 							});
@@ -191,5 +198,41 @@ class ViewPart {
 
 	viewOnRender(target, key, descriptor) {
 		target._onRender = key;
+	}
+	
+	defineDefaultViews(eventDec) {
+		class ModalView {
+			constructor(className=null) {
+				this.className = className;
+				this.isOpen = false;
+			}
+		
+			template() {
+				return <div class={ "modal" + (this.className ? " " + this.className : "") + (this.isOpen ? " open" : "") }>
+					<div class="panel">
+						<i class="fa fa-times close"/>
+						{ this.templates.panel(this.data, this.state, this.templates) }
+					</div>
+				</div>
+			}
+		
+			@eventDec('.modal, .close')
+			close() {
+				this.isOpen = false;
+				this.select().classify('open', false);
+			}
+		
+			open() {
+				this.isOpen = true;
+				this.select().classify('open');
+			}
+		
+			@eventDec('.panel')
+			keepOpen(el, event) {
+				event.stopPropagation();
+			}
+		}
+
+		this.core.ModalView = ModalView;
 	}
 }

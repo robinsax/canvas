@@ -91,7 +91,7 @@ class Field {
 					repr = '';
 				}
 				else {
-					repr = repr.substring(splitI);
+					repr = repr.substring(splitI + 1);
 				}
 					
 				let Class = formPartInstance.validatorTypes[type];
@@ -200,6 +200,8 @@ class Field {
 class FormPart {
 	constructor(core) {
 		formPartInstance = this;
+		this.core = core;
+
 		this._formDefinitions = {};
 		this.validatorTypes = {};
 		core.forms = this.forms = {};
@@ -217,7 +219,10 @@ class FormPart {
 		core.onSuccess = (target, key) => this.formOnSuccess(target, key);
 		core.onFailure = (target, key) => this.formOnFailure(target, key);
 
-		core.onceReady(() => { this.defineDefaultValidatorTypes() });
+		core.onceReady(() => { 
+			this.defineDefaultValidatorTypes();
+			this.defineDefaultForms(core.event, core.onSuccess, core.onFailure);
+		});
 		tk(window).on('load', () => this.createForms());
 	}
 
@@ -278,6 +283,7 @@ class FormPart {
 					this.target = this.target || options.target || cv.route;
 					this.method = this.method || options.method || 'post';
 					this.uninclude = this.uninclude || options.uninclude || [];
+					this.data = this.data || options.data || {};
 
 					this.submit = this.submit || ((includeData={}) => this._submit(includeData));
 					
@@ -322,39 +328,84 @@ class FormPart {
 					});
 
 					this.node = null;
+					this._rendering = false;
 				}
 
 				select() {
 					return this.node;
 				}
 
+				//	TODO: Refactor this whole thing pls future me.
 				render() {
-					this.node = tk.template(this.template)
-						.data(() => tk.comp(this.fields, (k, f) => f.template))
+					if (this._rendering) {
+						return;
+					}
+					this._rendering = true;
+
+					let el = tk.template(this._template || this.template) //	TODO: There must be a better way.
+						.data(() => tk.comp(this.fields, (k, f) => f.template), this.data)
 						.render();
+
+					let watch = (data, callback) => {
+						if (data instanceof Array){
+							if (data._watched){ return; }
+							data._watched = true;
+							
+							tk.listener(data)
+								.added((item) => {
+									watch(item, callback);
+									callback();
+								})
+								.removed((item) => {
+									callback();
+								});
+						}
+						else if (typeof data == 'object' && data !== null) {
+							if (data._watched){ return; }
+							data._watched = true;
+				
+							tk.iter(data, (property, value) => {
+								if (property == '_watch'){
+									return;
+								}
+								watch(value, callback);
+								tk.listener(data, property)
+									.changed((value) => {
+										callback();
+									});
+							});
+						}
+					}
+					watch(this.data, () => this.render());
 					
 					tk.iter(this.fields, (name, field) => {
-						field.bind(this.node);
+						field.bind(el);
 					});
 
-					this.node.children('input[type="submit"]').on('click', () => {
+					el.children('input[type="submit"]').on('click', () => {
 						this.submit();
 					});
 
-					//	TODO Patternize.
+					//	TODO Patternize this too.
 					if (FormClass.prototype._events) {
 						tk.iter(FormClass.prototype._events, (eventDesc) => {
-							if (this.node.is(eventDesc.selector)) {
-								this.node.on(eventDesc.on, (tel, event) => {
+							if (el.is(eventDesc.selector)) {
+								el.on(eventDesc.on, (tel, event) => {
 									this[eventDesc.key](tel, event);
 								});	
 							}
-							this.node.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
+							el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
 								this[eventDesc.key](tel, event);
 							});
 						});
 					}
 
+					if (this.node) {
+						this.node.replace(el);
+					}
+					this.node = el;
+
+					this._rendering = false;
 					return this.node;
 				}
 
@@ -436,5 +487,41 @@ class FormPart {
 
 	formOnFailure(target, key) {
 		target._onFailure = key;
+	}
+
+	defineDefaultForms(eventDec, successDec) {
+		class ModalForm {
+			constructor(className=null) {
+				this.className = className;
+				this.isOpen = false;
+
+				this._template = (fields, data) => 
+					<div class={ "modal" + (this.className ? " " + this.className : "") + (this.isOpen ? " open" : "") }>
+						<div class="panel">
+							<i class="fa fa-times close"/>
+							{ this.template(fields, data) }
+						</div>
+					</div>
+			}
+
+			@eventDec('.modal, .close')
+			@successDec
+			close() {
+				this.isOpen = false;
+				this.select().classify('open', false);
+			}
+			
+			open() {
+				this.isOpen = true;
+				this.select().classify('open');
+			}
+		
+			@eventDec('.panel')
+			keepOpen(el, event) {
+				event.stopPropagation();
+			}
+		}
+
+		this.core.ModalForm = ModalForm;
 	}
 }
