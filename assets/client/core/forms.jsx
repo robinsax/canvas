@@ -276,8 +276,10 @@ class FormPart {
 							<input type="submit">Submit</input>
 						</div>);
 					this.target = this.target || options.target || cv.route;
-					this.method = this.method || options.method || 'POST';
+					this.method = this.method || options.method || 'post';
 					this.uninclude = this.uninclude || options.uninclude || [];
+
+					this.submit = this.submit || ((includeData={}) => this._submit(includeData));
 					
 					let fieldData = definition || {};
 					if (options.fields) {
@@ -380,7 +382,7 @@ class FormPart {
 					});
 				}
 
-				submit(includeData={}) {
+				_submit(includeData={}) {
 					if (!this.validate()){
 						return;
 					}
