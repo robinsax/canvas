@@ -41,4 +41,4 @@ class Model:
 def serialize_model(model):
 	from . import dictize
 	
-	return serialize_json(dictize(model))
+	return dictize(model)

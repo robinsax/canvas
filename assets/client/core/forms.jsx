@@ -319,6 +319,7 @@ class FormPart {
 							this[key] = (...a) => func(...a);
 						}
 					});
+					core.utils.invokeDecoratedMethods(this, FormClass, '_onSetup');
 					
 					tk.listener(this, 'data').changed(() => { this.render(); })
 

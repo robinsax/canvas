@@ -71,8 +71,6 @@ class ViewPart {
 							if (!this._created) {
 								core.utils.invokeDecoratedMethods(this, ViewClass, '_onCreate');
 								this._created = true;
-
-								tk.listener(this, 'data').changed(boundRender);
 							}
 							core.utils.installObjectObservers(this.data, boundRender);
 							core.utils.installObjectObservers(this.state, boundRender);
@@ -97,10 +95,12 @@ class ViewPart {
 
 					tk.iter(this.base, (key, func) => {
 						if (!this[key]) {
-							this[key] = () => func(...arguments);
+							this[key] = (...a) => func(...a);
 						}
 					});
-					
+					core.utils.invokeDecoratedMethods(this, ViewClass, '_onSetup');
+					tk.listener(this, 'data').changed(() => this.render());
+
 					Object.defineProperties(this, {
 						_rendering: {
 							value: false,
@@ -128,7 +128,7 @@ class ViewPart {
 				ViewClass = this._viewDefinitions[name];
 
 			if (!ViewClass) {
-				tk.warn('No Such View: ' + name);
+				tk.warn('No such view: ' + name);
 				return;
 			}
 
@@ -138,7 +138,7 @@ class ViewPart {
 
 			let create = () => {
 				core.onceReady(() => {
-					tk.log('Created View ' + name + (label ? ' (as ' + label + ')' : ''));
+					tk.log('Created view ' + name + (label != name ? ' (as ' + label + ')' : ''));
 					el.replace(view.render());
 				});
 			};
@@ -204,6 +204,46 @@ class ViewPart {
 			}
 		}
 
+		class ListView {
+			updateOptionDefaults(defaults) {
+				defaults.className = null;
+				defaults.listRoot = 'ul';
+				defaults.iterated = null;
+				return defaults;
+			}
+
+			@core.onSetup
+			setupTemplates() {
+				this.templates = this.templates || {};
+				this.templates.header = this.templates.header || (() => {});
+				this.templates.item = this.templates.item || (item => <li>{ typeof item == 'object' ? JSON.stringify(item) : item + '' }</li>)
+				this.templates.empty = this.templates.empty || (() => <p class="subtext">No items to show</p>)
+				this.templates.footer = this.templates.footer || (() => {});
+
+				this.template = this.template || ((self) => {
+					let iterTarget = () => self.iterated ? self.data[self.iterated] : self.data;
+					
+					return (data, state, templates) =>
+						<div class={ "list-container" + (self.className ? " " + self.className : "") }>
+							{ templates.header(data, state, templates) }
+							{
+								tk.template.tag(
+									self.listRoot,
+									null,
+									( iterTarget.length > 0 ? 
+										() => tk.comp(iterTarget, (item, i) => templates.item(item, i, state, templates))
+										:
+										() => templates.empty(data, state, templates)
+									)
+								)
+							}
+							{ templates.footer(data, state, templates) }
+						</div>
+				})(this);
+			}
+		}
+
 		core.ModalView = ModalView;
+		core.ListView = ListView;
 	}
 }

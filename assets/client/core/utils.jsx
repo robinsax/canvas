@@ -2,6 +2,8 @@
 class CoreUtilsPart {
 	constructor() {
 		core.utils = this;
+
+		core.onSetup = this.createMethodDecorator('_onSetup');
 	}
 
 	nameToTitle(n) {

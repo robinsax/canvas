@@ -110,7 +110,7 @@ class _Session:
 
 	def _load_joined_model(self, join, row):
 		model = self._load_model(join.model_cls, row)
-
+		
 		augmentation_start = len(join.model_cls.__schema__)
 		for i, augmentation in enumerate(join.augmentations):
 			setattr(model, augmentation.name, row[augmentation_start + i])
