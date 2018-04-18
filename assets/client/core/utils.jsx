@@ -1,7 +1,11 @@
 @part
 class CoreUtilsPart {
-	constructor(core) {
+	constructor() {
 		core.utils = this;
+	}
+
+	nameToTitle(n) {
+		return n.replace(/(_|^)(\w)/g, (m, s, l) => (' ' + l.toUpperCase()));
 	}
 
 	applyOptionalizedArguments(instance, options, defaults) {
@@ -27,32 +31,29 @@ class CoreUtilsPart {
 		tk.iter(cls.prototype[annotation] || [], key => callback(key));
 	}
 
-	invokeMethodDecoratored(instance, cls, annotation, ...args) {
+	invokeDecoratedMethods(instance, cls, annotation, ...args) {
 		this.iterateMethodDecorated(cls, annotation, key => instance[key](...args));
 	}
 
 	installObjectObservers(object, callback) {
-		if (data._watched){ return; }
-		Object.defineProperty(data, '_watched', {
-			value: true,
-			enumerable: false
-		});
+		if (!object || object._watched) { return; }
+		object._watched = true;
 
-		if (data instanceof Array){
-			tk.listener(data)
+		if (object instanceof Array){
+			tk.listener(object)
 				.added(item => {
-					watch(item, callback);
+					this.installObjectObservers(item, callback);
 					callback();
 				})
 				.removed(item => {
 					callback();
 				});
 		}
-		else if (typeof data == 'object' && data !== null) {
-			tk.iter(data, (property, value) => {
-				watch(value, callback);
-				tk.listener(data, property)
-					.changed((value) => {
+		else if (typeof object == 'object' && object !== null) {
+			tk.iter(object, (property, value) => {
+				this.installObjectObservers(value, callback);
+				tk.listener(object, property)
+					.changed(value => {
 						callback();
 					});
 			});

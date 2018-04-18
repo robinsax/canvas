@@ -1,19 +1,20 @@
-//	cv::include core/validators
-
 class Field {
 	constructor(options, form) {
-		let nameToTitle = (n) => {
-			return n.replace(/(_|^)(\w)/g, (m, s, l) => (' ' + l.toUpperCase()));
-		}
-		this.name = options.name || options.attribute;
-		this.label = options.label || nameToTitle(options.name);
-		this.type = options.type || 'text';
-		this.placeholder = options.placeholder || '';
-		this.validators = options.validators || [];
-		this.required = false;
+		core.utils.applyOptionalizedArguments(this, options, {
+			name: options.attribute,
+			label: core.utils.nameToTitle(options.name),
+			type: 'text',
+			placeholder: '',
+			validators: []
+		});
+		Object.defineProperty(this, '_required', {
+			value: false, 
+			enumerable: false,
+			writable: true
+		});
 
 		tk.iter(this.validators, (validator, i) => {
-			if (!(validator instanceof Validator)) {
+			if (!(validator instanceof core._Validator)) {
 				let repr = validator[0],
 				splitI = repr.indexOf(':'),
 				type = repr.substring(0, splitI);
@@ -23,10 +24,10 @@ class Field {
 					repr = '';
 				}
 				else {
-					repr = repr.substring(splitI + 1);
+					repr = repr.substring(splitI);
 				}
 					
-				let Class = formPartInstance.validatorTypes[type];
+				let Class = core._validatorTypes[type];
 				if (!Class) {
 					throw 'Unknown validator type ' + type;
 				}
@@ -36,7 +37,7 @@ class Field {
 			}
 			
 			if (validator instanceof RequiredValidator) {
-				this.required = true;
+				this._required = true;
 			}
 		});
 
@@ -45,7 +46,7 @@ class Field {
 		this.node = null;
 		this.errorNode = null;
 
-		this.template = () => <div class={ "field" + (this.required ? " required" : "") }>
+		this.template = () => <div class={ "field" + (this._required ? " required" : "") }>
 				{ this.label ?
 					<label for={ this.name }>{ this.label }</label>
 					:
@@ -61,7 +62,7 @@ class Field {
 	}
 
 	value(toSet=_sentinel) {
-		if (toSet == _sentinel) {
+		if (toSet === _sentinel) {
 			return this.node.children('.input').value();
 		}
 		this.node.children('.input').value(toSet);
@@ -130,30 +131,20 @@ class Field {
 
 @part
 class FormPart {
-	constructor(core) {
-		formPartInstance = this;
-		this.core = core;
-
+	constructor() {
 		this._formDefinitions = {};
 		this.validatorTypes = {};
 		core.forms = this.forms = {};
 
-		core.RegexValidator = RegexValidator;
-		core.RangeValidator = RangeValidator;
-		core.RequiredValidator = RequiredValidator;
-		core.FileTypeValidator = FileTypeValidator;
-
 		core.readFile = (file, success) => this.readFile(file, success);
 
 		core.form = (name, options) => this.form(name, options);
-		core.validator = (type) => this.registerValidatorType(type);
-
-		core.onSuccess = (target, key) => this.formOnSuccess(target, key);
-		core.onFailure = (target, key) => this.formOnFailure(target, key);
+		
+		core.onSuccess = core.utils.createMethodDecorator('_onSuccess');
+		core.onFailure = core.utils.createMethodDecorator('_onFailure');
 
 		core.onceReady(() => { 
-			this.defineDefaultValidatorTypes();
-			this.defineDefaultForms(core.event, core.onSuccess, core.onFailure);
+			this.defineDefaultForms();
 		});
 		tk(window).on('load', () => this.createForms());
 	}
@@ -165,21 +156,6 @@ class FormPart {
 		}
 		return reader.readAsBinaryString(file);
 	} 
-
-	registerValidatorType(type) {
-		return target => { this.validatorTypes[type] = target; }
-	}
-
-	defineDefaultValidatorTypes() {
-		@this.registerValidatorType('regex')
-		class _RegexValidator extends RegexValidator {}
-
-		@this.registerValidatorType('range')
-		class _RangeValidator extends RangeValidator {}
-
-		@this.registerValidatorType('required')
-		class _RequiredValidator extends RequiredValidator {}
-	}
 
 	createForms() {
 		tk('cv-form').iter(el => {
@@ -202,55 +178,39 @@ class FormPart {
 			class Form extends FormClass {
 				constructor() {
 					super();
-					let definition = null;
-					if (options.model) {
-						definition = modelDefinitions[options.model];
-					}
-					this.modelName = options.model || null;
-					this.template = this.template || options.template || (fields => 
-						<div class="form">
-							{ fields }
-							<input type="submit">Submit</input>
-						</div>);
-					this.target = this.target || options.target || cv.route;
-					this.method = this.method || options.method || 'post';
-					this.uninclude = this.uninclude || options.uninclude || [];
-					this.data = this.data || options.data || {};
 
-					this.submit = this.submit || ((includeData={}) => this._submit(includeData));
+					let definition = options.model ? modelDefinitions[options.model] : null;
+					this.updateOptionDefaults = this.updateOptionDefaults || (x => x);
+					
+					core.utils.applyOptionalizedArguments(this, options, this.updateOptionDefaults({
+						template: fields => 
+							<div class="form">
+								<div class="error-summary hidden"/>
+								{ fields }
+								<input type="submit">Submit</input>
+							</div>,
+						target: cv.route,
+						method: 'post',
+						uninclude: [],
+						data: {}
+					}));
 					
 					let fieldData = definition || {};
 					if (options.fields) {
-						//	TODO: Nasty.
-						if (!definition) {
-							tk.iter(options.fields, select => {
-								let override = {};
-								if (select instanceof Array){
-									override = select[1];
-									select = select[0];
-								}
-								fieldData[select] = {};
-								tk.iter(override, (key, value) => {
-									fieldData[select][key] = value;
-								});
-							})
-						}
-						else {
-							let filteredFieldData = {};
-							tk.iter(options.fields, select => {
-								let override = {};
-								if (select instanceof Array){
-									override = select[1];
-									select = select[0];
-								}
-								filteredFieldData[select] = fieldData[select] || {};
-								tk.iter(override, (key, value) => {
-									filteredFieldData[select][key] = value;
-								});
-							})
-
-							fieldData = filteredFieldData;
-						}
+						let filteredFieldData = {};
+						tk.iter(options.fields, select => {
+							let override = {};
+							if (select instanceof Array){
+								override = select[1];
+								select = select[0];
+							}
+							filteredFieldData[select] = fieldData[select] || {};
+							tk.iter(override, (key, value) => {
+								filteredFieldData[select][key] = value;
+							});
+						});
+						
+						fieldData = filteredFieldData;
 					}
 
 					this.fields = {};
@@ -259,152 +219,115 @@ class FormPart {
 						this.fields[name] = new Field(data, this);
 					});
 
-					this.node = null;
-					this._rendering = false;
-				}
+					this.base = {
+						select: () => this.node,
+						render: () => {
+							if (this._rendering) { return; }
+							this._rendering = true;
 
-				select() {
-					return this.node;
-				}
+							let el = tk.template(this._template || this.template)
+								.data(() => tk.comp(this.fields, (k, f) => f.template), this.data)
+								.render();
 
-				//	TODO: Refactor this whole thing pls future me.
-				render() {
-					if (this._rendering) {
-						return;
-					}
-					this._rendering = true;
+							core.utils.installObjectObservers(this.data, () => this.render());
 
-					let el = tk.template(this._template || this.template) //	TODO: There must be a better way.
-						.data(() => tk.comp(this.fields, (k, f) => f.template), this.data)
-						.render();
+							tk.iter(this.fields, (name, field) => { field.bind(el); });
+							el.children('input[type="submit"]').on('click', (el, event) => { 
+								this.submit(); 
+								event.preventDefault();
+							});
+							el.children('input').on('change', () => {
+								el.children('.error-summary').classify('hidden');
+							});
 
-					let watch = (data, callback) => {
-						if (data instanceof Array){
-							if (data._watched){ return; }
-							data._watched = true;
-							
-							tk.listener(data)
-								.added((item) => {
-									watch(item, callback);
-									callback();
-								})
-								.removed((item) => {
-									callback();
-								});
-						}
-						else if (typeof data == 'object' && data !== null) {
-							if (data._watched){ return; }
-							data._watched = true;
-				
-							tk.iter(data, (property, value) => {
-								if (property == '_watch'){
+							core.utils.resolveEvents(this, FormClass, el);
+
+							if (this.node && !this.node.parents('body').empty){
+								this.node.replace(el);
+							}
+							this.node = el;
+
+							this._rendering = false;
+							return this.node;
+						},
+						validate: () => {
+							let pass = true;
+							tk.iter(this.fields, (name, field) => {
+								if (!field.validate()) {
+									pass = false;
+								}
+							});
+
+							return pass;
+						},
+						clear: () => {
+							tk.iter(this.fields, (name, field) => {
+								field.value('');
+							});
+						},
+						fill: content => {
+							tk.iter(content, (key, value) => {
+								let field = this.fields[key];
+								field && field.value(value);
+							});
+						},
+						submit: (includeData={}) => {
+							if (!this.validate()){ return; }
+
+							let data = {};
+							tk.iter(this.fields, (name, field) => {
+								if (this.uninclude.indexOf(name) >= 0){
 									return;
 								}
-								watch(value, callback);
-								tk.listener(data, property)
-									.changed((value) => {
-										callback();
-									});
+								
+								let value = field.value();
+								if (value != null) {
+									data[name] = value;
+								}
 							});
+							tk.iter(includeData, (k, v) => { data[k] = v; });
+
+							cv.request(this.method, this.target).json(data)
+								.failure(response => {
+									let data = response.data;
+									if (data.errors) {
+										tk.iter(data.errors, (name, error) => {
+											this.fields[name].invalidate(error);
+										});
+									}
+									if (data.error_summary) {
+										let summaryNode = this.select().children('.error-summary');
+										if (summaryNode.empty) {
+											tk.warn('Cannot display error summary; no .summary-area (was ' + data.error_summary + ')');
+										}
+										else {
+											summaryNode.classify('hidden', false).text(data.error_summary);
+										}
+									}
+
+									core.utils.invokeDecoratedMethods(this, FormClass, '_onFailure', data.errors, data.error_summary);
+								})
+								.success(response => {
+									core.utils.invokeDecoratedMethods(this, FormClass, '_onSuccess', response.data);
+								})
+								.send();
 						}
 					}
-					watch(this.data, () => this.render());
 					
-					tk.iter(this.fields, (name, field) => {
-						field.bind(el);
-					});
-
-					el.children('input[type="submit"]').on('click', () => {
-						this.submit();
-					});
-
-					//	TODO Patternize this too.
-					if (FormClass.prototype._events) {
-						tk.iter(FormClass.prototype._events, (eventDesc) => {
-							if (el.is(eventDesc.selector)) {
-								el.on(eventDesc.on, (tel, event) => {
-									this[eventDesc.key](tel, event);
-								});	
-							}
-							el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
-								this[eventDesc.key](tel, event);
-							});
-						});
-					}
-
-					if (this.node) {
-						this.node.replace(el);
-					}
-					this.node = el;
-
-					this._rendering = false;
-					return this.node;
-				}
-
-				validate() {
-					let pass = true;
-					tk.iter(this.fields, (name, field) => {
-						if (!field.validate()) {
-							pass = false;
+					tk.iter(this.base, (key, func) => {
+						if (!this[key]) {
+							this[key] = (...a) => func(...a);
 						}
 					});
+					
+					tk.listener(this, 'data').changed(() => { this.render(); })
 
-					return pass;
-				}
-
-				clear() {
-					tk.iter(this.fields, (name, field) => {
-						field.value('');
+					Object.defineProperty(this, '_rendering', {
+						value: false,
+						writable: true,
+						enumerable: false
 					});
-				}
-
-				fill(content) {
-					tk.iter(content, (key, value) => {
-						let field = this.fields[key];
-						field && field.value(value);
-					});
-				}
-
-				_submit(includeData={}) {
-					if (!this.validate()){
-						return;
-					}
-
-					let data = {};
-					tk.iter(this.fields, (name, field) => {
-						if (this.uninclude.indexOf(name) >= 0){
-							return;
-						}
-						
-						let value = field.value();
-						if (value != null) {
-							data[name] = value;
-						}
-					});
-					tk.iter(includeData, (k, v) => { data[k] = v; });
-
-					cv.request(this.method, this.target).json(data)
-						.failure((response) => {
-							let data = response.data;
-							if (data.errors) {
-								tk.iter(data.errors, (name, error) => {
-									this.fields[name].invalidate(error);
-								});
-							}
-							if (data.error_summary) {
-								//	TODO: Nonono
-								console.log('Summary was ' + data.error_summary);
-							}
-							if (FormClass.prototype._onFailure) {
-								this[FormClass.prototype._onFailure](data.errors, data.error_summary);
-							}
-						})
-						.success((response) => {
-							if (FormClass.prototype._onSuccess) {
-								this[FormClass.prototype._onSuccess](response.data);
-							}
-						})
-						.send();
+					this.node = null;
 				}
 			}
 
@@ -413,18 +336,9 @@ class FormPart {
 		}
 	}
 
-	formOnSuccess(target, key) {
-		target._onSuccess = key;
-	}
-
-	formOnFailure(target, key) {
-		target._onFailure = key;
-	}
-
-	defineDefaultForms(eventDec, successDec) {
+	defineDefaultForms() {
 		class ModalForm {
-			constructor(className=null) {
-				this.className = className;
+			constructor() {
 				this.isOpen = false;
 
 				this._template = (fields, data) => 
@@ -436,8 +350,13 @@ class FormPart {
 					</div>
 			}
 
-			@eventDec('.modal, .close')
-			@successDec
+			updateOptionDefaults(defaults) {
+				defaults.className = null;
+				return defaults;
+			}
+
+			@core.event('.modal, .close')
+			@core.onSuccess
 			close() {
 				this.isOpen = false;
 				this.select().classify('open', false);
@@ -448,12 +367,12 @@ class FormPart {
 				this.select().classify('open');
 			}
 		
-			@eventDec('.panel')
+			@core.event('.panel')
 			keepOpen(el, event) {
 				event.stopPropagation();
 			}
 		}
 
-		this.core.ModalForm = ModalForm;
+		core.ModalForm = ModalForm;
 	}
 }

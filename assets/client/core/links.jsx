@@ -1,16 +1,15 @@
 @part
 class LinkPart {
-	constructor(core) {
-		this.core = core;
+	constructor() {
 
-		core.addInspector((check) => {
+		core.addInspector(check => {
 			this.registerSlides(check);
 			this.classifyOpen(check);
 		});
 	}
 
 	classifyOpen(check) {
-		check.reduce('a').classify('open', (el) => el.attr('href') == this.core.route);
+		check.reduce('a').classify('open', (el) => el.attr('href') == core.route);
 	}
 
 	registerSlides(check) {

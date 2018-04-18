@@ -1,8 +1,6 @@
 @part
 class SVGPart {
-	constructor(core) {
-		this.core = core;
-
+	constructor() {
 		this.cache = {};
 
 		core.addInspector((check) => {
@@ -27,7 +25,7 @@ class SVGPart {
 					swap(this.cache[src]);
 				}
 				else {
-					this.core.request('GET', src)
+					core.request('get', src)
 						.success((svgData) => {
 							this.cache[src] = svgData;
 							swap(svgData);

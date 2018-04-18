@@ -1,4 +1,6 @@
 class Validator {
+	//	TODO: Avoid.
+
 	constructor(errorMessage) {
 		this.errorMessage = errorMessage;
 	}
@@ -29,7 +31,7 @@ class FileTypeValidator extends Validator {
 class RegexValidator extends Validator {
 	constructor(repr, errorMessage) {
 		super(errorMessage);
-		let parts = repr.split(':');
+		let parts = repr.substring(1).split(':');
 		this.regex = new RegExp(decodeURIComponent(parts[0]), +parts[1] > 0 ? 'i' : '');
 		this.negation = +parts[2] > 0;
 	}
@@ -62,5 +64,38 @@ class RequiredValidator extends Validator {
 			return value.length > 0;
 		}
 		return value != null;
+	}
+}
+
+@part
+class ValidatorPart {
+	constructor() {
+		core._validatorTypes = this._validatorTypes = {};
+
+		core._Validator = Validator;
+		core.RegexValidator = RegexValidator;
+		core.RangeValidator = RangeValidator;
+		core.RequiredValidator = RequiredValidator;
+		core.FileTypeValidator = FileTypeValidator;
+
+		core.validator = (type) => this.registerValidatorType(type);
+		core.onceReady(() => {
+			this.defineDefaultValidatorTypes();
+		});
+	}
+	
+	registerValidatorType(type) {
+		return target => { this._validatorTypes[type] = target; }
+	}
+
+	defineDefaultValidatorTypes() {
+		@core.validator('regex')
+		class _RegexValidator extends RegexValidator {}
+
+		@core.validator('range')
+		class _RangeValidator extends RangeValidator {}
+
+		@core.validator('required')
+		class _RequiredValidator extends RequiredValidator {}
 	}
 }

@@ -254,12 +254,8 @@ h4 { font-size: 16pt; }
 	margin-right: 15px;
 }
 
-.button-margin {
-	padding: 0px 10px;
-}
-
-//	Buttons and button groups.
-button {
+button,
+input[type="submit"] {
 	border: none;
 	outline: none;
 	display: inline-block;
@@ -291,35 +287,6 @@ button {
 	&:hover {
 		cursor: pointer;
 		background-color: @highlight;
-	}
-}
-
-//	Button groups.
-.control-group,
-.control-group-left {
-	text-align: left;
-}
-.control-group-right {
-	text-align: right;
-
-	.button {
-		margin-left: 0px;
-		margin-right: 10px;
-	}
-}
-
-//	Icon-only buttons.
-.event-icon {
-	width: 10px;
-	vertical-align: middle;
-	margin: 0px 10px;
-	font-size: 12px;
-	text-decoration: none;
-	color: @subtext;
-	transition: color 0.5s;
-	
-	&:hover {
-		color: @highlight;
 	}
 }
 
