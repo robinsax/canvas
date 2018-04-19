@@ -1,5 +1,3 @@
-//	TODO: Message Passing.
-
 (() => {
 	let _sentinel = {},
 		core = null,

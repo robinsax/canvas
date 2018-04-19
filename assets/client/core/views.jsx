@@ -71,6 +71,7 @@ class ViewPart {
 							if (!this._created) {
 								core.utils.invokeDecoratedMethods(this, ViewClass, '_onCreate');
 								this._created = true;
+								tk.listener(this, 'data').changed(() => this.render());
 							}
 							core.utils.installObjectObservers(this.data, boundRender);
 							core.utils.installObjectObservers(this.state, boundRender);
@@ -99,7 +100,6 @@ class ViewPart {
 						}
 					});
 					core.utils.invokeDecoratedMethods(this, ViewClass, '_onSetup');
-					tk.listener(this, 'data').changed(() => this.render());
 
 					Object.defineProperties(this, {
 						_rendering: {
@@ -171,6 +171,14 @@ class ViewPart {
 		class ModalView {
 			constructor() {
 				this.isOpen = false;
+
+				this.template = ((self) => () => 
+					<div class={ "modal" + (self.className ? " " + self.className : "") + (self.isOpen ? " open" : "") }>
+						<div class="panel">
+							<i class="fa fa-times close"/>
+							{ self.templates.panel(self.data, self.state, self.templates) }
+						</div>
+					</div>)(this);
 			}
 			
 			updateOptionDefaults(options) {
@@ -179,12 +187,7 @@ class ViewPart {
 			}
 			
 			template() {
-				return <div class={ "modal" + (this.className ? " " + this.className : "") + (this.isOpen ? " open" : "") }>
-					<div class="panel">
-						<i class="fa fa-times close"/>
-						{ this.templates.panel(this.data, this.state, this.templates) }
-					</div>
-				</div>
+				return 
 			}
 		
 			@core.event('.modal, .close')

@@ -23,7 +23,11 @@ class LinkPart {
 				speed = (targetY - start)/time
 			
 			tk.transition((time) => {
-				return (html.scrollTop = (start + (speed*time))) < targetY;
+				let repeat = (html.scrollTop = (start + (speed*time))) < targetY;
+				if (!repeat) {
+					html.scrollTop = targetY;
+				}
+				return repeat;
 			});
 		})
 	}
