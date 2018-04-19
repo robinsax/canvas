@@ -5,7 +5,8 @@ class Field {
 			label: core.utils.nameToTitle(options.name),
 			type: 'text',
 			placeholder: '',
-			validators: []
+			validators: [],
+			options: []
 		});
 		Object.defineProperty(this, '_required', {
 			value: false, 
@@ -46,6 +47,24 @@ class Field {
 		this.node = null;
 		this.errorNode = null;
 
+		if (this.type == 'select') {
+			tk.listener(this, 'options').changed(() => {
+				if (!this.node) {
+					return;
+				}
+
+				this.node.children('option').remove();
+
+				let select = this.node.children('select');
+				if (this.placeholder) {
+					select.append(tk.tag('option', null, this.placeholder));
+				}
+				tk.iter(this.options, item => {
+					select.append(tk.tag('option', {value: item[1]}, item[0] + ''));
+				})
+			})
+		}
+
 		this.template = () => <div class={ "field" + (this._required ? " required" : "") }>
 				{ this.label ?
 					<label for={ this.name }>{ this.label }</label>
@@ -54,9 +73,12 @@ class Field {
 				}
 				{ this.type == 'textarea' ? 
 					<textarea class="input" name={ this.name }>{ this.placeholder }</textarea>
+					: (
+				  this.type == 'select' ?
+					<select class="input" name={ this.name }>{ this.placeholder ? <option>{ this.placeholder }</option> : () => {} }</select>
 					:
 					<input class="input" name={ this.name } type={ this.type } placeholder={ this.placeholder }></input>
-				}
+				)}
 			</div>
 
 	}
@@ -225,8 +247,24 @@ class FormPart {
 							if (this._rendering) { return; }
 							this._rendering = true;
 
+							let renderFields = (range) => {
+								range = range || [0, tk.comp(this.fields, x => x).length];
+								let curI = 0,
+									result = [];
+
+								tk.iter(this.fields, (name, field) => {
+									if (curI >= range[0] && curI < range[1]) {
+										result.push(field.template);
+									}
+									
+									curI++;
+								});
+								
+								return () => result;
+							};
+
 							let el = tk.template(this._template || this.template)
-								.data(() => tk.comp(this.fields, (k, f) => f.template), this.data)
+								.data(renderFields, this.data)
 								.render();
 
 							core.utils.installObjectObservers(this.data, () => this.render());
