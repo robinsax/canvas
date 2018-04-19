@@ -19,3 +19,9 @@ def test_asset_service():
 		response.status_code == 200
 	)
 
+	response = client.get('/')
+	cvt.assertion(
+		'Welcome serves',
+		response.status_code == 200
+	)
+
