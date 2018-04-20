@@ -149,12 +149,16 @@ def row_creation(model):
 		order.append(name)
 		values.append(value)
 	
-	statement = ' '.join([
-		'INSERT INTO', model_cls.__table__, '(', 
+	insertions = 'DEFAULT VALUES'
+	if len(order) > 0:
+		insertions = ' '.join(['(', 
 			', '.join(order),
 		') VALUES (',
 			', '.join(['%s' for x in order]),
-		') RETURNING ', ', '.join(model_cls.__schema__.keys()), ';'
+		')'])
+
+	statement = ' '.join([
+		'INSERT INTO', model_cls.__table__, insertions, 'RETURNING ', ', '.join(model_cls.__schema__.keys()), ';'
 	])
 	return statement, values
 
