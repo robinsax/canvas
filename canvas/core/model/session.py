@@ -127,6 +127,7 @@ class _Session:
 		try:
 			self.cursor.execute(sql, values)
 		except IntegrityError as ex:
+			print(ex.diag.constraint_name)
 			constraint = get_constraint(ex.diag.constraint_name)
 			try:
 				raise ValidationErrors({
