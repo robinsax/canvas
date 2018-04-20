@@ -1,3 +1,7 @@
+#	Patch versioning issue in CI. Plugin builds will break if we purely bump
+#	postgres in Travis config.
+sudo -u pkill postgres
+
 echo "Installing canvas dependencies..."
 
 apt-get update

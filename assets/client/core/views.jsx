@@ -233,8 +233,8 @@ class ViewPart {
 								tk.template.tag(
 									self.listRoot,
 									null,
-									( iterTarget.length > 0 ? 
-										() => tk.comp(iterTarget, (item, i) => templates.item(item, i, state, templates))
+									( iterTarget().length > 0 ? 
+										() => tk.comp(iterTarget(), (item, i) => templates.item(item, i, state, templates))
 										:
 										() => templates.empty(data, state, templates)
 									)
