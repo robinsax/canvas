@@ -25,7 +25,7 @@ class Field {
 					repr = '';
 				}
 				else {
-					repr = repr.substring(splitI);
+					repr = repr.substring(splitI + 1);
 				}
 					
 				let Class = core._validatorTypes[type];

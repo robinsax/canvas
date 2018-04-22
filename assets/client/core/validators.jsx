@@ -33,7 +33,7 @@ class FileTypeValidator extends Validator {
 class RegexValidator extends Validator {
 	constructor(repr, errorMessage) {
 		super(errorMessage);
-		let parts = repr.split(':');
+		let parts = repr.split('^');
 		this.regex = new RegExp(decodeURIComponent(parts[0]), +parts[1] > 0 ? 'i' : '');
 		this.negation = +parts[2] > 0;
 	}

@@ -59,7 +59,7 @@ class RegexConstraint(Constraint):
 	def as_validator(self):
 		as_flag = (lambda b: '1' if b else '0')
 
-		return 'regex:%s:%s:%s'%(
+		return 'regex:%s^%s^%s'%(
 			quote(self.regex), 
 			as_flag(self.ignore_case), 
 			as_flag(self.negative)

@@ -2,4 +2,5 @@
 '''
 A placeholder namespace for loaded plugins.
 '''
+
 pass
