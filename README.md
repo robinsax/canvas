@@ -98,8 +98,7 @@ following to do so:
 python3 canvas --write-setup-sql | sudo -u postgres psql
 ```
 
-*Note*: To see the complete list of command line options, including those
-defined by plugins, simply run `python3 canvas`.
+*Note*: To see the complete list of command line options, simply run `python3 canvas`.
 
 ### Running the tests
 

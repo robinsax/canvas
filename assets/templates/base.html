@@ -18,7 +18,7 @@
 			</script>
 			{% if __models__ is defined %}
 				<script type="text/javascript">
-					var modelDefinitions = {{ __models__ }};
+					var modelDefinitions = {{ __models__|markup }};
 				</script>
 			{% endif %}
 

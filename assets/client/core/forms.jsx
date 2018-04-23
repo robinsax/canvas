@@ -214,7 +214,7 @@ class FormPart {
 						target: cv.route,
 						method: 'post',
 						uninclude: [],
-						data: {}
+						state: {}
 					}));
 					
 					let fieldData = definition || {};
@@ -264,10 +264,10 @@ class FormPart {
 							};
 
 							let el = tk.template(this._template || this.template)
-								.data(renderFields, this.data)
+								.data(renderFields, this.state)
 								.render();
 
-							core.utils.installObjectObservers(this.data, () => this.render());
+							core.utils.installObjectObservers(this.state, () => this.render());
 
 							tk.iter(this.fields, (name, field) => { field.bind(el); });
 							el.children('input[type="submit"]').on('click', (el, event) => { 
