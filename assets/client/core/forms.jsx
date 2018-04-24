@@ -330,7 +330,13 @@ class FormPart {
 									let data = response.data;
 									if (data.errors) {
 										tk.iter(data.errors, (name, error) => {
-											this.fields[name].invalidate(error);
+											let field = this.fields[name];
+											if (field) {
+												field.invalidate(error);
+											}
+											else {
+												tk.warn('Invalidated field "' + name + '" not contained in form');
+											}
 										});
 									}
 									if (data.error_summary) {

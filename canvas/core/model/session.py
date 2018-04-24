@@ -147,7 +147,7 @@ class _Session:
 
 		self._map_model(model, self.cursor.fetchone())
 
-		model.__session__ = None
+		model.__session__ = self
 
 		model.__create__()
 		return self
