@@ -98,8 +98,8 @@ class RangeConstraint(Constraint):
 
 	def as_validator(self):
 		return 'range:%s:%s'%(
-			'-' if self.max_value is None else self.max_value,
-			'-' if self.min_value is None else self.min_value
+			'-' if self.min_value is None else self.min_value,
+			'-' if self.max_value is None else self.max_value
 		)
 
 	def as_sql(self):
