@@ -45,7 +45,7 @@ The attributes of a to-do list in our system will be simply a unique ID and the 
 ```python
 @cv.model('todo_lists', {
 	#	The unique identifier. We could alternately use the `uuid` type.
-	'id': cv.Column('serial', primary_key=True),
+	'id': cv.Column('uuid', primary_key=True),
 	#	The name of the owner. Since every list needs an owner, we add a
 	#	'not null' constraint to this field. Additionally, we enforce that
 	#	names are only one word using a regular expression.
@@ -90,7 +90,7 @@ We could represent this as a canvas model as follows:
 ```python
 @cv.model('todo_list_items', {
 	#	Again, a unique identifer.
-	'id': cv.Column('serial', primary_key=True),
+	'id': cv.Column('uuid', primary_key=True),
 	#	A reference to the parent to-do list. Specifically, this field
 	#	will contain the value of the `id` of its parent.
 	'parent_id': cv.Column('fk:todo_lists.id', (
