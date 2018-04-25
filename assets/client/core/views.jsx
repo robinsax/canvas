@@ -7,10 +7,7 @@ class ViewPart {
 		core.views = this.views = {};
 
 		core.utils.resolveEvents = (instance, cls, el) => this.resolveEvents(instance, cls, el);
-
-		core.event = (on, selector=null) => this.viewEvent(on, selector)
-		core.onCreate = core.utils.createMethodDecorator('_onCreate');
-		core.onRender = core.utils.createMethodDecorator('_onRender');
+		core.event = (on, selector=null) => this.viewEvent(on, selector);
 
 		this.defineDefaultViews(core);
 
@@ -71,26 +68,20 @@ class ViewPart {
 							let boundRender = () => this.render();
 
 							if (!this._created) {
-								core.utils.invokeDecoratedMethods(this, ViewClass, '_onCreate');
 								this._created = true;
 								tk.listener(this, 'data').changed(() => this.render());
 							}
 							core.utils.installObjectObservers(this.data, boundRender);
 							core.utils.installObjectObservers(this.state, boundRender);
 
-							let el = tk.template(this.template)
+							this.node = tk.template((...a) => <div>{ this.template(...a) }</div>)
 								.data(this.data, this.state, this.templates)
+								.live()
+								.inspection(el => {
+									core.utils.resolveEvents(this, ViewClass, el);
+								})
 								.render();
-
-							core.utils.resolveEvents(this, ViewClass, el);
 							
-							if (this.node && !this.node.parents('body').empty){
-								this.node.replace(el);
-							}
-							this.node = el;
-
-							core.utils.invokeDecoratedMethods(this, ViewClass, '_onRender', el);
-	
 							this._rendering = false;
 							return this.node;
 						}
