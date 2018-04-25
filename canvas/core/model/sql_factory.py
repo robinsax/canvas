@@ -57,7 +57,7 @@ def table_creation(model_cls):
 	])
 	return statement, ()
 
-def selection(target, query, ordering, for_):
+def selection(target, query, count, offset, ordering, for_):
 	values = []
 	
 	if query is True:
@@ -97,6 +97,14 @@ def selection(target, query, ordering, for_):
 		statement = ' '.join([
 			statement,
 			'ORDER BY', column.serialize(), 'ASC' if ascending else 'DESC'
+		])
+	if count is not None:
+		statement = ' '.join([
+			statement, 'LIMIT', str(count)	
+		])
+	if offset is not None:
+		statement = ' '.join([
+			statement, 'OFFSET', str(offset)
 		])
 	if for_ is not None:
 		statement = ' '.join((

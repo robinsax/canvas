@@ -41,7 +41,8 @@ class ViewPart {
 						templates: null,
 						template: null,
 						data: {},
-						dataSource: null
+						dataSource: null,
+						query: {}
 					}));
 					if (!this.template && this.templates) {
 						this.template = this.templates.root;
@@ -54,6 +55,7 @@ class ViewPart {
 							}
 
 							cv.request('get', this.dataSource)
+								.query(this.query)
 								.success(response => {
 									this.data = response.data;
 									this.render();

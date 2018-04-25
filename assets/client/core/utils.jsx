@@ -39,7 +39,16 @@ class CoreUtilsPart {
 
 	installObjectObservers(object, callback) {
 		if (!object || object._watched) { return; }
-		object._watched = true;
+
+		if (typeof object == 'object') {
+			Object.defineProperty(object, '_watched', {
+				value: true,
+				enumerable: false
+			});
+		}
+		else {
+			object._watched = true;
+		}
 
 		if (object instanceof Array){
 			tk.listener(object)

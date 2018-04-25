@@ -32,7 +32,7 @@ class Page(Controller):
 		context = RequestContext.get()
 
 		params.update({
-			'__route__': context.url.route,
+			'__route__': context.route,
 			'__models__': serialize_form_models(self.__models__)
 		})
 		return create_page(self.__template__, params, code=code, headers=headers)

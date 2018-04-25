@@ -164,7 +164,7 @@ class _Session:
 
 		return self.detach(model)
 
-	def query(self, target, conditions=True, one=False, count=None, order_by=None, descending=False, for_update=False, for_share=False):
+	def query(self, target, conditions=True, one=False, count=None, offset=None, order_by=None, descending=False, for_update=False, for_share=False):
 		if conditions is False:
 			return None if one else []
 		
@@ -174,7 +174,7 @@ class _Session:
 		if for_update:
 			for_ = 'UPDATE'
 		order = (order_by, not descending) if order_by is not None else None		
-		self.execute(*selection(target, conditions, order, for_))
+		self.execute(*selection(target, conditions, count, offset, order, for_))
 
 		def from_loader_method(loader_method):
 			if one:
@@ -186,8 +186,6 @@ class _Session:
 			else:
 				result = []
 				for i, row in enumerate(self.cursor):
-					if count is not None and i >= count:
-						break
 					result.append(loader_method(target, row))
 				return result
 
@@ -200,7 +198,7 @@ class _Session:
 				one = True
 			
 			if one:
-				return self.cursor.fetchone()
+				return self.cursor.fetchone()[0]
 			else:
 				return [r[0] for r in self.cursor.fetchall()]
 

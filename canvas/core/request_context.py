@@ -11,6 +11,12 @@ from .dictionaries import LazyAttributedDict
 _request_contexts = {}
 _lock = Lock()
 
+class RouteString(str):
+
+	def set_variables(self, variables):
+		for k, v in variables.items():
+			setattr(self, k, v)
+
 @export_ext
 class RequestContext(LazyAttributedDict):
 

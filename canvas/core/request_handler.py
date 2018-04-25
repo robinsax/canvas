@@ -30,7 +30,7 @@ from .plugins import get_path_occurrences
 from .model import create_session
 from .routing import resolve_route
 from .request_parsers import parse_request
-from .request_context import RequestContext
+from .request_context import RequestContext, RouteString
 from .request_errors import get_error_response
 from .responses import create_json
 from .styles import compile_less
@@ -138,18 +138,18 @@ def serve_controller(request):
 	else:
 		cookie = SecureCookie(secret_key=secret)
 
+	route_desc = RouteString(route)
+	route_desc.set_variables(variables)
+
 	#	Create context and handle.
 	context = RequestContext({
 		'cookie': cookie,
 		'session': create_session(),
 		'request': request_parameters,
 		'headers': request.headers,
-		'route': AttributedDict(variables),
+		'route': route_desc,
 		'verb': verb,
-		'url': AttributedDict({
-			'full': request.url,
-			'route': route
-		})
+		'url': request.url
 	})
 	RequestContext.put(context)
 
