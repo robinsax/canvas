@@ -10,6 +10,15 @@ class CoreUtilsPart {
 		return n.replace(/(_|^)(\w)/g, (m, s, l) => (' ' + l.toUpperCase()));
 	}
 
+	iterateNonStandardTags(callback) {
+		tk('body *').iter(el => {
+			let xName = /^[xX]-(\w+)$/.exec(el.tag());
+			if (xName) { 
+				callback(el, xName[1].toLowerCase());
+			}
+		});
+	} 
+
 	applyOptionalizedArguments(instance, options, defaults) {
 		tk.iter(defaults, (key, defaultValue) => {
 			if (instance[key]) { return; }
@@ -29,12 +38,12 @@ class CoreUtilsPart {
 		}
 	}
 
-	iterateMethodDecorated(cls, annotation, callback) {
+	iterateDecoratedMethods(cls, annotation, callback) {
 		tk.iter(cls.prototype[annotation] || [], key => callback(key));
 	}
 
 	invokeDecoratedMethods(instance, cls, annotation, ...args) {
-		this.iterateMethodDecorated(cls, annotation, key => instance[key](...args));
+		this.iterateDecoratedMethods(cls, annotation, key => instance[key](...args));
 	}
 
 	installObjectObservers(object, callback) {

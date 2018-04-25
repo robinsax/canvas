@@ -6,35 +6,34 @@ class ViewPart {
 		core.view = (name, definition) => this.view(name, definition);
 		core.views = this.views = {};
 
-		core.utils.resolveEvents = (instance, cls, el) => this.resolveEvents(instance, cls, el);
+		core.utils.resolveEventsAndInspections = (instance, cls, el) => this.resolveEventsAndInspections(instance, cls, el);
+		core.event = (on, selector=null) => this.viewEvent(on, selector);
+		core.inspects = selector => this.viewInspect(selector);
 
-		core.event = (on, selector=null) => this.viewEvent(on, selector)
-		core.onCreate = core.utils.createMethodDecorator('_onCreate');
-		core.onRender = core.utils.createMethodDecorator('_onRender');
-
-		this.defineDefaultViews(core);
+		this.defineDefaultViews();
 
 		tk(window).on('load', () => this.createViews());
 	}
 
-	resolveEvents(instance, cls, el) {
-		core.utils.iterateMethodDecorated(cls, '_events', eventDesc => {
-			if (el.is(eventDesc.selector)) {
-				el.on(eventDesc.on, (tel, event) => {
-					instance[eventDesc.key](tel, event);
-				});	
-			}
-			el.children(eventDesc.selector).on(eventDesc.on, (tel, event) => {
+	resolveEventsAndInspections(instance, cls, el) {
+		core.utils.iterateDecoratedMethods(cls, '_events', eventDesc => {
+			el.reduce(eventDesc.selector).on(eventDesc.on, (tel, event) => {
 				instance[eventDesc.key](tel, event);
 			});
 		});
+		core.utils.iterateDecoratedMethods(cls, '_inspectors', desc => {
+			el.reduce(desc.selector).iter(tel => { instance[desc.key](tel); });
+		});
 	}
 
-	view(name, options) {
+	view(options) {
 		return (ViewClass) => {
+			let name = ViewClass.name.toLowerCase();
+
 			class View extends ViewClass {
 				constructor() {
 					super(...arguments);
+					this.name = name;
 					this.updateOptionDefaults = this.updateOptionDefaults || (x => x);
 					core.utils.applyOptionalizedArguments(this, options, this.updateOptionDefaults({
 						state: {},
@@ -44,9 +43,6 @@ class ViewPart {
 						dataSource: null,
 						query: {}
 					}));
-					if (!this.template && this.templates) {
-						this.template = this.templates.root;
-					}
 
 					this.base = {
 						fetch: (then=(() => {})) => {
@@ -58,7 +54,6 @@ class ViewPart {
 								.query(this.query)
 								.success(response => {
 									this.data = response.data;
-									this.render();
 									then();
 								})
 								.send();
@@ -71,26 +66,16 @@ class ViewPart {
 							let boundRender = () => this.render();
 
 							if (!this._created) {
-								core.utils.invokeDecoratedMethods(this, ViewClass, '_onCreate');
 								this._created = true;
 								tk.listener(this, 'data').changed(() => this.render());
 							}
 							core.utils.installObjectObservers(this.data, boundRender);
 							core.utils.installObjectObservers(this.state, boundRender);
 
-							let el = tk.template(this.template)
+							this.node = this._templateContext
 								.data(this.data, this.state, this.templates)
 								.render();
-
-							core.utils.resolveEvents(this, ViewClass, el);
 							
-							if (this.node && !this.node.parents('body').empty){
-								this.node.replace(el);
-							}
-							this.node = el;
-
-							core.utils.invokeDecoratedMethods(this, ViewClass, '_onRender', el);
-	
 							this._rendering = false;
 							return this.node;
 						}
@@ -102,7 +87,7 @@ class ViewPart {
 						}
 					});
 					core.utils.invokeDecoratedMethods(this, ViewClass, '_onSetup');
-
+					
 					Object.defineProperties(this, {
 						_rendering: {
 							value: false,
@@ -115,7 +100,13 @@ class ViewPart {
 							enumerable: false
 						}
 					});
+
 					this.node = null;
+					this._templateContext = tk.template(this.template || this.templates.root)
+						.inspection(el => {
+							core.utils.resolveEventsAndInspections(this, ViewClass, el);
+						})
+						.live();
 				}
 			}
 			
@@ -125,32 +116,24 @@ class ViewPart {
 	}
 
 	createViews() {
-		tk('cv-view').iter(el => {
-			let name = el.attr('cv-name'), 
-				ViewClass = this._viewDefinitions[name];
-
-			if (!ViewClass) {
-				tk.warn('No such view: ' + name);
+		core.utils.iterateNonStandardTags((el, viewName) => {
+			if (!this._viewDefinitions[viewName]) {
 				return;
 			}
 
-			let label = el.attr('cv-label') || name,
-				view = new ViewClass();
+			let label = el.attr('data-name') || el.attr('name') || viewName, 
+				view = new this._viewDefinitions[viewName]();
 			this.views[label] = view;
 
 			let create = () => {
 				core.onceReady(() => {
-					tk.log('Created view ' + name + (label != name ? ' (as ' + label + ')' : ''));
 					el.replace(view.render());
+					tk.log('Created view ' + viewName + ' as ' + label);
 				});
-			};
+			}
 			
-			if (view.dataSource){
-				view.fetch(create);
-			}
-			else {
-				create();
-			}
+			if (view.dataSource){ view.fetch(create); }
+			else { create(); }
 		});
 	}
 
@@ -168,8 +151,17 @@ class ViewPart {
 			}
 		});
 	}
+
+	viewInspect(selector) {
+		return core.utils.createMethodDecorator('_inspectors', key => {
+			return {
+				selector: selector,
+				key: key
+			};
+		})
+	}
 	
-	defineDefaultViews(core) {
+	defineDefaultViews() {
 		class ModalView {
 			constructor() {
 				this.isOpen = false;
@@ -186,10 +178,6 @@ class ViewPart {
 			updateOptionDefaults(options) {
 				options.className = null;
 				return options;
-			}
-			
-			template() {
-				return 
 			}
 		
 			@core.event('.modal, .close')

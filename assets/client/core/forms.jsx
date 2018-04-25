@@ -1,4 +1,6 @@
 class Field {
+	//	TODO: Make use live template.
+
 	constructor(options, form) {
 		core.utils.applyOptionalizedArguments(this, options, {
 			name: options.attribute,
@@ -62,10 +64,11 @@ class Field {
 				tk.iter(this.options, item => {
 					select.append(tk.tag('option', {value: item[1]}, item[0] + ''));
 				})
-			})
+			});
 		}
 
-		this.template = () => <div class={ "field" + (this._required ? " required" : "") }>
+		this.template = () => 
+			<div class={ "field" + (this._required ? " required" : "") }>
 				{ this.label ?
 					<label for={ this.name }>{ this.label }</label>
 					:
@@ -80,14 +83,14 @@ class Field {
 					<input class="input" name={ this.name } type={ this.type } placeholder={ this.placeholder }></input>
 				)}
 			</div>
-
 	}
 
-	value(toSet=_sentinel) {
-		if (toSet === _sentinel) {
-			return this.node.children('.input').value();
-		}
-		this.node.children('.input').value(toSet);
+	get value() {
+		return this.node.children('.input').value();
+	}
+
+	set value(value) {
+		this.node.children('.input').value(value);
 	}
 
 	//	TODO: Cleanup.
@@ -110,7 +113,7 @@ class Field {
 		}
 
 		tk.iter(this.validators, validator => {
-			if (!validator.validate(this.value(), this)){
+			if (!validator.validate(this.value, this)){
 				this.error = validator.errorMessage;
 			}
 		});
@@ -129,6 +132,10 @@ class Field {
 
 	bind(el) {
 		let input = el.children('[name="' + this.name + '"]');
+		if (input.empty) {
+			return;
+		}
+		
 		input.on({
 			keyup: (el, event) => {
 				this.validate();
@@ -180,22 +187,21 @@ class FormPart {
 	} 
 
 	createForms() {
-		tk('cv-form').iter(el => {
-			let name = el.attr('cv-name'),
-				Class = this._formDefinitions[name];
-			if (!Class) {
-				tk.warn('No such form ' + name);
-				el.remove();
+		core.utils.iterateNonStandardTags((el, formName) => {
+			if (!this._formDefinitions[formName]){
 				return;
 			}
-			let instance = new Class();
-			el.replace(instance.render());
 
-			this.forms[el.attr('cv-label') || name] = instance;
+			let label = el.attr('data-name') || el.attr('name') || formName, 
+				form = new this._formDefinitions[formName]();
+			this.forms[label] = form;
+			
+			el.replace(form.render());
+			tk.log('Created form ' + formName + ' as ' + label);
 		});
 	}
 
-	form(name, options) {
+	form(options) {
 		return (FormClass) => {
 			class Form extends FormClass {
 				constructor() {
@@ -240,13 +246,13 @@ class FormPart {
 						data.name = name;
 						this.fields[name] = new Field(data, this);
 					});
-
+					
 					this.base = {
 						select: () => this.node,
 						render: () => {
 							if (this._rendering) { return; }
 							this._rendering = true;
-
+							
 							let renderFields = (range) => {
 								range = range || [0, tk.comp(this.fields, x => x).length];
 								let curI = 0,
@@ -260,30 +266,19 @@ class FormPart {
 									curI++;
 								});
 								
-								return () => result;
+								return result;
 							};
 
-							let el = tk.template(this._template || this.template)
+							this.node = this._templateContext
 								.data(renderFields, this.state)
 								.render();
 
-							core.utils.installObjectObservers(this.state, () => this.render());
-
-							tk.iter(this.fields, (name, field) => { field.bind(el); });
-							el.children('input[type="submit"]').on('click', (el, event) => { 
-								this.submit(); 
-								event.preventDefault();
-							});
-							el.children('input').on('change', () => {
-								el.children('.error-summary').classify('hidden');
-							});
-
-							core.utils.resolveEvents(this, FormClass, el);
-
-							if (this.node && !this.node.parents('body').empty){
-								this.node.replace(el);
+							if (!this._created) {
+								this._created = true;
+								tk.listener(this, 'state').changed(() => { this.render(); })
 							}
-							this.node = el;
+
+							core.utils.installObjectObservers(this.state, () => this.render());
 
 							this._rendering = false;
 							return this.node;
@@ -300,13 +295,15 @@ class FormPart {
 						},
 						clear: () => {
 							tk.iter(this.fields, (name, field) => {
-								field.value('');
+								field.value = '';
 							});
 						},
 						fill: content => {
 							tk.iter(content, (key, value) => {
 								let field = this.fields[key];
-								field && field.value(value);
+								if (field) {
+									field.value = value;
+								}
 							});
 						},
 						submit: (includeData={}) => {
@@ -318,7 +315,7 @@ class FormPart {
 									return;
 								}
 								
-								let value = field.value();
+								let value = field.value;
 								if (value != null) {
 									data[name] = value;
 								}
@@ -364,19 +361,42 @@ class FormPart {
 						}
 					});
 					core.utils.invokeDecoratedMethods(this, FormClass, '_onSetup');
-					
-					tk.listener(this, 'data').changed(() => { this.render(); })
 
-					Object.defineProperty(this, '_rendering', {
-						value: false,
-						writable: true,
-						enumerable: false
+					Object.defineProperties(this, {
+						_rendering: {
+							value: false,
+							writable: true,
+							enumerable: false
+						},
+						_created: {
+							value: false,
+							writable: true,
+							enumerable: false
+						}
 					});
+					
 					this.node = null;
+					this._templateContext = tk.template(this._template || this.template)
+						.live()
+						.inspection(el => {
+							tk.iter(this.fields, (name, field) => { field.bind(el); });
+
+							core.utils.resolveEventsAndInspections(this, FormClass, el);
+
+							el.reduce('input[type="submit"]').on('click', (el, event) => { 
+								this.submit(); 
+								event.preventDefault();
+							});
+							
+							el.reduce('input').on('change', () => {
+								el.children('.error-summary').classify('hidden');
+							});
+						});
+
 				}
 			}
 
-			this._formDefinitions[name] = Form;
+			this._formDefinitions[FormClass.name.toLowerCase()] = Form;
 			return Form;
 		}
 	}
