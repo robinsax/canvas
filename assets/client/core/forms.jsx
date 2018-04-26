@@ -2,7 +2,7 @@ class Field {
 	//	TODO: Make use live template.
 
 	constructor(options, form) {
-		core.utils.applyOptionalizedArguments(this, options, {
+		core.utils.putOptions(this, options, {
 			name: options.attribute,
 			label: core.utils.nameToTitle(options.name),
 			type: 'text',
@@ -158,6 +158,205 @@ class Field {
 	}
 }
 
+class RootForm {
+	constructor() {
+		this.state = {};
+		
+		this.template = fields => 
+			<div class="form">
+				<div class="error-summary hidden"/>
+				{ fields }
+				<input type="submit">Submit</input>
+			</div>
+		
+		this.target = core.route;
+		this.method = 'post';
+		this.uninclude = [];
+
+		Object.defineProperties(this, {
+			_rendering: {
+				value: false,
+				writable: true,
+				enumerable: false
+			},
+			_created: {
+				value: false,
+				writable: true,
+				enumerable: false
+			},
+			_templateContext: {
+				value: null,
+				writeable: true,
+				enumerable: false
+			}
+		});
+
+		this.node = null;
+	}
+
+	__options(options) {
+		this._modelDefn = options.model ? modelDefinitions[options.model] : null;
+		this.makeFields(options);
+
+		tk.update(this, options);
+	}
+
+	makeFields(options) {
+		let fieldData = this._modelDefn || {};
+		if (options.fields) {
+			let filteredFieldData = {};
+			tk.iter(options.fields, select => {
+				let override = {};
+				if (select instanceof Array){
+					override = select[1];
+					select = select[0];
+				}
+				filteredFieldData[select] = fieldData[select] || {};
+				tk.iter(override, (key, value) => {
+					filteredFieldData[select][key] = value;
+				});
+			});
+			
+			fieldData = filteredFieldData;
+		}
+
+		this.fields = {};
+		tk.iter(fieldData, (name, data) => {
+			data.name = name;
+			this.fields[name] = new Field(data, this);
+		});
+	}
+
+	render() {
+		if (this._rendering) { return; }
+		this._rendering = true;
+		
+		if (!this._templateContext) {
+			this._templateContext = tk.template(this._template || this.template)
+				.live()
+				.inspection(el => {
+					tk.iter(this.fields, (name, field) => { field.bind(el); });
+
+					core.utils.resolveEventsAndInspections(this, FormClass, el);
+
+					el.reduce('input[type="submit"]').on('click', (el, event) => { 
+						this.submit(); 
+						event.preventDefault();
+					});
+					
+					el.reduce('input').on('change', () => {
+						el.children('.error-summary').classify('hidden');
+					});
+				});
+		}
+
+		let renderFields = (range) => {
+			range = range || [0, tk.comp(this.fields, x => x).length];
+			let curI = 0, result = [];
+
+			tk.iter(this.fields, (name, field) => {
+				if (curI >= range[0] && curI < range[1]) {
+					result.push(field.template);
+				}
+				
+				curI++;
+			});
+			
+			return result;
+		};
+
+		this.node = this._templateContext
+			.data(renderFields, this.state)
+			.render();
+
+		if (!this._created) {
+			this._created = true;
+			tk.listener(this, 'state').changed(() => { this.render(); })
+		}
+
+		core.utils.installObjectObservers(this.state, () => this.render());
+
+		this._rendering = false;
+		return this.node;
+	}
+
+	validate() {
+		let pass = true;
+		tk.iter(this.fields, (name, field) => {
+			if (!field.validate()) {
+				pass = false;
+			}
+		});
+
+		return pass;
+	}
+
+	fill(content) {
+		tk.iter(content, (key, value) => {
+			let field = this.fields[key];
+			if (field) {
+				field.value = value;
+			}
+		});
+	}
+
+	clear() {
+		tk.iter(this.fields, (name, field) => {
+			field.value = '';
+		});
+	}
+
+	submit(extraData={}) {
+		if (!this.validate()){ return; }
+
+		let data = {};
+		tk.iter(this.fields, (name, field) => {
+			if (this.uninclude.indexOf(name) >= 0){
+				return;
+			}
+			
+			let value = field.value;
+			if (value != null) {
+				data[name] = value;
+			}
+		});
+		tk.iter(includeData, (k, v) => { data[k] = v; });
+
+		cv.request(this.method, this.target).json(data)
+			.failure(response => {
+				let data = response.data;
+				if (data.errors) {
+					tk.iter(data.errors, (name, error) => {
+						let field = this.fields[name];
+						if (field) {
+							field.invalidate(error);
+						}
+						else {
+							tk.warn('Invalidated field "' + name + '" not contained in form');
+						}
+					});
+				}
+				if (data.error_summary) {
+					let summaryNode = this.select().children('.error-summary');
+					if (summaryNode.empty) {
+						tk.warn('Cannot display error summary; no .summary-area (was ' + data.error_summary + ')');
+					}
+					else {
+						summaryNode.classify('hidden', false).text(data.error_summary);
+					}
+				}
+
+				core.utils.invokeDecoratedMethods(this, FormClass, '_onFailure', data.errors, data.error_summary);
+			})
+			.success(response => {
+				core.utils.invokeDecoratedMethods(this, FormClass, '_onSuccess', response.data);
+			})
+			.send();
+	}
+
+	select() { return this.node; }
+}
+
 @part
 class FormPart {
 	constructor() {
@@ -197,202 +396,18 @@ class FormPart {
 			this.forms[label] = form;
 			
 			el.replace(form.render());
-			tk.log('Created form ' + formName + ' as ' + label);
+			tk.log('Created form ' + label);
 		});
 	}
 
 	form(options) {
-		return (FormClass) => {
+		return FormClass => {
+			Object.setPrototypeOf(FormClass, RootForm);
+
 			class Form extends FormClass {
 				constructor() {
 					super();
-
-					let definition = options.model ? modelDefinitions[options.model] : null;
-					this.updateOptionDefaults = this.updateOptionDefaults || (x => x);
-					
-					core.utils.applyOptionalizedArguments(this, options, this.updateOptionDefaults({
-						template: fields => 
-							<div class="form">
-								<div class="error-summary hidden"/>
-								{ fields }
-								<input type="submit">Submit</input>
-							</div>,
-						target: cv.route,
-						method: 'post',
-						uninclude: [],
-						state: {}
-					}));
-					
-					let fieldData = definition || {};
-					if (options.fields) {
-						let filteredFieldData = {};
-						tk.iter(options.fields, select => {
-							let override = {};
-							if (select instanceof Array){
-								override = select[1];
-								select = select[0];
-							}
-							filteredFieldData[select] = fieldData[select] || {};
-							tk.iter(override, (key, value) => {
-								filteredFieldData[select][key] = value;
-							});
-						});
-						
-						fieldData = filteredFieldData;
-					}
-
-					this.fields = {};
-					tk.iter(fieldData, (name, data) => {
-						data.name = name;
-						this.fields[name] = new Field(data, this);
-					});
-					
-					this.base = {
-						select: () => this.node,
-						render: () => {
-							if (this._rendering) { return; }
-							this._rendering = true;
-							
-							let renderFields = (range) => {
-								range = range || [0, tk.comp(this.fields, x => x).length];
-								let curI = 0,
-									result = [];
-
-								tk.iter(this.fields, (name, field) => {
-									if (curI >= range[0] && curI < range[1]) {
-										result.push(field.template);
-									}
-									
-									curI++;
-								});
-								
-								return result;
-							};
-
-							this.node = this._templateContext
-								.data(renderFields, this.state)
-								.render();
-
-							if (!this._created) {
-								this._created = true;
-								tk.listener(this, 'state').changed(() => { this.render(); })
-							}
-
-							core.utils.installObjectObservers(this.state, () => this.render());
-
-							this._rendering = false;
-							return this.node;
-						},
-						validate: () => {
-							let pass = true;
-							tk.iter(this.fields, (name, field) => {
-								if (!field.validate()) {
-									pass = false;
-								}
-							});
-
-							return pass;
-						},
-						clear: () => {
-							tk.iter(this.fields, (name, field) => {
-								field.value = '';
-							});
-						},
-						fill: content => {
-							tk.iter(content, (key, value) => {
-								let field = this.fields[key];
-								if (field) {
-									field.value = value;
-								}
-							});
-						},
-						submit: (includeData={}) => {
-							if (!this.validate()){ return; }
-
-							let data = {};
-							tk.iter(this.fields, (name, field) => {
-								if (this.uninclude.indexOf(name) >= 0){
-									return;
-								}
-								
-								let value = field.value;
-								if (value != null) {
-									data[name] = value;
-								}
-							});
-							tk.iter(includeData, (k, v) => { data[k] = v; });
-
-							cv.request(this.method, this.target).json(data)
-								.failure(response => {
-									let data = response.data;
-									if (data.errors) {
-										tk.iter(data.errors, (name, error) => {
-											let field = this.fields[name];
-											if (field) {
-												field.invalidate(error);
-											}
-											else {
-												tk.warn('Invalidated field "' + name + '" not contained in form');
-											}
-										});
-									}
-									if (data.error_summary) {
-										let summaryNode = this.select().children('.error-summary');
-										if (summaryNode.empty) {
-											tk.warn('Cannot display error summary; no .summary-area (was ' + data.error_summary + ')');
-										}
-										else {
-											summaryNode.classify('hidden', false).text(data.error_summary);
-										}
-									}
-
-									core.utils.invokeDecoratedMethods(this, FormClass, '_onFailure', data.errors, data.error_summary);
-								})
-								.success(response => {
-									core.utils.invokeDecoratedMethods(this, FormClass, '_onSuccess', response.data);
-								})
-								.send();
-						}
-					}
-					
-					tk.iter(this.base, (key, func) => {
-						if (!this[key]) {
-							this[key] = (...a) => func(...a);
-						}
-					});
-					core.utils.invokeDecoratedMethods(this, FormClass, '_onSetup');
-
-					Object.defineProperties(this, {
-						_rendering: {
-							value: false,
-							writable: true,
-							enumerable: false
-						},
-						_created: {
-							value: false,
-							writable: true,
-							enumerable: false
-						}
-					});
-					
-					this.node = null;
-					this._templateContext = tk.template(this._template || this.template)
-						.live()
-						.inspection(el => {
-							tk.iter(this.fields, (name, field) => { field.bind(el); });
-
-							core.utils.resolveEventsAndInspections(this, FormClass, el);
-
-							el.reduce('input[type="submit"]').on('click', (el, event) => { 
-								this.submit(); 
-								event.preventDefault();
-							});
-							
-							el.reduce('input').on('change', () => {
-								el.children('.error-summary').classify('hidden');
-							});
-						});
-
+					this.__options(options);
 				}
 			}
 
@@ -404,32 +419,38 @@ class FormPart {
 	defineDefaultForms() {
 		class ModalForm {
 			constructor() {
-				this.isOpen = false;
+				this.state = {
+					isOpen: false,
+					className: null
+				};
 
-				this._template = (fields, data) => 
-					<div class={ "modal" + (this.className ? " " + this.className : "") + (this.isOpen ? " open" : "") }>
-						<div class="panel">
-							<i class="fa fa-times close"/>
-							{ this.template(fields, data) }
-						</div>
-					</div>
-			}
-
-			updateOptionDefaults(defaults) {
-				defaults.className = null;
-				return defaults;
+				Object.defineProperty(this, 'template', (() => {
+					let template = null;
+					return {
+						set: (value) => {
+							template = (fields, state) => 
+								<div class={ "modal" + (state.className ? " " + state.className : "") + (state.isOpen ? " open" : "") }>
+									<div class="panel">
+										<i class="fa fa-times close"/>
+										{ value(fields, state) }
+									</div>
+								</div>
+							return value;
+						},
+						get: () => template,
+						enumerable: true
+					}
+				})());
 			}
 
 			@core.event('.modal, .close')
 			@core.onSuccess
 			close() {
-				this.isOpen = false;
-				this.select().classify('open', false);
+				this.state.isOpen = false;
 			}
 			
 			open() {
-				this.isOpen = true;
-				this.select().classify('open');
+				this.state.isOpen = true;
 			}
 		
 			@core.event('.panel')

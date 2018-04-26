@@ -2,8 +2,6 @@
 class CoreUtilsPart {
 	constructor() {
 		core.utils = this;
-
-		core.onSetup = this.createMethodDecorator('_onSetup');
 	}
 
 	nameToTitle(n) {
@@ -13,13 +11,23 @@ class CoreUtilsPart {
 	iterateNonStandardTags(callback) {
 		tk('body *').iter(el => {
 			let xName = /^[xX]-(\w+)$/.exec(el.tag());
+
 			if (xName) { 
 				callback(el, xName[1].toLowerCase());
 			}
 		});
-	} 
+	}
 
-	applyOptionalizedArguments(instance, options, defaults) {
+	setRootPrototype(Top, Root) {
+		let last = Top.prototype;
+		while (Object.getPrototypeOf(last) != Object.prototype) {
+			last = Object.getPrototypeOf(last);
+		}
+		tk.log(last, Root.prototype);
+		Object.setPrototypeOf(last, Root.prototype);
+	}
+
+	putOptions(instance, options, defaults) {
 		tk.iter(defaults, (key, defaultValue) => {
 			if (instance[key]) { return; }
 			instance[key] = (options[key] || defaultValue);

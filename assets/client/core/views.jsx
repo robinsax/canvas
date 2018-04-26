@@ -1,3 +1,85 @@
+class RootView {
+	constructor() {
+		this.state = {};
+		this.data = {};
+
+		this.template = {};
+		this.templates = {};
+
+		this.dataSource = null;
+		this.query = null;
+
+		Object.defineProperties(this, {
+			_rendering: {
+				value: false,
+				writable: true,
+				enumerable: false
+			},
+			_created: {
+				value: false,
+				writable: true,
+				enumerable: false
+			},
+			_templateContext: {
+				value: null,
+				writeable: true,
+				enumerable: false
+			}
+		});
+
+		this.node = null;
+	}
+
+	__options(options) {
+		tk.update(this, options);
+	}
+
+	fetch(then=(() => {})) {
+		if (!this.dataSource) {
+			throw 'Cannot fetch without dataSource';
+		}
+
+		cv.request('get', this.dataSource)
+			.query(this.query)
+			.success(response => {
+				this.data = response.data;
+				then();
+			})
+			.send();
+	}
+
+	render() {
+		if (this._rendering){ return; }
+		this._rendering = true;
+
+		if (!this.templateContext) {
+			this._templateContext = tk.template(this.template || this.templates.root)
+				.inspection(el => {
+					core.utils.resolveEventsAndInspections(this, ViewClass, el);
+				})
+				.live();
+		}
+
+		let boundRender = () => this.render();
+
+		if (!this._created) {
+			this._created = true;
+			tk.listener(this, 'data').changed(() => this.render());
+		}
+		core.utils.installObjectObservers(this.data, boundRender);
+		core.utils.installObjectObservers(this.state, boundRender);
+
+		this.node = this._templateContext
+			.data(this.data, this.state, this.templates)
+			.render();
+		
+		this._rendering = false;
+		return this.node;
+	}
+
+	select() { return this.node; }
+}
+
 @part
 class ViewPart {
 	constructor() {
@@ -11,14 +93,16 @@ class ViewPart {
 		core.inspects = selector => this.viewInspect(selector);
 
 		this.defineDefaultViews();
-
 		tk(window).on('load', () => this.createViews());
 	}
 
 	resolveEventsAndInspections(instance, cls, el) {
 		core.utils.iterateDecoratedMethods(cls, '_events', eventDesc => {
-			el.reduce(eventDesc.selector).on(eventDesc.on, (tel, event) => {
-				instance[eventDesc.key](tel, event);
+			el.reduce(eventDesc.selector).on(eventDesc.on, (...a) => {
+				if (eventDesc.transform) {
+					a = eventDesc.transform.apply(null, a);
+				}
+				instance[eventDesc.key](...a);
 			});
 		});
 		core.utils.iterateDecoratedMethods(cls, '_inspectors', desc => {
@@ -30,83 +114,12 @@ class ViewPart {
 		return (ViewClass) => {
 			let name = ViewClass.name.toLowerCase();
 
+			core.utils.setRootPrototype(ViewClass, RootView);
+
 			class View extends ViewClass {
 				constructor() {
-					super(...arguments);
-					this.name = name;
-					this.updateOptionDefaults = this.updateOptionDefaults || (x => x);
-					core.utils.applyOptionalizedArguments(this, options, this.updateOptionDefaults({
-						state: {},
-						templates: null,
-						template: null,
-						data: {},
-						dataSource: null,
-						query: {}
-					}));
-
-					this.base = {
-						fetch: (then=(() => {})) => {
-							if (!this.dataSource) {
-								throw 'Cannot fetch without dataSource';
-							}
-
-							cv.request('get', this.dataSource)
-								.query(this.query)
-								.success(response => {
-									this.data = response.data;
-									then();
-								})
-								.send();
-						},
-						select: () => this.node,
-						render: () => {
-							if (this._rendering){ return; }
-							this._rendering = true;
-
-							let boundRender = () => this.render();
-
-							if (!this._created) {
-								this._created = true;
-								tk.listener(this, 'data').changed(() => this.render());
-							}
-							core.utils.installObjectObservers(this.data, boundRender);
-							core.utils.installObjectObservers(this.state, boundRender);
-
-							this.node = this._templateContext
-								.data(this.data, this.state, this.templates)
-								.render();
-							
-							this._rendering = false;
-							return this.node;
-						}
-					}
-
-					tk.iter(this.base, (key, func) => {
-						if (!this[key]) {
-							this[key] = (...a) => func(...a);
-						}
-					});
-					core.utils.invokeDecoratedMethods(this, ViewClass, '_onSetup');
-					
-					Object.defineProperties(this, {
-						_rendering: {
-							value: false,
-							writable: true,
-							enumerable: false
-						},
-						_created: {
-							value: false,
-							writable: true,
-							enumerable: false
-						}
-					});
-
-					this.node = null;
-					this._templateContext = tk.template(this.template || this.templates.root)
-						.inspection(el => {
-							core.utils.resolveEventsAndInspections(this, ViewClass, el);
-						})
-						.live();
+					super();
+					this.__options(options);
 				}
 			}
 			
@@ -128,7 +141,7 @@ class ViewPart {
 			let create = () => {
 				core.onceReady(() => {
 					el.replace(view.render());
-					tk.log('Created view ' + viewName + ' as ' + label);
+					tk.log('Created view ' + label);
 				});
 			}
 			
@@ -137,7 +150,12 @@ class ViewPart {
 		});
 	}
 
-	viewEvent(on, selector) {
+	viewEvent(on, selector, transform=null) {
+		if (typeof selector == 'function') {
+			transform = selector;
+			selector = on;
+			on = 'click';
+		}
 		if (!selector) {
 			selector = on;
 			on = 'click';
@@ -147,7 +165,8 @@ class ViewPart {
 			return {
 				selector: selector,
 				on: on,
-				key: key
+				key: key,
+				transform: transform
 			}
 		});
 	}
@@ -160,37 +179,33 @@ class ViewPart {
 			};
 		})
 	}
-	
+
 	defineDefaultViews() {
 		class ModalView {
 			constructor() {
-				this.isOpen = false;
+				this.state = {
+					isOpen: false,
+					className: null
+				};
 
-				this.template = ((self) => () => 
-					<div class={ "modal" + (self.className ? " " + self.className : "") + (self.isOpen ? " open" : "") }>
+				this.template = (data, state, templates) => 
+					<div class={ "modal" + (state.className ? " " + state.className : "") + (state.isOpen ? " open" : "") }>
 						<div class="panel">
 							<i class="fa fa-times close"/>
-							{ self.templates.panel(self.data, self.state, self.templates) }
+							{ templates.panel(data, state, templates) }
 						</div>
-					</div>)(this);
+					</div>
 			}
-			
-			updateOptionDefaults(options) {
-				options.className = null;
-				return options;
-			}
-		
+
 			@core.event('.modal, .close')
 			close() {
-				this.isOpen = false;
-				this.select().classify('open', false);
+				this.state.isOpen = false;
 			}
-		
+
 			open() {
-				this.isOpen = true;
-				this.select().classify('open');
+				this.state.isOpen = true;
 			}
-		
+
 			@core.event('.panel')
 			keepOpen(el, event) {
 				event.stopPropagation();
@@ -198,41 +213,37 @@ class ViewPart {
 		}
 
 		class ListView {
-			updateOptionDefaults(defaults) {
-				defaults.className = null;
-				defaults.listRoot = 'ul';
-				defaults.iterated = null;
-				return defaults;
-			}
+			constructor() {
+				this.state = {
+					className: null,
+					listRoot: <ul/>,
+					iteratedKey: null
+				};
 
-			@core.onSetup
-			setupTemplates() {
-				this.templates = this.templates || {};
-				this.templates.header = this.templates.header || (() => {});
-				this.templates.item = this.templates.item || (item => <li>{ typeof item == 'object' ? JSON.stringify(item) : item + '' }</li>)
-				this.templates.empty = this.templates.empty || (() => <p class="subtext">No items to show</p>)
-				this.templates.footer = this.templates.footer || (() => {});
+				this.templates = {
+					header: () => {},
+					item: item => <li>{ typeof item == 'object' ? JSON.stringify(item) : item + '' }</li>,
+					empty: () => <p class="subtext">No items to show</p>,
+					footer: () => {}
+				};
 
-				this.template = this.template || ((self) => {
-					let iterTarget = () => self.iterated ? self.data[self.iterated] : self.data;
-					
-					return (data, state, templates) =>
-						<div class={ "list-container" + (self.className ? " " + self.className : "") }>
-							{ templates.header(data, state, templates) }
-							{
-								tk.template.tag(
-									self.listRoot,
-									null,
-									( iterTarget().length > 0 ? 
-										() => tk.comp(iterTarget(), (item, i) => templates.item(item, i, state, templates))
-										:
-										() => templates.empty(data, state, templates)
-									)
+				let getIterTarget = () => this.state.iteratedKey ? this.data[this.state.iteratedKey] : this.data;
+				this.template = (data, state, templates) =>
+					<div class={ "list-container" + (state.className ? " " + state.className : "") }>
+						{ templates.header(data, state, templates) }
+						{
+							tk.template.tag(
+								state.listRoot.tag,
+								{class: 'list'},
+								( getIterTarget().length > 0 ? 
+									() => tk.comp(getIterTarget(), (item, i) => templates.item(item, i, state, templates))
+									:
+									() => templates.empty(data, state, templates)
 								)
-							}
-							{ templates.footer(data, state, templates) }
-						</div>
-				})(this);
+							)
+						}
+						{ templates.footer(data, state, templates) }
+					</div>
 			}
 		}
 
