@@ -33,3 +33,16 @@ def patch_type(cls, destiny):
 	Patched.__name__ = cls.__name__
 
 	return Patched
+
+@export
+def cached_property(meth):
+	protected = '_%s'%meth.__name__
+	def retrieval(self):
+		if hasattr(self, protected):
+			return getattr(self, protected)
+		else:
+			value = meth(self)
+			setattr(self, protected, value)
+			return value
+	
+	return property(retrieval)

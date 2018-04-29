@@ -1,13 +1,21 @@
 class RootView {
-	constructor() {
-		this.state = {};
-		this.data = {};
+	__construct(options) {
+		this.state = this.state || {};
+		tk.update(this.state, options.state || {});
 
-		this.template = {};
-		this.templates = {};
+		this.data = options.data || this.data || {};
 
-		this.dataSource = null;
-		this.query = null;
+		this.template = options.template || this.template || null;
+		this.templates = this.templates || {};
+		tk.update(this.templates, options.templates || {});
+
+		if (!this.template) {
+			this.template = this.templates.root;
+		}
+
+		this.dataSource = options.dataSource || this.dataSource || null;
+		this.query = this.query || {};
+		tk.update(this.query, options.query || {});
 
 		Object.defineProperties(this, {
 			_rendering: {
@@ -22,16 +30,12 @@ class RootView {
 			},
 			_templateContext: {
 				value: null,
-				writeable: true,
+				writable: true,
 				enumerable: false
 			}
 		});
-
+		
 		this.node = null;
-	}
-
-	__options(options) {
-		tk.update(this, options);
 	}
 
 	fetch(then=(() => {})) {
@@ -52,10 +56,10 @@ class RootView {
 		if (this._rendering){ return; }
 		this._rendering = true;
 
-		if (!this.templateContext) {
+		if (!this._templateContext) {
 			this._templateContext = tk.template(this.template || this.templates.root)
 				.inspection(el => {
-					core.utils.resolveEventsAndInspections(this, ViewClass, el);
+					core.utils.resolveEventsAndInspections(this, this.__cls, el);
 				})
 				.live();
 		}
@@ -64,7 +68,7 @@ class RootView {
 
 		if (!this._created) {
 			this._created = true;
-			tk.listener(this, 'data').changed(() => this.render());
+			tk.listener(this, 'data').changed(boundRender);
 		}
 		core.utils.installObjectObservers(this.data, boundRender);
 		core.utils.installObjectObservers(this.state, boundRender);
@@ -111,15 +115,15 @@ class ViewPart {
 	}
 
 	view(options) {
-		return (ViewClass) => {
+		return ViewClass => {
 			let name = ViewClass.name.toLowerCase();
 
 			core.utils.setRootPrototype(ViewClass, RootView);
-
 			class View extends ViewClass {
 				constructor() {
 					super();
-					this.__options(options);
+					this.__cls = ViewClass;
+					this.__construct(options);
 				}
 			}
 			

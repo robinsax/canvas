@@ -130,12 +130,7 @@ class Field {
 		return !this.error;
 	}
 
-	bind(el) {
-		let input = el.children('[name="' + this.name + '"]');
-		if (input.empty) {
-			return;
-		}
-		
+	bindToNode(el, input) {
 		input.on({
 			keyup: (el, event) => {
 				this.validate();
@@ -148,9 +143,7 @@ class Field {
 			}
 		});
 
-		this.node = input.parents(false);
-
-		return el;
+		this.node = el;
 	}
 	
 	render() {
@@ -159,19 +152,23 @@ class Field {
 }
 
 class RootForm {
-	constructor() {
-		this.state = {};
-		
-		this.template = fields => 
+	__construct(options) {
+		let model = options.model || this.model || null;
+		this._modelDefn = model ? modelDefinitions[model] : {};
+
+		this.state = this.state || {};
+		tk.update(this.state, options.state || {});
+
+		this.template = options.template || this.template || (fields => 
 			<div class="form">
 				<div class="error-summary hidden"/>
 				{ fields }
 				<input type="submit">Submit</input>
-			</div>
+			</div>)
 		
-		this.target = core.route;
-		this.method = 'post';
-		this.uninclude = [];
+		this.target = options.target || this.target || core.route;
+		this.method = options.method || this.method || 'post';
+		this.uninclude = options.uninclude || this.uninclude || [];
 
 		Object.defineProperties(this, {
 			_rendering: {
@@ -186,19 +183,13 @@ class RootForm {
 			},
 			_templateContext: {
 				value: null,
-				writeable: true,
+				writable: true,
 				enumerable: false
 			}
 		});
 
 		this.node = null;
-	}
-
-	__options(options) {
-		this._modelDefn = options.model ? modelDefinitions[options.model] : null;
 		this.makeFields(options);
-
-		tk.update(this, options);
 	}
 
 	makeFields(options) {
@@ -232,17 +223,22 @@ class RootForm {
 		this._rendering = true;
 		
 		if (!this._templateContext) {
-			this._templateContext = tk.template(this._template || this.template)
+			this._templateContext = tk.template(this.template)
 				.live()
 				.inspection(el => {
-					tk.iter(this.fields, (name, field) => { field.bind(el); });
+					core.utils.resolveEventsAndInspections(this, this.__cls, el);
 
-					core.utils.resolveEventsAndInspections(this, FormClass, el);
+					if (el.is('input[type="submit"]')) {
+						el.on('click', (el, event) => { 
+							this.submit(); 
+							event.preventDefault();
+						});
+					}
 
-					el.reduce('input[type="submit"]').on('click', (el, event) => { 
-						this.submit(); 
-						event.preventDefault();
-					});
+					if (el.is('.field')) {
+						let input = el.children('input');
+						this.fields[input.attr('name')].bindToNode(el, input);
+					}
 					
 					el.reduce('input').on('change', () => {
 						el.children('.error-summary').classify('hidden');
@@ -275,7 +271,7 @@ class RootForm {
 		}
 
 		core.utils.installObjectObservers(this.state, () => this.render());
-
+		
 		this._rendering = false;
 		return this.node;
 	}
@@ -320,7 +316,7 @@ class RootForm {
 				data[name] = value;
 			}
 		});
-		tk.iter(includeData, (k, v) => { data[k] = v; });
+		tk.iter(extraData, (k, v) => { data[k] = v; });
 
 		cv.request(this.method, this.target).json(data)
 			.failure(response => {
@@ -346,10 +342,10 @@ class RootForm {
 					}
 				}
 
-				core.utils.invokeDecoratedMethods(this, FormClass, '_onFailure', data.errors, data.error_summary);
+				core.utils.invokeDecoratedMethods(this, this.__cls, '_onFailure', data.errors, data.error_summary);
 			})
 			.success(response => {
-				core.utils.invokeDecoratedMethods(this, FormClass, '_onSuccess', response.data);
+				core.utils.invokeDecoratedMethods(this, this.__cls, '_onSuccess', response.data);
 			})
 			.send();
 	}
@@ -402,12 +398,13 @@ class FormPart {
 
 	form(options) {
 		return FormClass => {
-			Object.setPrototypeOf(FormClass, RootForm);
 
+			core.utils.setRootPrototype(FormClass, RootForm);
 			class Form extends FormClass {
 				constructor() {
 					super();
-					this.__options(options);
+					this.__cls = FormClass;
+					this.__construct(options);
 				}
 			}
 

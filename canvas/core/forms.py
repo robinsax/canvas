@@ -19,5 +19,5 @@ def serialize_form_models(model_classes):
 				'type': column.input_type,
 				'validators': constraints
 			}
-		models_dict[model_cls.__table__] = form_dict
+		models_dict[model_cls.__name__] = form_dict
 	return serialize_json(models_dict)

@@ -2,11 +2,10 @@
 
 ## Specification
 
-In this tutorial, we will develop a simple to-do list application, which allows users to track a list of to-do items. To reduce complexity, authentication will be temporarily ignored; users will simply supply their name to access their list.
+In this tutorial, we will develop a simple to-do list application which allows users 
+to create to-do lists, add items to those lists, and mark items as finished. 
 
-This application will be consist of a model, an *API*, and a web page with provides an interface for that API.
-
-*Note*: This tutorial's implementation of the specification is somewhat overly complex to allow good coverage of canvas's features.
+The complete implementation of this application can be found at 
 
 ## Building It!
 

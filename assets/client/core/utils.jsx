@@ -19,11 +19,16 @@ class CoreUtilsPart {
 	}
 
 	setRootPrototype(Top, Root) {
+
 		let last = Top.prototype;
 		while (Object.getPrototypeOf(last) != Object.prototype) {
 			last = Object.getPrototypeOf(last);
+			if (last == Root.prototype) {
+				//	This will happen all but the first time.
+				return;
+			}
 		}
-		tk.log(last, Root.prototype);
+		
 		Object.setPrototypeOf(last, Root.prototype);
 	}
 

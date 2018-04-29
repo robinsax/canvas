@@ -3,6 +3,8 @@
 ORM class, decorator, and utility definitions. 
 '''
 
+import inspect
+
 from collections import OrderedDict
 
 class _ResolveOther(Exception):
@@ -12,7 +14,7 @@ class _ResolveOther(Exception):
 
 _object_relational_map = dict()
 
-from ...exceptions import InvalidSchema
+from ...exceptions import InvalidSchema, InvalidDecoration
 from ...namespace import export, export_ext
 from ...utils import patch_type
 from ..request_context import RequestContext

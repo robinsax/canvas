@@ -11,6 +11,8 @@ class ConfigurationError(Exception): pass
 @export
 class AssetError(Exception): pass
 
+class InvalidDecoration(Exception): pass
+
 @export
 @export_ext
 class Unrecognized(Exception): pass
