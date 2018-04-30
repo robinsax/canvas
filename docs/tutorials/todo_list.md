@@ -5,7 +5,7 @@
 In this tutorial, we will develop a simple to-do list application which allows users 
 to create to-do lists, add items to those lists, and mark items as finished. 
 
-The complete implementation of this application can be found at 
+The complete implementation of this application can be found in its [repository](https://github.com/robinsax/cvpl-todo.git).
 
 ## Building It!
 
@@ -27,85 +27,80 @@ When should now have a folder called `cvpl-todo`, which contains some configurat
 
 To ensure everything is set up correctly, let's serve canvas and make sure the 'Welcome' page is available.
 
-To serve canvas locally on port 8080, run
+To serve canvas locally on port 80, run
 
 ```bash
-python3 canvas --serve 8080
+python3 canvas --serve 80
 ```
 
-If you now visit `http://localhost:8080` in your browser, you should see the 'canvas is running' page.
+If you now visit `http://localhost` in your browser, you should see the default welcome page.
 
 ### Defining the Model
 
-Getting your data model right is important, as it is the foundation of your application. Therefore, the first thing we're going to do is define our model of a *to-do list* and a *to-do list item*.
+Getting a data model right is important as it's is the foundation of your application. Therefore, 
+the first thing we're going to do is define our model of a *to-do list* and a *to-do item*.
 
-The attributes of a to-do list in our system will be simply a unique ID and the name of its owner. For simplicity, this will be the first name only. We can represent this as a canvas model as follows:
+The attributes of a to-do list in our system will be simply a unique ID and its name. 
+We can represent this as a canvas model as follows:
 
 ```python
+#	Our to-do list model will be stored in a table called 'todo_lists'.
 @cv.model('todo_lists', {
-	#	The unique identifier. We could alternately use the `uuid` type.
+	#	It has UUID 'id' as a primary key...
 	'id': cv.Column('uuid', primary_key=True),
-	#	The name of the owner. Since every list needs an owner, we add a
-	#	'not null' constraint to this field. Additionally, we enforce that
-	#	names are only one word using a regular expression.
-	'owner_name': cv.Column('text', (
+	#	..and a required name.
+	'name': cv.Column('text', (
 		cv.NotNullConstraint(),
-		cv.UniquenessConstraint('That name is already taken'),
-		cv.RegexConstraint('Must be first name only', r'^[^\s]*$')
 	))
-})
+#	When we 'dictize' (i.e. serialize into a dictionary) a to-do list,
+#	we want to include it's items. We define that property below.
+}, dictized=('items',))
 class TodoList:
 
-	#	A constructor.
-	def __init__(self, owner_name):
-		self.owner_name = owner_name
+	#	To create a to-do list all we need to know is the name.
+	def __init__(self, name):
+		self.name = name
 
-	#	A retrieval class method that requires a database session and an
-	#	owner name. The purpose of this method may not be clear until we
-	#	create our API.
-	@classmethod
-	def get_or_die(cls, owner_name, session):
-		#	Retrieve the instance with the given owner name.
-		instance = session.query(cls, cls.owner_name == owner_name, one=True)
-
-		if not instance:
-			#	There is no such instance, raise an exception that causes
-			#	a 404 Not Found response to be returned to the client
-			raise cv.NotFound(owner_name)
-
-		#	Return the instance.
-		return instance
+	#	The cached_property() decorator is an extension of Python's
+	#	builtin property() decorator. It caches the value of the
+	#	property. In this case, that prevents multiple identical
+	#	database queries.
+	@cv.cached_property 
+	def items(self):
+		#	Using the session that loaded this model, query its items.
+		return self.__session__.query(TodoItem, TodoItem.parent_id == self.id, order_by=TodoItem.content)
 ```
 
-Next, we want to define what constitutes a to-do list item. A good starting point would be:
+Next, we want to define what constitutes a to-do item. A good starting point would be:
 
 * A unique ID.
 * A reference to the to-do list to which the item belongs.
-* The user-provided text context of the item.
+* The user-provided textual context of the item.
 * Whether or not the item is completed.
 
 We could represent this as a canvas model as follows:
 
 ```python
-@cv.model('todo_list_items', {
-	#	Again, a unique identifer.
+#	Our to-do list item model will be stored in a table called
+#	'todo_list_items'.
+@cv.model('todo_items', {
+	#	It has UUID 'id' as a primary key...
 	'id': cv.Column('uuid', primary_key=True),
-	#	A reference to the parent to-do list. Specifically, this field
-	#	will contain the value of the `id` of its parent.
+	#	...a reference to its containing list...
 	'parent_id': cv.Column('fk:todo_lists.id', (
 		cv.NotNullConstraint(),
-	)),
-	#	The user-provided text content of the item.
+	)), 
+	#	...textual content...
 	'content': cv.Column('text', (
 		cv.NotNullConstraint(),
 	)),
-	#	Whether or not the item has been completed.
+	#	...and wether or not it is marked as finished.
 	'finished': cv.Column('bool', default=False)
 })
-class TodoListItem:
+class TodoItem:
 
-	#	A constructor, which takes a `TodoList` instance and a string
-	#	containing the text content of the item.
+	#	To create a to-do list item, we need to know its parent
+	#	list and it's textual content.
 	def __init__(self, parent, content):
 		self.parent_id = parent.id
 		self.content = content
@@ -115,140 +110,149 @@ We now have the two models we need to implement our system.
 
 ### Defining an API
 
-There are several methods with which we could provide the functionality of creating and adding items to a to-do list to a *client* (someone or -thing sending requests to our server).
+There are several methods with which we could provide the functionality of creating, adding, and modifying 
+these items to a to-do list to a *client* (someone or -thing sending requests to our server).
 
-In this tutorial, we will provide an *API*. Generally, this approach is recommended for an innumerable number of reasons.
+In this tutorial, we will provide a JSON *API*. Generally, this approach is recommended for an innumerable 
+number of reasons.
 
 Our API will consist of the following *endpoint routes* and associated *verbs*:
 
-* The list endpoint: `/api/list/<owner_name>`
-	* `get`: Retrieve the to-do list of this name and its contained items.
-	* `put`: Create a new to-do list for this name.
-* The list item endpoint: `/api/item/<owner_name>`
-	* `put`: Add an item to the to-do list of this owner.
+* The list endpoint: `/api/lists`
+	* `get`: Retrieve all to-do lists.
+	* `put`: Create a new to-do list given a name.
+* The item endpoint: `/api/items`
+	* `put`: Create a new to-do list item given the ID of the parent list and some textual content.
+	* `patch`: Toggle the finished state of a to-do item given its ID.
 
 #### The List Endpoint
 
 We can translate our specification for the *list endpoint* into a canvas controller as follows:
 
 ```python
-#	Define and register our endpoint class as being responsible for
-#	the decided route. This route contains a variable (owner_name), which
-#	we will access when handling requests.
-@cv.endpoint('/api/list/<owner_name>')
+#	Our list endpoint will live at '/api/lists'.
+@cv.endpoint('/api/lists')
 class ListEndpoint:
 
-	#	This method is invoked to handle the `get` verb. It is responsible
-	#	for returning the to-do list whose owners name is `owner_name`, or
-	#	returning a 404 Not Found HTTP code if no such list exists.
+	#	This method handles 'get' requests. It returns all to-do lists.
 	def on_get(self, context):
-		#	Alias the database session.
-		session = context.session
+		#	Read all to-do lists our of our database.
+		lists = context.session.query(TodoList)
 
-		#	Retrieve the to-do list for this owner using the class method
-		#	we defined earlier. Note that it handles the case where no
-		#	such to-do list exists (hence the 'or_die').
-		todo_list = TodoList.get_or_die(context.route.owner_name, session)
+		#	Serve a canonical JSON response containing a list of to-do 
+		#	list dictizations in its data package.
+		return cv.create_json('success', cv.dictize(lists))
 
-		#	Retrieve all items belonging to this to-do list.
-		items = session.query(TodoListItem, TodoListItem.parent_id == todo_list.id)
-		
-		#	Create a dictionary containing representing our to-do list.
-		dictized = cv.dictize(todo_list)
-		#	Add an attribute containing the *dictizations* of the items.
-		dictized['items'] = cv.dictize(items)
-
-		#	Return a JSON response containing the to-do list and its items
-		# 	to the client.
-		return cv.create_json('success', dictized)
-
-	#	This method is invoked to handle the `put` verb. It is responsible
-	#	for creating a new to-do list.
+	#	This method handles 'put' requests. It creates a new to-do list
+	#	given a name.
 	def on_put(self, context):
-		#	Read the name of the owner.
-		owner_name = context.route.owner_name
+		#	This shorthand allows easier access to the most commonly
+		#	used contents of the request context.
+		request, cookie, session = context[:3]
 
-		#	Create a `TodoList` object with the given owner.
-		todo_list = TodoList(owner_name)
+		#	Create a new TodoList given the name supplied in the
+		#	request JSON.
+		new_list = TodoList(request.name)
 
-		#	Save the new instance in the database and commit the
-		#	transaction.
-		context.session.save(todo_list).commit()
+		#	Write the list to the database and commit our changes.
+		session.save(new_list).commit()
 
-		#	Inform the client the operation was successful.
+		#	Serve a canonical JSON response.
 		return cv.create_json('success')
 ```
 
 #### The Item Endpoint
 
-We can translate our specification for the *list item endpoint* into a canvas controller as follows:
+We can translate our specification for the *item endpoint* into a canvas controller as follows:
 
 ```python
-@cv.endpoint('/api/item/<owner_name>')
+#	Our item endpoint will live at '/api/items'.
+@cv.endpoint('/api/items')
 class ListItemEndpoint:
 
-	#	This method is invoked to handle the `put` verb. It is responsible
-	#	for asserting that a to-do list for owner_name exists and adding
-	#	a new item as described in the request body to it if so.
+	#	This method handles 'put' requests. It creates a new item given
+	#	a parent list and some textual content.
 	def on_put(self, context):
-		#	Alias the database session.
-		session = context.session
+		#	Unpack the request context.
+		request, cookie, session = context[:3]
 
-		#	As before, retrieve the to-do list for this owner.
-		parent_todo_list = TodoList.get_or_die(context.route.owner_name, session)
+		#	Retrieve the parent to-do list specified in the request context.
+		parent = TodoList.get(request.parent_id, session)
+
+		if not parent:
+			#	If there is no such parent to-do list, we cannot process the
+			#	request (this exception results in a 422 HTTP status code).
+			raise cv.UnprocessableEntity('No list with ID %s'%request.parent_id)
 		
-		#	Create our new to-do list item. Reading from `context.request`
-		#	implicitly requires the client to have provided whatever
-		#	values we read in the request body, which by default is JSON.
-		item = TodoListItem(parent_todo_list, context.request.content)
+		#	Create a new item.
+		item = TodoItem(parent, request.content)
 
-		#	Use the database session to save our new item and commit the
-		#	transaction.
+		#	Write the item to our database and commit the changes.
 		session.save(item).commit()
-	
-		#	Inform the client the operation was successful.
+
+		#	Serve a canonical JSON response.
+		return cv.create_json('success')
+
+	#	This method handles 'patch' requests. It marks an item as finished
+	#	given its ID.
+	def on_patch(self, context):
+		#	Unpack the request context.
+		request, cookie, session = context[:3]
+
+		#	Retrieve the item specified in the request.
+		item = TodoItem.get(request.item_id, session)
+		if not item:
+			#	If there is no such item we cannot process the request.
+			raise cv.UnprocessableEntity('No item with ID %s'%request.item_id)
+
+		#	Toggle the item's finished attributel.
+		item.finished = not item.finished
+
+		#	Save our changes.
+		session.commit()
+
+		#	Serve a canonical JSON response.
 		return cv.create_json('success')
 ```
 
 ###	Creating the Interface
 
-Now we have an to-do list model, and an API that allows us to control it. At this point you should try creating a to-do list, adding an item to it, and retrieving it using `curl`, the `requests` library for Python, or a similar method.
+Now we have an to-do list model, and an API that allows us to control it. At this point you should try 
+creating a to-do list, adding an item to it, and retrieving it using `curl`, the `requests` library for 
+Python, or a similar method.
 
-The final step is to provide a web page with an interface that allows users to control their
-to-do list from their browser.
+The final step is to provide a web page with an interface that allows users to control to-do lists 
+from their browser.
 
-There are three aspects to this:
+There are four aspects to this:
 
 * Defining a controller to serve the page.
 * Defining a Jinja template of the static part of that page.
-* Defining a to-do list `View` and an owner name entry `Form` in Javascript and placing them on the page.
-
-The use case for this interface is:
-
-1. The user visits the page.
-1. They enter their name in a field.
-1. If the name they provide is not associated with an existing to-do list, they are asked if they want to create one.
-1. They are presented with an interactive view of their to-do list.
+* Defining a to-do list `View` and and list creation `Form` in Javascript and placing them on the page.
+* Authoring a LESS stylesheet.
 
 #### The Page Controller
 
-Notice how we registered our API's controllers using the `endpoint` decorator. This informed canvas that we were creating... well, endpoints. Similarly, we can use the `page` decorator on a controller class to inform canvas we are creating a page.
+Notice how we registered our API's controllers using the `endpoint` decorator. This informed canvas 
+that we were creating... well, endpoints. Similarly, we can use the `page` decorator on a controller class to 
+inform canvas we are creating a page.
 
-Lets say our to-do list interface will live at the route `/todo`, and its HTML template at `./assets/templates/todo.html` in our plugin's folder. Our page controller could then be defined with simply:
-
-```python
-@cv.page('/todo')
-class TodoPage: pass
-```
-
-We are going to make one addition. Our page is going to contain a small form with which users will supply their name. Therefore it will contain a field modeled after the `owner_name` attribute of our `TodoList` model. canvas provides a method for easily generating forms based off of models. To use it, we tell canvas to include a *serialization* of our model with our page so our form-generation JavaScript can reference it. This is done by adding a `models` option to the `page` decorator, like so:
+Lets say our to-do list interface will live at the domain root, and its HTML template at 
+`./assets/templates/todo.html` in our plugin's folder. Our page controller could then be defined with:
 
 ```python
-@cv.page('/todo', models=(TodoList,))
-class TodoPage: pass
-```
 
-When we create our form, we can now reference the fact that it is based on `'todo_lists'` (the name we gave our `TodoList` model). This will be explained further when we make use of it; for now, just understand that we are providing a representation of our `TodoList` model to our frontend.
+#	The page on which our interface will live will be the root of our domain
+#	(e.g. http://localhost/). It's Jinja template is 'todo.html'. Finally,
+#	we want to include a representation of our TodoList model with which we
+#	can create a form for adding to-do lists.
+@cv.page('/', template='todo.html', models=(TodoList,))
+class TodoPage:
+	#	We don't need anything here; the default behaviour of a page is to
+	#	render and serve it's template on 'get', which is what we want.
+	pass
+
+```
 
 #### The Template
 
@@ -263,20 +267,14 @@ In this case, we can use the following template:
 {# Set the title of the page. #}
 {% set title = 'To-do List Manager' %}
 
-{# Add the JavaScript file which will contain our view as a dependency. #}
-{% set dependencies = ['todo_list.js'] %}
+{# Add our JavaScript and CSS as dependencies. #}
+{% set dependencies = ['todo_list.js', 'todo_list.css'] %}
 
 {# Define the contents of the 'page' section of the document (as opposed to the header, footer, etc.). #}
 {% block page %}
-	{# Note: See features/page_layout.md for an explanation of the 'component col-12' class. #}
-	<div class="component col-12"/>
-		{# Inform the front end we want a form called 'owner' (which we'll define presently) to be placed here. #}
-		<cv-form cv-name="ownerName"></cv-form>
-	</div>
-	<div class="component col-12"/>
-		{# Inform the front end we want a view called 'todoList' (which we'll define presently) to be placed here. #}
-		<cv-view cv-name="todoList"></cv-view>
-	</div>
+	{# Place and name our list view and form. #}
+	<x-TodoListView data-name="lists"></x-TodoListView>
+	<x-TodoListForm data-name="list"></x-TodoListForm>
 {% endblock %}
 ```
 
@@ -284,7 +282,10 @@ This file should live at `./assets/templates/todo.html`.
 
 #### The JavaScript
 
-Now we need to create our JSX file, `todo_list.jsx`, where we will define our to-do list view. Note that in our page template, we referred to this file with a `.js` extension. This is because canvas will recognize requests for non-existant `.js` files as potentially referencing a `.jsx` file, and will compile and serve the latter in its place. The same is true of `.less` and `.css`.
+Now we need to create our JSX file, `todo_list.jsx`, where we will define our to-do list view. Note that 
+in our page template, we referred to this file with a `.js` extension. This is because canvas will 
+recognize requests for non-existant `.js` files as potentially referencing a `.jsx` file, and will compile 
+and serve the latter in its place. As we will see later, the same is true of `.less` and `.css`.
 
 This file should live as `./assets/client/todo_list.jsx` in our plugin folder.
 
@@ -296,55 +297,152 @@ Views are used to render data as HTML. They have 3 primary components:
 
 * `data`, an attribute containing the data they represent.
 * `state`, an attribute containing an arbitrary object describing their state.
-* a `template` function, which maps `data` and `state` to an HTML representation.
+* A `template` function, which maps `data` and `state` to an HTML representation.
 
-We want to define our to-do list view such that, given a owner name, it:
+We want to define our to-do list view such that it:
 
-* Collects their to-do list from the `/api/list/<owner_name>` endpoint we created earlier.
-* Displays it, and provides the ability to add items.
-
-The view will be provided the name of the to-do list owner from our form.
+* Displays all to-do lists.
+* Displays the items of the current to-do list, including a button to mark them as finished.
 
 The following code defines our view.
 
 ```javascript
-//	Register our view as being called 'todoList'.
-@cv.view('todoList', {
-	//	The state of this view consists of only its owner name.
-	state: {ownerName: null},
-	//	Our JSX template.
-	template: (data, state) => 
-		!data.items ? () => {} : 	//	If there is no data, don't render anything.
-		<div class="todo-list component col-12">
-			<h1>{ state.ownerName }'s To-do List</h1>
-			<ul>
-				{ tk.comp(data.items, item => <li>{ item.content }</li>) }
-			</ul>
-			<input type="text" placeholder="Add an item..."/>
-			<button>Add</button>
-		</div>
+/*
+	This view consists of two components:
+	* A list of all to-do lists with a button to open the creation form.
+	* The title and contents of the currently selected to-do list, where
+	  each item includes an icon that can be clicked to mark it as finished.
+*/
+@cv.view({
+	//	The data for this view is retrieved from our list endpoint.
+	dataSource: '/api/lists',
+	//	The state of this view contains the index of the currently
+	//	selected list.
+	state: {currentI: -1},
+	//	Since our template is somewhat complex, we split it up by specifying
+	//	a 'templates' object instead of just a 'template'. The 'root' entry
+	//	is the base.
+	templates: {
+		//	This renders our list of to-do lists, or a hint if there aren't 
+		//	any yet.
+		lists: (data, state) =>
+			<div class="lists">
+				{ data.length > 0 ?
+					//	If there are any lists, render them, marking the 
+					//	current one with the 'current' class so we can
+					//	style it differently.
+					tk.comp(data, (list, i) =>
+						<div class={ "tile" + (state.currentI == i ? " current" : "") }>
+							<h3>{ list.name }</h3>
+							<aside class="subtext">{ list.items.length + '' } items</aside>
+						</div>
+					)
+					:
+					//	If there are no lists, render a hint.
+					<p class="subtext">Create a list</p>
+				}
+			</div>,
+		//	This renders our currently selected to-do list.
+		currentList: (currentList) =>
+			<div>
+				<h2>{ currentList.name }</h2>
+				<ul>
+					{ 
+					//	Render the items and their finished buttons, 
+					//	marking the finished ones with the 'finished' class.
+					  tk.comp(currentList.items, item => 
+						<li class={ item.finished ? "finished" : "" }>{ item.content } <i class="fa fa-check mark-done"/></li>
+					)}
+				</ul>
+				{ 
+				//	Provide an input and associated button for adding new
+				//	items.
+				}
+				<input type="text" name="new_item" placeholder="Add an item..."/>
+				<button class="add-item">Add</button>
+			</div>,
+		//	This is the base template. Its third parameter, 'templates', is
+		//	the set of our defined templates.
+		root: (data, state, templates) =>
+			<div class="todo-list">
+				<h1 class="align-center">To-do Lists</h1>
+				<div class="component col-6">
+					{ 
+					//	Render our 'lists' template defined above, and a button
+					//	for adding new lists.
+					templates.lists(data, state) 
+					}
+					<div class="padding">
+						<button class="add-list">Add a List</button>
+					</div>
+				</div>
+				<div class="component col-6">
+					{ 
+					//	Either render the current list or a hint if there is no
+					//	current list.
+					state.currentI >= 0 ?
+						templates.currentList(data[state.currentI])
+						:
+						<p class="subtext">Select a list</p>
+					}
+				</div>
+			</div>
+	}
 })
 class TodoListView {
-	//	This method sets the owner name and fetches their to-do list.
-	setOwnerName(ownerName) {
-		this.state.ownerName = ownerName;
-		this.dataSource = '/api/list/' + ownerName;
-		this.fetch();
+	//	Bind an event to to-do list tiles that sets the current list
+	//	in state.
+	@cv.event('.tile')
+	setCurrent(el) {
+		//	ToolkitSelection.index() returns the index of the element in 
+		//	its source comprehension.
+		this.state.currentI = el.index();
 	}
 
-	//	This method is triggered by the button being clicked. It adds
-	//	an item to the to-do list by sending a request to the 'add item'
-	//	endpoint we created, then re-fetching its data.
-	@cv.event('button')
-	addItem() {
-		//	Read the input value.
-		let content = tk('input').value();
+	//	Bind an event to our add list button that opens the to-do list
+	//	form.
+	@cv.event('.add-list')
+	openListForm() {
+		cv.forms.list.open();
+	}
 
-		//	Send a request to the 'add item' endpoint, with a request
-		//	body containing the item content (compare this with how we
-		//	are reading the request body at that endpoint).
-		cv.request('put', '/api/item/' + this.state.ownerName)
-			.json({content: content})
+	//	Bind an event to the icon in each to-do item that marks it as 
+	//	finished.
+	@cv.event('.mark-done')
+	markDone(el) {
+		//	Send a patch request to our items endpoint, then refresh
+		//	our view.
+		cv.request('patch', '/api/items')
+			.json({
+				item_id: el.data().id
+			})
+			.success(() => {
+				this.fetch();
+			})
+			.send();
+	}
+
+	//	Bind an event to our add item button that adds a new item.
+	@cv.event('.add-item')
+	addItem() {
+		//	Retrieve our input.
+		let input = tk('input[name="new_item"]'),
+		//	Read it's value.
+			content = input.value();
+
+		//	If it has no value, return.
+		if (!content) { return; }
+		
+		//	Clear it.
+		input.value('');
+		
+		//	Send a put request to our items endpoint to create a new
+		//	item, then refresh our view.
+		cv.request('put', '/api/items')
+			.json({
+				parent_id: this.data[this.state.currentI].id,
+				content: content
+			})
 			.success(() => {
 				//	The operation was successful, refresh the list.
 				this.fetch();
@@ -358,80 +456,107 @@ class TodoListView {
 
 canvas abstracts forms.
 
-Like views, forms use template to create an HTML representation of themselves. However, they don't have a `data` attribute. Instead, their template is passed a variable called `fields`, which can be "printed" directly.
+Like views, forms use template to create an HTML representation of themselves. However, they don't 
+have a `data` attribute. Instead, their template is passed a variable called `fields`, which can be "printed" directly.
 
-The form decorator should also be passed a definition of its fields. In this case, we supplied a model which we can use to do the majority of form definition.
-
-In this case, our form should:
-
-1. Have a single field, with which the user can input their name.
-1. Ensure a to-do list exists for that user, and if not give them the option to create one.
-1. Pass the username to the view we defined by calling its `setOwnerName()` method.
+The form decorator should also be passed a definition of its fields. In this case, we supplied a model 
+which we can use to do the majority of form definition.
 
 The following code defines our form.
 
 ```javascript
-//	Define the form as being named 'ownerName'.
-@cv.form('ownerName', {	
-	//	State that this form is based on the to-do list model.
-	model: 'todo_lists',
-	//	Declare the list fields we want to include in this form.
+/*
+	A to-do list creation form that opens in a modal.
+*/
+@cv.form({
+	//	This form is based on our TodoList model.
+	model: 'TodoList',
+	//	It is submitted via HTTP put to /api/lists
+	target: '/api/lists',
+	method: 'put',
+	//	It contains a single field, the 'name' attribute of our
+	//	model. We override a single default value, the placeholder.
 	fields: [
-		//	This list can contain strings or string, object pairs.
-		//	In the latter case, the object is used to override default values.
-		['owner_name', {
-			label: 'Your Name',
-			placeholder: 'e.g. Jane'
+		['name', {
+			placeholder: 'e.g. My To-do List'
 		}]
 	],
-	//	Our state simple contains a flag that decides whether or not this
-	//	form renders.
-	state: {closed: false},
-	//	The template checks whether it should render, then provides a simple wrapper
-	//	around its fields.
-	template: (fields, state) =>
-		state.closed ? () => {} :
+	//	The template is simply a wrapper around the fields.
+	template: fields =>
 		<div class="form">
-			<h1>To-do List Manager</h1>
-			<p>Please enter your name to continue...</p>
+			<h2>Add a List</h2>
 			{ fields }
-			<button>Enter</button>
+			<button>Add</button>
 		</div>
 })
-class OwnerNameForm {
-	getOwnerName() {
-		//	Return the value of the owner_name field.
-		return this.fields.owner_name.value();
+class TodoListForm extends cv.ModalForm {
+	//	When a new list is successfully created, referesh the list 
+	//	view (so the new list is added).
+	@cv.onSuccess
+	fetchView() {
+		cv.views.lists.fetch();
 	}
 
-	openView() {
-		//	Open the 'todoList' view for the current owner.
-		cv.views.todoList.setOwnerName(this.getOwnerName());
-		this.state.closed = true;	
-	}
-
+	//	Bind submission to the button in our template.
 	@cv.event('button')
 	submit() {
-		//	Our form submission function, triggered when the button is clicked.
-
-		//	Compute the URL of the list endpoint for this owner.
-		let endpointURL = '/api/list/' + this.getOwnerName();
-
-		//	Check if the to-do list exists, and create it if it doesn't.
-		cv.request('get', endpointURL)
-			.success(() => this.openView())
-			.failure(() => {
-				cv.request('put', endpointURL)
-					.success(() => {
-						this.openView();
-					})
-					.send();
-			})
-			.send();
+		super.submit();
 	}
 }
 ```
 
-Done! Run the following to serve the application.
+#### The Stylesheet
 
-#	TODO: Mark as complete.
+We included a stylesheet called `todo_list.css` in the dependencies of our template,
+but we want to user LESS to author it. Therefore, this file must live at 
+`./assets/client/todo_list.less`.
+
+The following adds some simple styling to our page.
+
+```less
+//	Since canvas includes a base stylesheet, plugin styles are generally
+//	contained in a body selector to allow them to override the base easily.
+body {
+	//	We want our tiles, which represent lists, to be inline block.
+	.tile {
+		display: inline-block;
+		vertical-align: top;
+		margin: 20px;
+		padding: 10px;
+		cursor: pointer;
+
+		&.current {
+			//	Highlight the currently selected list.
+			background-color: @theme1;
+		}
+	}
+
+	li {
+		i {
+			//	The 'mark finished' icons will float to the right and
+			//	be red by default.
+			float: right;
+			color: @error;
+			cursor: pointer;
+		}
+
+		&.finished {
+			//	Strike out completed items, and set their icon color
+			//	to green.
+			text-decoration: line-through;
+
+			i {
+				//	Change the color of the 'mark finished' icon to
+				//	green if the item is completed.
+				color: @success;
+			}
+		}
+	}
+}
+```
+
+Done! Run the following (with CWD as the canvas directory) to serve the application.
+
+```
+python canvas --serve 80
+```

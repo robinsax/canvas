@@ -7,7 +7,8 @@ A full-stack web application framework for building modern web products simply.
 
 ## What's it like?
 
-canvas is designed for minimalism and extensibility.
+canvas is designed for minimalism and extensibility. 
+*Especially its documentation...* (I'm working on this).
 
 The following code samples define a Breakfast model, an API endpoint that
 serves an instance of it, and a view that displays it.
@@ -21,7 +22,9 @@ import canvas as cv
 #   Create a breakfast model.
 @cv.model('breakfasts', {
     'id': model.Column('uuid', primary_key=True),
-    'name': model.Column('text'),
+    'name': model.Column('text', (
+		cv.NotNullConstraint(),
+	)),
     'ingredients': model.Column('json')
 })
 class Breakfast:
@@ -44,8 +47,8 @@ def cook_breakfast():
 class BreakfastEndpoint:
 
     def on_get(self, context):
-        to_serve = context.session.query(Breakfast, one=True)
-        return cv.create_json('success', cv.dictize(to_serve))
+        breakfast = context.session.query(Breakfast, one=True)
+        return cv.create_json('success', cv.dictize(breakfast))
 ```
 
 The view:
@@ -65,7 +68,7 @@ The view:
         </article>
 })
 class BreakfastView {
-    @cv.view.event('button')
+    @cv.event('button')
     eat() {
         alert('Yum!');
     }
@@ -135,8 +138,8 @@ python3 canvas --create-plugin <plugin_name>
 To activate a plugin, modify the appropriate entry of `settings.json`, or run:
 
 ```bash
-python3 canvas --config plugins.activated=<some_plugin>,
+python3 canvas --config "plugins.activated=<plugin_name>,"
 ```
 
-For more in depth documentation about developing plugins for canvas, see the `./docs`
-directory of this repository.
+For more in depth documentation about developing web applications with canvas, 
+see the `./docs` directory of this repository.
