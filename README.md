@@ -55,7 +55,7 @@ The view:
 
 ```javascript
 //  Define a breakfast view.
-@cv.view('breakfastView', {
+@cv.view({
     dataSource: '/api/breakfast',
     template: (breakfast) => 
         <article class="breakfast">
