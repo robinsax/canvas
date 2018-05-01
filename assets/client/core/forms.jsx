@@ -157,8 +157,12 @@ class RootForm {
 		let model = options.model || this.model || null;
 		this._modelDefn = model ? modelDefinitions[model] : {};
 
-		this.state = new core._State(this.state || {});
-		this.state.update(options.state || {});
+		let state = new core.State(this.state || {});
+		state.update(options.state || {});
+		Object.defineProperty(this, 'state', {
+			value: state,
+			writable: false
+		});
 
 		this.template = options.template || this.template || (fields => 
 			<div class="form">
@@ -173,11 +177,6 @@ class RootForm {
 
 		Object.defineProperties(this, {
 			_rendering: {
-				value: false,
-				writable: true,
-				enumerable: false
-			},
-			_created: {
 				value: false,
 				writable: true,
 				enumerable: false
@@ -228,20 +227,16 @@ class RootForm {
 		if (this._rendering) { return; }
 		this._rendering = true;
 		
-		let boundRender = () => { this.render(); }
-
-		if (!this._created) {
-			this._created = true;
-			tk.listener(this, 'state').changed(boundRender);
-		}
+		let boundRender = this.render.bind(this);
 
 		core.utils.installObjectObservers(this.state, boundRender);
+		this.state._.toInstall = boundRender;
 
 		if (!this._templateContext) {
 			this._templateContext = tk.template(this.template)
 				.live()
 				.inspection(el => {
-					core.utils.resolveEventsAndInspections(this, this.__cls, el);
+					core.utils.resolveEventsAndInspections(this, el);
 
 					if (el.is('input[type="submit"]')) {
 						el.on('click', (el, event) => { 
@@ -351,11 +346,11 @@ class RootForm {
 					}
 				}
 
-				core.utils.invokeDecoratedMethods(this, this.__cls, '_onFailure', data.errors, data.error_summary);
+				core.utils.invokeAnnotated(this, 'isFailureCallback', data.errors, data.error_summary);
 				this._submitting = false;
 			})
 			.success(response => {
-				core.utils.invokeDecoratedMethods(this, this.__cls, '_onSuccess', response.data);
+				core.utils.invokeAnnotated(this, 'isSuccessCallback', response.data);
 				this._submitting = false;
 			})
 			.send();
@@ -369,19 +364,18 @@ class FormPart {
 	constructor() {
 		this._formDefinitions = {};
 		this.validatorTypes = {};
-		core.forms = this.forms = {};
+		
+		core.Form = RootForm;
 
 		core.readFile = (file, success) => this.readFile(file, success);
 
 		core.form = (name, options) => this.form(name, options);
+		core.forms = this.forms = {};
 		
-		core.onSuccess = core.utils.createMethodDecorator('_onSuccess');
-		core.onFailure = core.utils.createMethodDecorator('_onFailure');
-
-		core.onceReady(() => { 
-			this.defineDefaultForms();
-		});
-		tk(window).on('load', () => this.createForms());
+		core.onSuccess = core.utils.createAnnotationDecorator('isSuccessCallback');
+		core.onFailure = core.utils.createAnnotationDecorator('isFailureCallback');
+		
+		tk(window).on('load', this.createForms.bind(this));
 	}
 
 	readFile(file, success) {
@@ -411,65 +405,16 @@ class FormPart {
 		return FormClass => {
 
 			core.utils.setRootPrototype(FormClass, RootForm);
-			class Form extends FormClass {
+			let Form = (() => class Form extends FormClass {
 				constructor() {
 					super();
-					this.__cls = FormClass;
 					this.__construct(options);
+					core.attachMixins(this, options.mixins || []);
 				}
-			}
+			})();
 
 			this._formDefinitions[FormClass.name.toLowerCase()] = Form;
 			return Form;
 		}
-	}
-
-	defineDefaultForms() {
-		class ModalForm {
-			constructor() {
-				this.state = {
-					isOpen: false,
-					className: null
-				};
-
-				Object.defineProperty(this, 'template', (() => {
-					let template = null, wrapped = false;
-					return {
-						set: (value) => {
-							if (!wrapped) {
-								template = (fields, state) => 
-									<div class={ "modal" + (state.className ? " " + state.className : "") + (state.isOpen ? " open" : "") }>
-										<div class="panel">
-											<i class="fa fa-times close"/>
-											{ value(fields, state) }
-										</div>
-									</div>
-								wrapped = true;
-							}
-							return value;
-						},
-						get: () => template,
-						enumerable: true
-					}
-				})());
-			}
-
-			@core.event('.modal, .close')
-			@core.onSuccess
-			close() {
-				this.state.isOpen = false;
-			}
-			
-			open() {
-				this.state.isOpen = true;
-			}
-		
-			@core.event('.panel')
-			keepOpen(el, event) {
-				event.stopPropagation();
-			}
-		}
-
-		core.ModalForm = ModalForm;
 	}
 }

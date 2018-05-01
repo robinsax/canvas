@@ -2,8 +2,6 @@
 class CoreUtilsPart {
 	constructor() {
 		core.utils = this;
-
-		this.decorations = {};
 	}
 
 	nameToTitle(n) {
@@ -25,7 +23,6 @@ class CoreUtilsPart {
 		while (Object.getPrototypeOf(last) != Object.prototype) {
 			last = Object.getPrototypeOf(last);
 			if (last == Root.prototype) {
-				//	This will happen all but the first time.
 				return;
 			}
 		}
@@ -40,44 +37,47 @@ class CoreUtilsPart {
 		});
 	}
 
-	//	TODO: Need a safe storage for annotations (this is a super-hacky hotfix).
-	createMethodDecorator(annotation, transform=x => x) {
+	createAnnotationDecorator(annotation, valueGenerator=x => true) {
 		return (target, key) => {
-			if (!target.constructor[annotation]) {
-				target.constructor[annotation] = [];
-			}
-
-			target.constructor[annotation].push(transform(key));
+			target[key][annotation] = valueGenerator(key);
 		}
 	}
 
-	//	TODO: Use fix here.
-	iterateDecoratedMethods(cls, annotation, callback) {
-		tk.iter(cls[annotation] || [], key => callback(key));
+	iterateAnnotated(target, annotation, callback) {
+		let proto = Object.getPrototypeOf(target);
+		
+		while (proto != Object.prototype) {
+			let props = Object.getOwnPropertyNames(proto);
+
+			tk.iter(props, prop => {
+				if (proto[prop][annotation]) {
+					callback(prop, proto[prop][annotation]);
+				}
+			});
+			
+			proto = Object.getPrototypeOf(proto);
+		}
 	}
 
-	invokeDecoratedMethods(instance, cls, annotation, ...args) {
-		this.iterateDecoratedMethods(cls, annotation, key => { 
-			// TODO: Remove this hotfix.
-			if (!instance[key]) {
-				return;
-			}
-			
-			instance[key](...args)
+	invokeAnnotated(target, annotation, ...args) {
+		this.iterateAnnotated(target, annotation, prop => {
+			target[prop](...args);
 		});
 	}
 
 	installObjectObservers(object, callback) {
-		if (!object || object._watched) { return; }
+		if (!object) { return; }
 
-		if (typeof object == 'object') {
-			Object.defineProperty(object, '_watched', {
-				value: true,
-				enumerable: false
-			});
-		}
-		else {
-			object._watched = true;
+		if (!object._watched) {
+			if (typeof object == 'object') {
+				Object.defineProperty(object, '_watched', {
+					value: true,
+					enumerable: false
+				});
+			}
+			else {
+				object._watched = true;
+			}
 		}
 
 		if (object instanceof Array){
@@ -94,9 +94,7 @@ class CoreUtilsPart {
 			tk.iter(object, (property, value) => {
 				this.installObjectObservers(value, callback);
 				tk.listener(object, property)
-					.changed(value => {
-						callback();
-					});
+					.changed(value => { callback(); });
 			});
 		}
 	}
