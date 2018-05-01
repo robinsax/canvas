@@ -2,6 +2,8 @@
 class CoreUtilsPart {
 	constructor() {
 		core.utils = this;
+
+		this.decorations = {};
 	}
 
 	nameToTitle(n) {
@@ -19,7 +21,6 @@ class CoreUtilsPart {
 	}
 
 	setRootPrototype(Top, Root) {
-
 		let last = Top.prototype;
 		while (Object.getPrototypeOf(last) != Object.prototype) {
 			last = Object.getPrototypeOf(last);
@@ -39,24 +40,31 @@ class CoreUtilsPart {
 		});
 	}
 
+	//	TODO: Need a safe storage for annotations (this is a super-hacky hotfix).
 	createMethodDecorator(annotation, transform=x => x) {
 		return (target, key) => {
-			if (!target[annotation]) {
-				Object.defineProperty(target, annotation, {
-					value: [],
-					enumerable: false
-				});
+			if (!target.constructor[annotation]) {
+				target.constructor[annotation] = [];
 			}
-			target[annotation].push(transform(key));
+
+			target.constructor[annotation].push(transform(key));
 		}
 	}
 
+	//	TODO: Use fix here.
 	iterateDecoratedMethods(cls, annotation, callback) {
-		tk.iter(cls.prototype[annotation] || [], key => callback(key));
+		tk.iter(cls[annotation] || [], key => callback(key));
 	}
 
 	invokeDecoratedMethods(instance, cls, annotation, ...args) {
-		this.iterateDecoratedMethods(cls, annotation, key => instance[key](...args));
+		this.iterateDecoratedMethods(cls, annotation, key => { 
+			// TODO: Remove this hotfix.
+			if (!instance[key]) {
+				return;
+			}
+			
+			instance[key](...args)
+		});
 	}
 
 	installObjectObservers(object, callback) {

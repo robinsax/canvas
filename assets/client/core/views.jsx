@@ -1,7 +1,17 @@
+class State {
+	constructor(state) {
+		this.update(state);
+	}
+
+	update(updates) {
+		tk.update(this, updates);
+	}
+}
+
 class RootView {
 	__construct(options) {
-		this.state = this.state || {};
-		tk.update(this.state, options.state || {});
+		this.state = new State(this.state || {});
+		this.state.update(options.state || {});
 
 		this.data = options.data || this.data || {};
 
@@ -55,7 +65,7 @@ class RootView {
 	render() {
 		if (this._rendering){ return; }
 		this._rendering = true;
-
+		
 		if (!this._templateContext) {
 			this._templateContext = tk.template(this.template || this.templates.root)
 				.inspection(el => {
@@ -89,6 +99,8 @@ class ViewPart {
 	constructor() {
 		this._viewDefinitions = {};
 
+		core._State = State;
+		
 		core.view = (name, definition) => this.view(name, definition);
 		core.views = this.views = {};
 
@@ -102,9 +114,13 @@ class ViewPart {
 
 	resolveEventsAndInspections(instance, cls, el) {
 		core.utils.iterateDecoratedMethods(cls, '_events', eventDesc => {
+			
+			//	TODO: Remove once annotation storage safe
+			if (!instance[eventDesc.key]) { return; }
+
 			el.reduce(eventDesc.selector).on(eventDesc.on, (...a) => {
 				if (eventDesc.transform) {
-					a = eventDesc.transform.apply(null, a);
+					a = eventDesc.transform.apply(null, a) || [];
 				}
 				instance[eventDesc.key](...a);
 			});

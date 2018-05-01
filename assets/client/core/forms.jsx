@@ -63,7 +63,7 @@ class Field {
 				}
 				tk.iter(this.options, item => {
 					select.append(tk.tag('option', {value: item[1]}, item[0] + ''));
-				})
+				});
 			});
 		}
 
@@ -136,6 +136,7 @@ class Field {
 				this.validate();
 				if ((event.keyCode || event.which) == 13) {
 					this.form.submit();
+					event.preventDefault();
 				}
 			},
 			change: () => {
@@ -156,8 +157,8 @@ class RootForm {
 		let model = options.model || this.model || null;
 		this._modelDefn = model ? modelDefinitions[model] : {};
 
-		this.state = this.state || {};
-		tk.update(this.state, options.state || {});
+		this.state = new core._State(this.state || {});
+		this.state.update(options.state || {});
 
 		this.template = options.template || this.template || (fields => 
 			<div class="form">
@@ -183,6 +184,11 @@ class RootForm {
 			},
 			_templateContext: {
 				value: null,
+				writable: true,
+				enumerable: false
+			},
+			_submitting: {
+				value: false,
 				writable: true,
 				enumerable: false
 			}
@@ -222,6 +228,15 @@ class RootForm {
 		if (this._rendering) { return; }
 		this._rendering = true;
 		
+		let boundRender = () => { this.render(); }
+
+		if (!this._created) {
+			this._created = true;
+			tk.listener(this, 'state').changed(boundRender);
+		}
+
+		core.utils.installObjectObservers(this.state, boundRender);
+
 		if (!this._templateContext) {
 			this._templateContext = tk.template(this.template)
 				.live()
@@ -258,19 +273,12 @@ class RootForm {
 				curI++;
 			});
 			
-			return result;
+			return () => <div class="fields">{ result }</div>;
 		};
 
 		this.node = this._templateContext
 			.data(renderFields, this.state)
 			.render();
-
-		if (!this._created) {
-			this._created = true;
-			tk.listener(this, 'state').changed(() => { this.render(); })
-		}
-
-		core.utils.installObjectObservers(this.state, () => this.render());
 		
 		this._rendering = false;
 		return this.node;
@@ -303,7 +311,8 @@ class RootForm {
 	}
 
 	submit(extraData={}) {
-		if (!this.validate()){ return; }
+		if (!this.validate() || this._submitting){ return; }
+		this._submitting = true;
 
 		let data = {};
 		tk.iter(this.fields, (name, field) => {
@@ -343,9 +352,11 @@ class RootForm {
 				}
 
 				core.utils.invokeDecoratedMethods(this, this.__cls, '_onFailure', data.errors, data.error_summary);
+				this._submitting = false;
 			})
 			.success(response => {
 				core.utils.invokeDecoratedMethods(this, this.__cls, '_onSuccess', response.data);
+				this._submitting = false;
 			})
 			.send();
 	}
@@ -422,16 +433,19 @@ class FormPart {
 				};
 
 				Object.defineProperty(this, 'template', (() => {
-					let template = null;
+					let template = null, wrapped = false;
 					return {
 						set: (value) => {
-							template = (fields, state) => 
-								<div class={ "modal" + (state.className ? " " + state.className : "") + (state.isOpen ? " open" : "") }>
-									<div class="panel">
-										<i class="fa fa-times close"/>
-										{ value(fields, state) }
+							if (!wrapped) {
+								template = (fields, state) => 
+									<div class={ "modal" + (state.className ? " " + state.className : "") + (state.isOpen ? " open" : "") }>
+										<div class="panel">
+											<i class="fa fa-times close"/>
+											{ value(fields, state) }
+										</div>
 									</div>
-								</div>
+								wrapped = true;
+							}
 							return value;
 						},
 						get: () => template,
