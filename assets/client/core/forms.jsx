@@ -246,7 +246,7 @@ class RootForm {
 					}
 
 					if (el.is('.field')) {
-						let input = el.children('input');
+						let input = el.children('.input');
 						this.fields[input.attr('name')].bindToNode(el, input);
 					}
 					
