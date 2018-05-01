@@ -6,13 +6,17 @@
 
 	//	cv::include core/utils
 	//	cv::include core/requests
+		
 	//	cv::include core/views
+	//	cv::include core/validators
+	//	cv::include core/forms
+
 	//	cv::include core/dnd
 	//	cv::include core/svg
 	//	cv::include core/links
-	//	cv::include core/validators
-	//	cv::include core/forms
 	//	cv::include core/tooltip
+
+	//	cv::include core/mixins
 	
 	class Core {
 		constructor(debug){

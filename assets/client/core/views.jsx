@@ -1,17 +1,23 @@
 class State {
-	constructor(state) {
+	constructor(target, state) {
 		this.update(state);
+		this.target = target;
 	}
 
 	update(updates) {
 		tk.update(this, updates);
+		core.utils.installObjectObservers(this, this.target.render.bind(this.target));
 	}
 }
 
 class RootView {
 	__construct(options) {
-		this.state = new State(this.state || {});
-		this.state.update(options.state || {});
+		let state = new State(this, this.state || {});
+		state.update(options.state || {});
+		Object.defineProperty(this, 'state', {
+			value: state,
+			writable: false
+		});
 
 		this.data = options.data || this.data || {};
 
@@ -69,18 +75,17 @@ class RootView {
 		if (!this._templateContext) {
 			this._templateContext = tk.template(this.template || this.templates.root)
 				.inspection(el => {
-					core.utils.resolveEventsAndInspections(this, this.__cls, el);
+					core.utils.resolveEventsAndInspections(this, el);
 				})
 				.live();
 		}
 
-		let boundRender = () => this.render();
+		let boundRender = this.render.bind(this);
 
 		if (!this._created) {
 			this._created = true;
 			tk.listener(this, 'data').changed(boundRender);
 		}
-		core.utils.installObjectObservers(this.data, boundRender);
 		core.utils.installObjectObservers(this.state, boundRender);
 
 		this.node = this._templateContext
@@ -99,12 +104,13 @@ class ViewPart {
 	constructor() {
 		this._viewDefinitions = {};
 
-		core._State = State;
+		core.State = State;
+		core.View = RootView;
 		
 		core.view = (name, definition) => this.view(name, definition);
 		core.views = this.views = {};
-
-		core.utils.resolveEventsAndInspections = (instance, cls, el) => this.resolveEventsAndInspections(instance, cls, el);
+		
+		core.utils.resolveEventsAndInspections = (instance, el) => this.resolveEventsAndInspections(instance, el);
 		core.event = (on, selector=null) => this.viewEvent(on, selector);
 		core.inspects = selector => this.viewInspect(selector);
 
@@ -112,12 +118,8 @@ class ViewPart {
 		tk(window).on('load', () => this.createViews());
 	}
 
-	resolveEventsAndInspections(instance, cls, el) {
-		core.utils.iterateDecoratedMethods(cls, '_events', eventDesc => {
-			
-			//	TODO: Remove once annotation storage safe
-			if (!instance[eventDesc.key]) { return; }
-
+	resolveEventsAndInspections(instance, el) {
+		core.utils.iterateDecoratedMethods(instance, '_events', eventDesc => {
 			el.reduce(eventDesc.selector).on(eventDesc.on, (...a) => {
 				if (eventDesc.transform) {
 					a = eventDesc.transform.apply(null, a) || [];
@@ -125,7 +127,7 @@ class ViewPart {
 				instance[eventDesc.key](...a);
 			});
 		});
-		core.utils.iterateDecoratedMethods(cls, '_inspectors', desc => {
+		core.utils.iterateDecoratedMethods(instance, '_inspectors', desc => {
 			el.reduce(desc.selector).iter(tel => { instance[desc.key](tel); });
 		});
 	}
@@ -135,19 +137,19 @@ class ViewPart {
 			let name = ViewClass.name.toLowerCase();
 
 			core.utils.setRootPrototype(ViewClass, RootView);
-			class View extends ViewClass {
+			let View = (() => class View extends ViewClass {
 				constructor() {
 					super();
-					this.__cls = ViewClass;
 					this.__construct(options);
+					core.applyMixins(this, options.mixins || []);
 				}
-			}
+			})();
 			
 			this._viewDefinitions[name] = View;
 			return View;
 		}
 	}
-
+	
 	createViews() {
 		core.utils.iterateNonStandardTags((el, viewName) => {
 			if (!this._viewDefinitions[viewName]) {
@@ -201,37 +203,6 @@ class ViewPart {
 	}
 
 	defineDefaultViews() {
-		class ModalView {
-			constructor() {
-				this.state = {
-					isOpen: false,
-					className: null
-				};
-
-				this.template = (data, state, templates) => 
-					<div class={ "modal" + (state.className ? " " + state.className : "") + (state.isOpen ? " open" : "") }>
-						<div class="panel">
-							<i class="fa fa-times close"/>
-							{ templates.panel(data, state, templates) }
-						</div>
-					</div>
-			}
-
-			@core.event('.modal, .close')
-			close() {
-				this.state.isOpen = false;
-			}
-
-			open() {
-				this.state.isOpen = true;
-			}
-
-			@core.event('.panel')
-			keepOpen(el, event) {
-				event.stopPropagation();
-			}
-		}
-
 		class ListView {
 			constructor() {
 				this.state = {
@@ -267,7 +238,6 @@ class ViewPart {
 			}
 		}
 
-		core.ModalView = ModalView;
 		core.ListView = ListView;
 	}
 }
