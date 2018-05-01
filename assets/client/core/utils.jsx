@@ -2,8 +2,6 @@
 class CoreUtilsPart {
 	constructor() {
 		core.utils = this;
-
-		this.decorations = {};
 	}
 
 	nameToTitle(n) {
@@ -39,23 +37,31 @@ class CoreUtilsPart {
 		});
 	}
 
-	createMethodDecorator(annotation, transform=x => x) {
+	createAnnotationDecorator(annotation, valueGenerator=x => true) {
 		return (target, key) => {
-			if (!target[annotation]) {
-				target[annotation] = [];
-			}
-
-			target[annotation].push(transform(key));
+			target[key][annotation] = valueGenerator(key);
 		}
 	}
 
-	iterateDecoratedMethods(instance, annotation, callback) {
-		tk.iter(instance[annotation] || [], key => callback(key));
+	iterateAnnotated(target, annotation, callback) {
+		let proto = Object.getPrototypeOf(target);
+		
+		while (proto != Object.prototype) {
+			let props = Object.getOwnPropertyNames(proto);
+
+			tk.iter(props, prop => {
+				if (proto[prop][annotation]) {
+					callback(prop, proto[prop][annotation]);
+				}
+			});
+			
+			proto = Object.getPrototypeOf(proto);
+		}
 	}
 
-	invokeDecoratedMethods(instance, annotation, ...args) {
-		this.iterateDecoratedMethods(instance, annotation, key => { 
-			instance[key](...args);
+	invokeAnnotated(target, annotation, ...args) {
+		this.iterateAnnotated(target, annotation, prop => {
+			target[prop](...args);
 		});
 	}
 

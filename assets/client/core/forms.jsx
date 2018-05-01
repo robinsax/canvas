@@ -157,7 +157,7 @@ class RootForm {
 		let model = options.model || this.model || null;
 		this._modelDefn = model ? modelDefinitions[model] : {};
 
-		let state = new core.State(this, this.state || {});
+		let state = new core.State(this.state || {});
 		state.update(options.state || {});
 		Object.defineProperty(this, 'state', {
 			value: state,
@@ -230,6 +230,7 @@ class RootForm {
 		let boundRender = this.render.bind(this);
 
 		core.utils.installObjectObservers(this.state, boundRender);
+		this.state._.toInstall = boundRender;
 
 		if (!this._templateContext) {
 			this._templateContext = tk.template(this.template)
@@ -345,11 +346,11 @@ class RootForm {
 					}
 				}
 
-				core.utils.invokeDecoratedMethods(this, '_onFailure', data.errors, data.error_summary);
+				core.utils.invokeAnnotated(this, 'isFailureCallback', data.errors, data.error_summary);
 				this._submitting = false;
 			})
 			.success(response => {
-				core.utils.invokeDecoratedMethods(this, '_onSuccess', response.data);
+				core.utils.invokeAnnotated(this, 'isSuccessCallback', response.data);
 				this._submitting = false;
 			})
 			.send();
@@ -371,8 +372,8 @@ class FormPart {
 		core.form = (name, options) => this.form(name, options);
 		core.forms = this.forms = {};
 		
-		core.onSuccess = core.utils.createMethodDecorator('_onSuccess');
-		core.onFailure = core.utils.createMethodDecorator('_onFailure');
+		core.onSuccess = core.utils.createAnnotationDecorator('isSuccessCallback');
+		core.onFailure = core.utils.createAnnotationDecorator('isFailureCallback');
 		
 		tk(window).on('load', this.createForms.bind(this));
 	}
@@ -408,7 +409,7 @@ class FormPart {
 				constructor() {
 					super();
 					this.__construct(options);
-					core.applyMixins(this, options.mixins || []);
+					core.attachMixins(this, options.mixins || []);
 				}
 			})();
 

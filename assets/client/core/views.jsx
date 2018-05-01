@@ -1,18 +1,27 @@
 class State {
-	constructor(target, state) {
+	constructor(state) {
+		Object.defineProperty(this, '_', {
+			value: {
+				toInstall: null
+			},
+			enumerable: false
+		});
 		this.update(state);
-		this.target = target;
 	}
 
 	update(updates) {
 		tk.update(this, updates);
-		core.utils.installObjectObservers(this, this.target.render.bind(this.target));
+		if (!this._.toInstall) {
+			return;
+		}
+
+		core.utils.installObjectObservers(this, this._.toInstall);
 	}
 }
 
 class RootView {
 	__construct(options) {
-		let state = new State(this, this.state || {});
+		let state = new State(this.state || {});
 		state.update(options.state || {});
 		Object.defineProperty(this, 'state', {
 			value: state,
@@ -81,6 +90,7 @@ class RootView {
 		}
 
 		let boundRender = this.render.bind(this);
+		this.state._.toInstall = boundRender;
 
 		if (!this._created) {
 			this._created = true;
@@ -107,7 +117,7 @@ class ViewPart {
 		core.State = State;
 		core.View = RootView;
 		
-		core.view = (name, definition) => this.view(name, definition);
+		core.view = this.view.bind(this);
 		core.views = this.views = {};
 		
 		core.utils.resolveEventsAndInspections = (instance, el) => this.resolveEventsAndInspections(instance, el);
@@ -119,16 +129,16 @@ class ViewPart {
 	}
 
 	resolveEventsAndInspections(instance, el) {
-		core.utils.iterateDecoratedMethods(instance, '_events', eventDesc => {
-			el.reduce(eventDesc.selector).on(eventDesc.on, (...a) => {
-				if (eventDesc.transform) {
-					a = eventDesc.transform.apply(null, a) || [];
+		core.utils.iterateAnnotated(instance, 'isEvent', (prop, desc) => {
+			el.reduce(desc.selector).on(desc.on, (...args) => {
+				if (desc.transform) {
+					a = desc.transform.apply(null, a) || [];
 				}
-				instance[eventDesc.key](...a);
+				instance[prop](...args);
 			});
 		});
-		core.utils.iterateDecoratedMethods(instance, '_inspectors', desc => {
-			el.reduce(desc.selector).iter(tel => { instance[desc.key](tel); });
+		core.utils.iterateAnnotated(instance, 'isInspection', (prop, desc) => {
+			el.reduce(desc.selector).iter(tel => { instance[prop](tel); });
 		});
 	}
 
@@ -141,7 +151,7 @@ class ViewPart {
 				constructor() {
 					super();
 					this.__construct(options);
-					core.applyMixins(this, options.mixins || []);
+					core.attachMixins(this, options.mixins || []);
 				}
 			})();
 			
@@ -183,21 +193,19 @@ class ViewPart {
 			on = 'click';
 		}
 
-		return core.utils.createMethodDecorator('_events', key => {
+		return core.utils.createAnnotationDecorator('isEvent', key => {
 			return {
 				selector: selector,
 				on: on,
-				key: key,
 				transform: transform
-			}
+			};
 		});
 	}
 
 	viewInspect(selector) {
-		return core.utils.createMethodDecorator('_inspectors', key => {
+		return core.utils.createAnnotationDecorator('isInspection', key => {
 			return {
-				selector: selector,
-				key: key
+				selector: selector
 			};
 		})
 	}

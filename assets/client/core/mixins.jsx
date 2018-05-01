@@ -1,40 +1,42 @@
 @part
 class MixinPart {
 	constructor() {
-		core.applyMixins = this.applyMixins.bind(this);
-
+		core.attachMixins = this.attachMixins.bind(this);
+		core.attachMixin = this.attachMixin.bind(this);
+		core.attach = core.utils.createAnnotationDecorator('isMixinAttachment');
+		
 		this.defineDefaultMixins();
 	}
 
-	applyMixins(instance, mixins) {
-		tk.iter(mixinClasses, mixin => {
-			instance.state.update(mixin.state || {});
+	attachMixin(instance, mixin) {
+		let annotations = ['isEvent', 'isInspection'];
+		if (instance instanceof core.Form) {
+			annotations.push('isSuccessCallback', 'isFailureCallback');
+		}
 
-			tk.iter(mixin._events || [], desc => {
-				let placeKey = MixinClass.name + '_' + desc.key;
-				
-				instance[placeKey] = mixin[desc.key];
-				instance._events.push({
-					key: placeKey,
-					on: desc.on,
-					selector: desc.selector,
-					transform: desc.transform
-				});
-			});
+		mixin.host = instance;
+		instance.state.update(mixin.state || {});
 
-			tk.iter(mixin._inspectors || [], desc => {
-				let placeKey = MixinClass.name + '_' + desc.key;
-				
-				instance[placeKey] = mixin[desc.key];
-				instance._inspectors.push({
-					key: placeKey,
-					selector: desc.selector
-				});
-			});
+		let target = Object.getPrototypeOf(instance);
+		core.utils.iterateAnnotated(mixin, 'isMixinAttachment', prop => {
+			let bound = mixin[prop].bind(mixin);
+			tk.iter(annotations, name => {
+				if (mixin[prop][name]) {
+					bound[name] = mixin[prop][name];
+				}
+			})
 
-			if (mixin.attach) {
-				mixin.attach(instance);
-			}
+			target[prop] = bound;
+		});
+
+		if (mixin.attach) {
+			mixin.attach();
+		}
+	}
+
+	attachMixins(instance, mixins) {
+		tk.iter(mixins, mixin => {
+			this.attachMixin(instance, mixin);
 		});
 	}
 
@@ -47,9 +49,9 @@ class MixinPart {
 				};
 			}
 
-			attach(instance) {
-				let template = instance.template;
-				Object.defineProperty(instance, 'template', (() => {
+			attach() {
+				let template = this.host.template;
+				Object.defineProperty(this.host, 'template', (() => {
 					let template = null, wrapped = false;
 					return {
 						set: (value) => {
@@ -69,20 +71,23 @@ class MixinPart {
 						enumerable: true
 					}
 				})());
-				instance.template = template;
+				this.host.template = template;
 			}
 
 			@core.event('.modal, .close')
 			@core.onSuccess
+			@core.attach
 			close() {
-				this.state.isOpen = false;
+				this.host.state.isOpen = false;
 			}
 			
+			@core.attach
 			open() {
-				this.state.isOpen = true;
+				this.host.state.isOpen = true;
 			}
-		
+			
 			@core.event('.panel')
+			@core.attach
 			keepOpen(el, event) {
 				event.stopPropagation();
 			}
