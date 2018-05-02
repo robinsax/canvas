@@ -47,6 +47,11 @@ def define_column_types():
 	})
 	invoke_callbacks('column_type_definition', _column_types)
 
+class OrderedColumnReference:
+
+	def __init__(self, column, ascending):
+		self.column, self.ascending = column, ascending
+
 @export
 class Column(SQLExpression):
 	#	This is an expression because a column can be boolean.
@@ -61,6 +66,9 @@ class Column(SQLExpression):
 		self.sql_type, self.input_type = None, None
 		self.is_fk, self.reference = False, None
 		self.incoming_fks = []
+
+		self.ascending = OrderedColumnReference(self, True)
+		self.descending = OrderedColumnReference(self, False)
 
 	def resolve(self):
 		#	Resolve type.

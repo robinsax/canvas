@@ -71,12 +71,13 @@ def model(table_name, schema, accessors=None, dictized=None):
 	return model_wrap
 
 @export
-def dictize(target, omit=[]):
+def dictize(target, omit=tuple(), include=tuple()):
 	if isinstance(target, (list, tuple)):
-		return [dictize(item) for item in target]
+		return [dictize(item, omit, include) for item in target]
 	
 	to_read = list(target.__class__.__schema__.keys())
 	to_read.extend(target.__class__.__dictized_attrs__)
+	to_read.extend(include)
 
 	return {
 		name: getattr(target, name, None) for name in to_read if name not in omit

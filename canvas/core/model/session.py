@@ -212,7 +212,7 @@ class _Session:
 
 		return self.detach(model)
 
-	def query(self, target, conditions=True, one=False, count=None, offset=None, order_by=None, descending=False, for_update=False, for_share=False):
+	def query(self, target, conditions=True, one=False, count=None, offset=None, order_by=tuple(), for_update=False, for_share=False):
 		if conditions is False:
 			return None if one else []
 		
@@ -221,8 +221,11 @@ class _Session:
 			for_ = 'SHARE'
 		if for_update:
 			for_ = 'UPDATE'
-		order = (order_by, not descending) if order_by is not None else None		
-		self.execute(*selection(target, conditions, count, offset, order, for_))
+		
+		if not isinstance(order_by, (list, tuple)):
+			order_by = (order_by,)
+		
+		self.execute(*selection(target, conditions, count, offset, order_by, for_))
 
 		#	TODO: Remove.
 		def from_loader_method(loader_method):

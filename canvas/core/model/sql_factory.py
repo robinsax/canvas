@@ -17,7 +17,7 @@ from .sql_nodes import (
 )
 from .columns import Column
 from .model import Model
-from .columns import _sentinel
+from .columns import _sentinel, OrderedColumnReference
 from .joins import Join
 
 #	TODO: More transactionality.
@@ -98,12 +98,24 @@ def selection(target, query, count, offset, ordering, for_):
 			statement,
 			condition
 		])
-	if ordering is not None:
-		column, ascending = ordering
-		statement = ' '.join([
-			statement,
-			'ORDER BY', column.serialize(), 'ASC' if ascending else 'DESC'
-		])
+	if len(ordering) > 0:
+		parts = [statement, 'ORDER BY']
+		first = True
+		for one in ordering:
+			ascending = True
+			if isinstance(one, OrderedColumnReference):
+				column = one.column
+				ascending = one.ascending
+			else:
+				column = one
+			
+			if not first:
+				parts.append(',')
+			first = False
+			
+			parts.extend((column.serialize(), 'ASC' if ascending else 'DESC'))
+			
+		statement = ' '.join(parts)
 	if count is not None:
 		statement = ' '.join([
 			statement, 'LIMIT', str(count)	
