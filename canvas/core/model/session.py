@@ -15,7 +15,6 @@ from ...utils import logger
 from ...configuration import config
 from .columns import _sentinel
 from .model import Model
-from .joins import Join
 from .constraints import get_constraint
 from .sql_nodes import SQLAggregatorCall
 from .sql_factory import (
@@ -25,6 +24,7 @@ from .sql_factory import (
 	row_update,
 	row_deletion
 )
+from .joins import Join
 
 log = logger(__name__)
 
@@ -39,7 +39,13 @@ class _Session:
 	@property
 	def connection(self):
 		if self._connection is None:
-			self._connection = connect(**config.database)
+			creds = config.database
+			self._connection = connect(
+				database=creds.database,
+				user=creds.user,
+				password=creds.password,
+				host=creds.host
+			)
 
 		return self._connection
 	
@@ -108,14 +114,56 @@ class _Session:
 
 		return model
 
-	def _load_joined_model(self, join, row):
-		model = self._load_model(join.model_cls, row)
-		
-		augmentation_start = len(join.model_cls.__schema__)
-		for i, augmentation in enumerate(join.augmentations):
-			setattr(model, augmentation.name, row[augmentation_start + i])
+	def _load_join(self, join, one):		
+		first_cols = len(join.source_cls.__schema__)
+		attr_name = join.load_onto
 
-		return model
+		def load_one(row):
+			#	Load a single instance of each, childing and returning the appropriate ones.
+			
+			from_inst = self._load_model(join.source_cls, row[:first_cols])
+			to_inst = self._load_model(join.target_cls, row[first_cols:])
+
+			if not join.one_side:
+				if not hasattr(to_inst, attr_name):
+					setattr(to_inst, attr_name, [])
+				getattr(to_inst, attr_name).append(from_inst)
+				return to_inst
+			else:
+				setattr(from_inst, attr_name, to_inst)
+				return from_inst
+		
+		result = []
+		last = None
+		row = self.cursor.fetchone()
+
+		while row is not None:
+			#	Load it.
+			loaded = load_one(row)
+
+			#	First time.
+			if last is None:
+				last = loaded
+
+			if loaded is not last:
+				#	New host.
+				if one:
+					#	Done, we loaded one.
+					break
+				
+				#	Keep going.
+				result.append(last)
+				last = loaded
+
+			row = self.cursor.fetchone()
+
+		#	Eat last.
+		result.append(last)
+
+		if one:
+			return result[0] if len(result) > 0 else None
+		else:
+			return result
 
 	def execute(self, sql, values=()):
 		if config.development.log_emitted_sql:
@@ -135,7 +183,7 @@ class _Session:
 			except BaseException as inner_ex:
 				if isinstance(inner_ex, ValidationErrors):
 					raise inner_ex
-				raise ex
+				raise ex from None
 		
 		return self
 
@@ -159,8 +207,8 @@ class _Session:
 
 		return self
 
-	def delete(self, model):
-		self.execute(*row_deletion(model))
+	def delete(self, model, cascade=False):
+		self.execute(*row_deletion(model, cascade))
 
 		return self.detach(model)
 
@@ -176,6 +224,7 @@ class _Session:
 		order = (order_by, not descending) if order_by is not None else None		
 		self.execute(*selection(target, conditions, count, offset, order, for_))
 
+		#	TODO: Remove.
 		def from_loader_method(loader_method):
 			if one:
 				row = self.cursor.fetchone()
@@ -192,7 +241,7 @@ class _Session:
 		if inspect.isclass(target) and issubclass(target, Model):
 			return from_loader_method(self._load_model)
 		elif isinstance(target, Join):
-			return from_loader_method(self._load_joined_model)
+			return self._load_join(target, one)
 		else:
 			if isinstance(target, SQLAggregatorCall):
 				one = True

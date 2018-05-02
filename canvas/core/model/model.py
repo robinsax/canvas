@@ -6,7 +6,7 @@ The base model class definition.
 from ...namespace import export
 from ..json_io import json_serializer, serialize_json
 from .columns import Column
-from .joins import Join
+from .joins import Join, Attachment
 
 @export
 class Model:
@@ -19,8 +19,32 @@ class Model:
 		return session.query(cls, query, one=True)
 	
 	@classmethod
-	def join(cls, *augmentations):
-		return Join('INNER', cls, augmentations)
+	def onto(cls, attr_name):
+		return Attachment(cls, attr_name)
+
+	@classmethod
+	def join(cls, attachment):
+		target_cls = attachment.model_cls
+		link = from_ = to = None
+		
+		#	Check if this is many side.
+		for column in cls.__schema__.values():
+			if column.is_fk and column.reference.model.__table__ == target_cls.__table__:
+				link = column
+				from_ = cls
+				to = target_cls
+
+		#	Check if this is one side.
+		for column in target_cls.__schema__.values():
+			if column.is_fk and column.reference.model.__table__ == cls.__table__:
+				link = column
+				from_ = target_cls
+				to = cls
+		
+		if not link:
+			raise InvalidQuery('No link between "%s" and "%s"'%(cls.__table__, target_cls.__table__))
+
+		return Join(from_, to, link, attachment.attr_name, from_.__table__ == cls.__table__)
 
 	def __load__(self): pass
 	def __create__(self): pass

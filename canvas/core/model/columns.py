@@ -60,6 +60,7 @@ class Column(SQLExpression):
 		self.type, self.model, self.name = (None,)*3
 		self.sql_type, self.input_type = None, None
 		self.is_fk, self.reference = False, None
+		self.incoming_fks = []
 
 	def resolve(self):
 		#	Resolve type.
@@ -81,6 +82,7 @@ class Column(SQLExpression):
 					if not issubclass(target_table, self.model) and not target_table.__created__:
 						raise _ResolveOther(target_table)
 					
+					target_column.incoming_fks.append(self)
 					self.is_fk, self.reference = True, target_column
 				else:
 					#	Unpack definition.
@@ -101,7 +103,7 @@ class Column(SQLExpression):
 		for constraint in self.constraints:
 			constraint.resolve(self)
 
-	def serialize(self, values=[]):			
+	def serialize(self, values=tuple()):			
 		return '%s.%s'%(self.model.__table__, self.name)
 		
 	def get_default(self):

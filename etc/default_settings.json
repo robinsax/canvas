@@ -14,7 +14,8 @@
 		"database": "devdb",
 		"user": "devuser",
 		"password": "canvasbackend",
-		"host": "localhost"
+		"host": "localhost",
+		"eager_drop_cascades": false
 	},
 	"plugins": {
 		"directory": "../canvas_plugins",

@@ -9,6 +9,7 @@ from ...exceptions import (
 	InvalidQuery,
 	UnadaptedType
 )
+from ...configuration import config
 from .sql_nodes import (
 	SQLExpression,
 	SQLComparison,
@@ -16,19 +17,24 @@ from .sql_nodes import (
 )
 from .columns import Column
 from .model import Model
-from .joins import Join
 from .columns import _sentinel
+from .joins import Join
+
+#	TODO: More transactionality.
 
 def table_creation(model_cls):
 
 	def column_definition(column):
 		if column.is_fk:
 			target = column.reference
-			column_sql = ' '.join([
+			column_sql = ' '.join((
 				column.name, target.sql_type,
 				'REFERENCES',
 				target.model.__table__, '(', target.name, ')'
-			])
+			))
+			
+			if config.database.eager_drop_cascades:
+				column_sql = ' '.join((column_sql, 'ON DELETE CASCADE'))
 		else:
 			column_sql = ' '.join([column.name, column.sql_type])
 			if column.primary_key:
@@ -170,14 +176,49 @@ def row_creation(model):
 	])
 	return statement, values
 
-def row_deletion(model):
+def row_deletion(model, cascade):
 	model_cls = model.__class__
 	primary_key = model_cls.__primary_key__.name
 
-	#	Return formatted statement.
-	statement = ' '.join([
+	statement = ' '.join((
 		'DELETE FROM', model_cls.__table__,
 		'WHERE', primary_key, '= %s;'
-	])
+	))
+
+	if cascade and not config.database.eager_drop_cascades:
+		#	Remove foreign keys, replacing them with cascades, then 
+		#	reapply them. Bad for performance, good for safety.
+		fk_cols = [c for c in model_cls.__schema__.values() if c.is_fk]
+
+		for my_column in model_cls.__schema__.values():
+			for column in my_column.incoming_fks:
+				table_name = column.model.__table__
+
+				constraint_name = '%s_%s_fkey'%(table_name, column.name)
+				constraint_base_sql = ' '.join((
+					'CONSTRAINT', constraint_name, 
+					'FOREIGN KEY (', column.name, ') REFERENCES',
+					model_cls.__table__, '(', my_column.name, ')'
+				))
+
+				statement = ' '.join((
+					'ALTER TABLE', table_name,
+						'DROP CONSTRAINT', constraint_name,
+					';',
+					'ALTER TABLE', table_name,
+						'ADD', constraint_base_sql,
+						'ON DELETE CASCADE',
+					';',
+					statement,
+					'ALTER TABLE', table_name,
+						'DROP CONSTRAINT', constraint_name,
+					';',
+					'ALTER TABLE', table_name,
+						'ADD', constraint_base_sql,
+					';'
+				))
+
+		statement = ' '.join(('BEGIN;', statement, 'COMMIT;'))
+
 	values = (model.__mapped_as__,)
 	return statement, values
