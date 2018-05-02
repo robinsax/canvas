@@ -1,6 +1,8 @@
 class Drag {
 	static current = null;
 
+	//	TODO: A Mixin for this because right now if you attach it on inspect to a node that updates its baad.
+
 	constructor(source, params) {
 		this.source = source;
 		this._displayed = params.displayed || (() => { return this.source.copy() });

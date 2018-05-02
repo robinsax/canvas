@@ -15,23 +15,27 @@ class MixinPart {
 		}
 
 		mixin.host = instance;
-		instance.state.update(mixin.state || {});
 
 		let target = Object.getPrototypeOf(instance);
+		let mixinness = {};
 		core.utils.iterateAnnotated(mixin, 'isMixinAttachment', prop => {
 			let bound = mixin[prop].bind(mixin);
+			target[prop] = target[prop] || bound;
+
+			mixinness[prop] = bound;
+		
 			tk.iter(annotations, name => {
 				if (mixin[prop][name]) {
-					bound[name] = mixin[prop][name];
+					target[prop][name] = mixin[prop][name];
 				}
-			})
-
-			target[prop] = bound;
+			});
 		});
 
 		if (mixin.attach) {
 			mixin.attach();
 		}
+
+		return mixinness;
 	}
 
 	attachMixins(instance, mixins) {
@@ -42,25 +46,28 @@ class MixinPart {
 
 	defineDefaultMixins() {
 		class ModalMixin {
-			constructor() {
-				this.state = {
-					isOpen: false,
-					className: null
-				};
+			constructor(className=null) {
+				this.className = className;
 			}
 
 			attach() {
+				this.host.state.update({
+					isOpen: false,
+					className: this.className
+				});
+
 				let template = this.host.template;
 				Object.defineProperty(this.host, 'template', (() => {
-					let template = null, wrapped = false;
+					let template = null, wrapped = false, _value = null;
 					return {
 						set: (value) => {
+							_value = value;
 							if (!wrapped) {
-								template = (x, state, y) => 
+								template = (x, state, y) =>
 									<div class={ "modal" + (state.className ? " " + state.className : "") + (state.isOpen ? " open" : "") }>
 										<div class="panel">
 											<i class="fa fa-times close"/>
-											{ value(x, state, y) }
+											{ _value(x, state, y) }
 										</div>
 									</div>
 								wrapped = true;

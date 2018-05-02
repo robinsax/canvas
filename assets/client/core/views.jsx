@@ -9,6 +9,11 @@ class State {
 		this.update(state);
 	}
 
+	activate(callback) {
+		this._.toInstall = callback;
+		core.utils.installObjectObservers(this, this._.toInstall);
+	}
+
 	update(updates) {
 		tk.update(this, updates);
 		if (!this._.toInstall) {
@@ -96,7 +101,7 @@ class RootView {
 			this._created = true;
 			tk.listener(this, 'data').changed(boundRender);
 		}
-		core.utils.installObjectObservers(this.state, boundRender);
+		this.state.activate(boundRender);
 
 		this.node = this._templateContext
 			.data(this.data, this.state, this.templates)
@@ -132,7 +137,7 @@ class ViewPart {
 		core.utils.iterateAnnotated(instance, 'isEvent', (prop, desc) => {
 			el.reduce(desc.selector).on(desc.on, (...args) => {
 				if (desc.transform) {
-					a = desc.transform.apply(null, a) || [];
+					args = desc.transform.apply(null, args) || [];
 				}
 				instance[prop](...args);
 			});

@@ -86,7 +86,8 @@ class Field {
 	}
 
 	get value() {
-		return this.node.children('.input').value();
+		let value = this.node.children('.input').value();
+		return value == this.placeholder ? null : value;
 	}
 
 	set value(value) {
@@ -164,7 +165,10 @@ class RootForm {
 			writable: false
 		});
 
-		this.template = options.template || this.template || (fields => 
+		this.templates = this.templates || {};
+		tk.update(this.templates, options.templates || {});
+
+		this.template = options.template || this.template || this.templates.root || (fields => 
 			<div class="form">
 				<div class="error-summary hidden"/>
 				{ fields }
@@ -272,7 +276,7 @@ class RootForm {
 		};
 
 		this.node = this._templateContext
-			.data(renderFields, this.state)
+			.data(renderFields, this.state, this.templates)
 			.render();
 		
 		this._rendering = false;

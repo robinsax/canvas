@@ -50,7 +50,7 @@ class CoreUtilsPart {
 			let props = Object.getOwnPropertyNames(proto);
 
 			tk.iter(props, prop => {
-				if (proto[prop][annotation]) {
+				if (proto[prop] && proto[prop][annotation]) {
 					callback(prop, proto[prop][annotation]);
 				}
 			});
@@ -66,19 +66,8 @@ class CoreUtilsPart {
 	}
 
 	installObjectObservers(object, callback) {
-		if (!object) { return; }
+		if (!object || object._watched) { return; }
 
-		if (!object._watched) {
-			if (typeof object == 'object') {
-				Object.defineProperty(object, '_watched', {
-					value: true,
-					enumerable: false
-				});
-			}
-			else {
-				object._watched = true;
-			}
-		}
 
 		if (object instanceof Array){
 			tk.listener(object)
@@ -96,6 +85,16 @@ class CoreUtilsPart {
 				tk.listener(object, property)
 					.changed(value => { callback(); });
 			});
+		}
+
+		if (typeof object == 'object') {
+			Object.defineProperty(object, '_watched', {
+				value: true,
+				enumerable: false
+			});
+		}
+		else {
+			object._watched = true;
 		}
 	}
 }
