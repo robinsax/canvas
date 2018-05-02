@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
 
-# canvas <img align="left" width="200" height="200" title="Canvas" src="http://canvas-framework.com/assets/media/canvas_logo.svg">
+# canvas <img align="left" width="75" height="75" title="canvas" src="http://canvas-framework.com/assets/media/canvas_logo.svg">
 
 A full-stack web application framework for building modern web products simply.
 
