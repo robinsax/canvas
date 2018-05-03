@@ -6,6 +6,24 @@ class TooltipPart {
 		);
 
 		core.tooltip = (targets, content) => this.tooltip(targets, content);
+
+		class TooltipMixin {
+			constructor(map) {
+				this.map = map;
+			}
+		
+			@core.inspects('*')
+			@core.attach
+			tmMaybeAttachTooltip(el) {
+				tk.iter(this.map, (selector, tooltip) => {
+					if (el.is(selector)) {
+						core.tooltip(el, tooltip);
+					}
+				});
+			}
+		}
+		
+		core.TooltipMixin = TooltipMixin;
 	}
 
 	tooltip(targets, content) {

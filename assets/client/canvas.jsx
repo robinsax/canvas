@@ -11,12 +11,12 @@
 	//	cv::include core/validators
 	//	cv::include core/forms
 
+	//	cv::include core/mixins
+
 	//	cv::include core/dnd
 	//	cv::include core/svg
 	//	cv::include core/links
 	//	cv::include core/tooltip
-
-	//	cv::include core/mixins
 	
 	class Core {
 		constructor(debug){

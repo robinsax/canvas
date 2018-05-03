@@ -84,13 +84,23 @@ class MixinPart {
 			@core.event('.modal, .close')
 			@core.onSuccess
 			@core.attach
-			close() {
+			closeModal() {
 				this.host.state.isOpen = false;
+			}
+
+			@core.attach
+			close() {
+				this.closeModal();
 			}
 			
 			@core.attach
-			open() {
+			openModal() {
 				this.host.state.isOpen = true;
+			}
+
+			@core.attach
+			open() {
+				this.openModal();
 			}
 			
 			@core.event('.panel')
