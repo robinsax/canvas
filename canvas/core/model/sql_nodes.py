@@ -3,6 +3,7 @@
 SQL statement node definitions.
 '''
 
+from ...exceptions import UnadaptedType
 from .type_adapters import _adapted_types
 
 class SQLExpression:
