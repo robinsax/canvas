@@ -1,6 +1,6 @@
 import canvas as cv
 
-CREATE = False
+CREATE = True
 
 @cv.model('a_stuff', {
 	'id': cv.Column('uuid', primary_key=True),
@@ -40,8 +40,6 @@ if CREATE:
 
 from pprint import pprint
 
-s.delete(s.query(A, A.text == "I'm an a", one=True), cascade=True).commit()
-
 join = B.join(A.onto('a'))
 #	Should be 2 bs
 bs = s.query(join)
@@ -53,3 +51,6 @@ join = A.join(B.onto('bs'))
 as_ = s.query(join)
 for a in as_:
 	print(a.text, '-', [b.name for b in a.bs])
+
+
+A.join(B.onto('b_instances'), C.onto('c_instances'))

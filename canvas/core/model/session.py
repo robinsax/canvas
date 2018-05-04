@@ -158,7 +158,8 @@ class _Session:
 			row = self.cursor.fetchone()
 
 		#	Eat last.
-		result.append(last)
+		if last is not None:
+			result.append(last)
 
 		if one:
 			return result[0] if len(result) > 0 else None

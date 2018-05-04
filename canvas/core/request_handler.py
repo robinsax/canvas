@@ -140,7 +140,7 @@ def serve_controller(request):
 
 	route_desc = RouteString(route)
 	route_desc.set_variables(variables)
-
+	
 	#	Create context and handle.
 	context = RequestContext({
 		'cookie': cookie,
@@ -149,7 +149,8 @@ def serve_controller(request):
 		'headers': request.headers,
 		'route': route_desc,
 		'verb': verb,
-		'url': request.url
+		'url': request.url,
+		'__controller__': controller
 	})
 	RequestContext.put(context)
 

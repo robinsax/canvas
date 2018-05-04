@@ -48,6 +48,7 @@ class Field {
 		this.error = null;
 		this.node = null;
 		this.errorNode = null;
+		this.changeCallbacks = [];
 
 		if (this.type == 'select') {
 			tk.listener(this, 'options').changed(() => {
@@ -92,6 +93,10 @@ class Field {
 
 	set value(value) {
 		this.node.children('.input').value(value);
+	}
+
+	onChange(callback) {
+		this.changeCallbacks.push(callback);
 	}
 
 	//	TODO: Cleanup.
@@ -139,13 +144,25 @@ class Field {
 					this.form.submit();
 					event.preventDefault();
 				}
+
+				tk.iter(this.changeCallbacks, callback => {
+					callback(this);
+				});
 			},
 			change: () => {
+				tk.iter(this.changeCallbacks, callback => {
+					callback(this);
+				});
+
 				this.validate();
 			}
 		});
 
 		this.node = el;
+	}
+
+	select() {
+		return this.node;
 	}
 	
 	render() {
