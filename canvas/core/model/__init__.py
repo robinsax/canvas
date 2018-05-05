@@ -16,7 +16,6 @@ _object_relational_map = dict()
 
 from ...exceptions import InvalidSchema, InvalidDecoration
 from ...namespace import export, export_ext
-from ...utils import patch_type
 from ..request_context import RequestContext
 from .model import Model
 from .columns import define_column_types
@@ -58,6 +57,7 @@ def model(table_name, schema, accessors=None, dictized=None):
 		cls.__created__ = False
 		cls.__accessors__ = [primary_key] if accessors is None else [schema[name] for name in accessors]
 		cls.__session__ = None
+		cls.__query_attrs__ = dict()
 
 		inner_init = cls.__init__
 		def init_wrap(self, *args, **kwargs):
@@ -65,7 +65,7 @@ def model(table_name, schema, accessors=None, dictized=None):
 			inner_init(self, *args, **kwargs)
 		cls.__init__ = init_wrap
 
-		patched = patch_type(cls, Model)
+		patched = type(cls.__name__, (cls, Model), dict())
 		_object_relational_map[table_name] = patched
 		return patched
 	return model_wrap
@@ -74,14 +74,20 @@ def model(table_name, schema, accessors=None, dictized=None):
 def dictize(target, omit=tuple(), include=tuple()):
 	if isinstance(target, (list, tuple)):
 		return [dictize(item, omit, include) for item in target]
+	elif not issubclass(type(target), Model):
+		return target
 	
 	to_read = list(target.__class__.__schema__.keys())
 	to_read.extend(target.__class__.__dictized_attrs__)
 	to_read.extend(include)
 
-	return {
-		name: getattr(target, name, None) for name in to_read if name not in omit
-	}
+	dictization = dict()
+	for key in to_read:
+		if key in omit:
+			continue
+		dictization[key] = dictize(getattr(target, key, None))
+
+	return dictization
 
 @export
 def create_session():

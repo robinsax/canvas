@@ -15,7 +15,6 @@ from psycopg2.extensions import (
 )
 
 from ...namespace import export_ext
-from ...utils import patch_type
 from ..json_io import serialize_json, deserialize_json
 
 JSON_OID = 114
@@ -26,7 +25,7 @@ _adapted_types = [int, float, str, bytes, datetime]
 @export_ext
 def type_adapter(type_name, oid, *types):
 	def type_adapter_wrap(cls):
-		patched = patch_type(cls, TypeAdapter)
+		patched = type(cls.__name__, (cls, TypeAdapter), dict())
 		instance = patched()
 
 		class PsuedoAdapter:

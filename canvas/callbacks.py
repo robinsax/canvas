@@ -17,7 +17,7 @@ def _register(func, type_name):
 	_callbacks[type_name].append(func)
 
 @export_ext
-def define_callback_type(type_name, arguments=[], ext=False):
+def define_callback_type(type_name, arguments=tuple(), ext=False):
 	#	TODO: Allow argspec inspector.
 
 	def psuedo(func):

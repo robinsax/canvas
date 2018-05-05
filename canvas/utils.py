@@ -19,21 +19,6 @@ def format_exception(ex):
 	traceback = (''.join(format_tb(ex.__traceback__))).strip().replace('\n    ', '\n\t').replace('\n  ', '\n')
 	return '{}: {}\n{}'.format(ex.__class__.__name__, ex, traceback)
 
-def patch_type(cls, destiny):
-	if issubclass(cls, destiny):
-		return cls
-
-	class Patched(cls, destiny):
-		def __repr__(self):
-			return '<%s(%s) at 0x%s>'%(
-				cls.__name__, 
-				destiny.__name__, 
-				hex(id(self))
-			)
-	Patched.__name__ = cls.__name__
-
-	return Patched
-
 @export
 def cached_property(meth):
 	protected = '_%s'%meth.__name__

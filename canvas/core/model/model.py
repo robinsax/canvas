@@ -60,7 +60,6 @@ class Model:
 			self.__dirty__[attr] = getattr(self, attr)
 		super().__setattr__(attr, value)
 
-
 @json_serializer(Model)
 def serialize_model(model):
 	from . import dictize

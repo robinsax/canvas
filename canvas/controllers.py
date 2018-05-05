@@ -6,7 +6,7 @@ Controller registration and management.
 from .exceptions import IllegalEndpointRoute
 from .namespace import export
 from .configuration import config
-from .utils import logger, patch_type
+from .utils import logger
 from .core.request_context import RequestContext
 from .core.responses import create_page
 from .core.forms import serialize_form_models
@@ -46,7 +46,7 @@ class _ControllerDefinition:
 @export
 def controller(*routes, _destiny=Controller, **attrs):
 	def controller_wrap(cls):
-		patched = patch_type(cls, _destiny)
+		patched = type(cls.__name__, (cls, _destiny), dict())
 		definition = _ControllerDefinition(patched, routes, attrs)
 		_definitions.append(definition)
 		

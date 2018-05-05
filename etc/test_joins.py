@@ -1,56 +1,76 @@
 import canvas as cv
+from pprint import pprint
+from datetime import datetime
 
-CREATE = True
-
-@cv.model('a_stuff', {
+@cv.model('people', {
 	'id': cv.Column('uuid', primary_key=True),
-	'text': cv.Column('text')
+	'name': cv.Column('text')
 })
-class A:
+class Person:
 
-	def __init__(self, text):
-		self.text = text
-
-@cv.model('b_stuff', {
-	'id': cv.Column('uuid', primary_key=True),
-	'name': cv.Column('text'),
-	'a_id': cv.Column('fk:a_stuff.id')
-})
-class B:
-
-	def __init__(self, name, a):
+	def __init__(self, name):
 		self.name = name
-		self.a_id = a.id
+
+@cv.model('roles', {
+	'id': cv.Column('uuid', primary_key=True),
+	'name': cv.Column('text')
+})
+class Role:
+
+	def __init__(self, name):
+		self.name = name
+
+@cv.model('person_roles', {
+	'id': cv.Column('uuid', primary_key=True),
+	'person_id': cv.Column('fk:people.id'),
+	'role_id': cv.Column('fk:roles.id'),
+	'started': cv.Column('datetime', default=datetime.now()),
+	'ended': cv.Column('datetime', default=None)
+})
+class PersonRole:
+
+	def __init__(self, person, role):
+		self.person_id, self.role_id = person.id, role.id
 
 cv.initialize()
 
-s = cv.create_session()
+session = cv.create_session()
 
-if CREATE:
-	a = A("I'm another a")
-	s.save(a).commit()
+def create_some():
+	jim = Person('Jim')
+	session.save(jim).commit()
 
-	b1 = B("I'm b 1 - 1", a)
-	s.save(b1)
+	dad = Role('Dad')
+	drug_addict = Role('Drug Addict')
+	session.save(drug_addict, dad).commit()
 
-	b2 = B("I'm b 1- 2", a)
-	s.save(b2)
+	jim_as_dad = PersonRole(jim, dad)
+	jim_as_drug_addict = PersonRole(jim, drug_addict)
+	session.save(jim_as_dad, jim_as_drug_addict).commit()
 
-	s.commit()
+if False:
+	drops = (PersonRole, Person, Role)
+	for drop in drops:
+		session.execute('drop table %s;'%drop.__table__)
+	session.commit()
+if False:
+	create_some()
 
-from pprint import pprint
+now = datetime.now()
 
-join = B.join(A.onto('a'))
-#	Should be 2 bs
-bs = s.query(join)
-print('read %d bs'%len(bs))
-for b in bs:
-	print(b.name, '-', b.a.text)
+from canvas.core.model.sql_factory import selection
 
-join = A.join(B.onto('bs'))
-as_ = s.query(join)
-for a in as_:
-	print(a.text, '-', [b.name for b in a.bs])
+def print_result(target, query=True, include=tuple()):
+	print(cv.dictize(session.query(target, query), include=include))
 
+print_result(Person.join(PersonRole.onto('role_tags')), include=('role_tags',))
+print('--- Nice! ---')
+print(Person.join(Role.across(PersonRole).onto('roles')).serialize([]))
+print('--- V. Nice! ---')
+print(Person.join(Role.across(PersonRole, PersonRole.start <= now).onto('roles')).serialize([]))
+print('--- Killmanjaro! ---')
 
-A.join(B.onto('b_instances'), C.onto('c_instances'))
+query = Person.join(Role.across(PersonRole, PersonRole.start <= now).onto('roles'))
+jim_with_roles = session.query(query, Person.name == 'Jim')
+
+pprint(cv.dictize(jim_with_roles, include=('roles',)))

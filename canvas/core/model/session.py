@@ -33,12 +33,12 @@ log = logger(__name__)
 class _Session:
 
 	def __init__(self):
-		self._connection, self._cursor = None, None		
+		self._connection, self._cursor = None, None
 		self.active_mappings = dict()
 
 	@property
 	def connection(self):
-		if self._connection is None:
+		if not self._connection:
 			creds = config.database
 			self._connection = connect(
 				database=creds.database,
@@ -166,7 +166,7 @@ class _Session:
 		else:
 			return result
 
-	def execute(self, sql, values=()):
+	def execute(self, sql, values=tuple()):
 		if config.development.log_emitted_sql:
 			log.debug(sql)
 
@@ -188,17 +188,18 @@ class _Session:
 		
 		return self
 
-	def save(self, model):
-		model_cls = model.__class__
-		self._precheck_constraints(model)
+	def save(self, *models):
+		for model in models:
+			model_cls = model.__class__
+			self._precheck_constraints(model)
 
-		self.execute(*row_creation(model))
+			self.execute(*row_creation(model))
 
-		self._map_model(model, self.cursor.fetchone())
+			self._map_model(model, self.cursor.fetchone())
 
-		model.__session__ = self
+			model.__session__ = self
 
-		model.__create__()
+			model.__create__()
 		return self
 
 	def detach(self, model):
