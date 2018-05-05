@@ -17,7 +17,7 @@ def logger(name):
 @export
 def format_exception(ex):
 	traceback = (''.join(format_tb(ex.__traceback__))).strip().replace('\n    ', '\n\t').replace('\n  ', '\n')
-	return '{}: {}\n{}'.format(ex.__class__.__name__, ex, traceback)
+	return '%s: %s\n%s'%(ex.__class__.__name__, ex, traceback)
 
 @export
 def cached_property(meth):
