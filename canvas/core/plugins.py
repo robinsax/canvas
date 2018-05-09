@@ -17,6 +17,8 @@ from .json_io import deserialize_json
 
 log = logger(__name__)
 
+_loaded = list()
+
 @export
 def plugin_base_path(name):
 	name = name.split('.')[-1]
@@ -57,6 +59,7 @@ def load_plugins():
 			if length == 1:
 				raise DependencyError('Plugin not found: %s'%plugin_label)
 			raise ex
+		_loaded.append(name)
 
 	for plugin in config.plugins.activated:
 		load_plugin(plugin)
@@ -68,7 +71,7 @@ def get_path_occurrences(*path_parts, include_base=True, dir=False):
 	occurrences = []
 	path_check = os.path.isdir if dir else os.path.isfile
 	
-	for plugin in reversed(config.plugins.activated):
+	for plugin in reversed(_loaded):
 		plugin_path = os.path.join(plugin_base_path(plugin), path)
 		if path_check(plugin_path):
 			occurrences.insert(0, plugin_path)
