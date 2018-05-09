@@ -29,7 +29,7 @@ def wipe_orm(are_you_sure=False):
 		_all_orm = dict()
 
 @export
-def model(table_name, schema, accessors=None, dictized=None):
+def model(table_name, schema, accessors=None, dictized=None, not_dictized=None):
 	def model_wrap(cls):
 		#	Resolve primary key and name columns.
 		primary_key = None
@@ -54,6 +54,7 @@ def model(table_name, schema, accessors=None, dictized=None):
 		cls.__schema__ = ordered_schema
 		cls.__primary_key__ = primary_key
 		cls.__dictized_attrs__ = tuple() if dictized is None else dictized
+		cls.__undictized_attrs__ = tuple() if not_dictized is None else not_dictized
 		cls.__created__ = False
 		cls.__accessors__ = [primary_key] if accessors is None else [schema[name] for name in accessors]
 		cls.__session__ = None
@@ -83,7 +84,7 @@ def dictize(target, omit=tuple(), include=tuple()):
 
 	dictization = dict()
 	for key in to_read:
-		if key in omit:
+		if key in omit or key in target.__class__.__undictized_attrs__:
 			continue
 		dictization[key] = dictize(getattr(target, key, None))
 

@@ -34,6 +34,10 @@ class TooltipPart {
 					if (tooltip) { tooltip.remove(); }
 					//	TODO(toolkit): Fix offset().
 					let target = el.first(false).getBoundingClientRect();
+					if (typeof content == 'function') {
+						content = content(el);
+					}
+					
 					tooltip = this.tooltipTemplate
 						.data(target.x, target.y, content)
 						.render();

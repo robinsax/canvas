@@ -366,8 +366,13 @@ class RootForm {
 						summaryNode.classify('hidden', false).text(data.error_summary);
 					}
 				}
-
-				core.utils.invokeAnnotated(this, 'isFailureCallback', data.errors, data.error_summary);
+				
+				try {
+					core.utils.invokeAnnotated(this, 'isFailureCallback', data.errors, data.error_summary);
+				}
+				catch (ex) {
+					cv.flashMessage = 'An error occured.';
+				}
 				this._submitting = false;
 			})
 			.success(response => {
