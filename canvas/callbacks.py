@@ -18,7 +18,7 @@ def _register(func, type_name):
 
 @export_ext
 def define_callback_type(type_name, arguments=tuple(), ext=False):
-	#	TODO: Allow argspec inspector.
+	#	TODO: Argspec inspector.
 
 	def psuedo(func):
 		_register(func, type_name)

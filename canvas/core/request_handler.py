@@ -45,7 +45,7 @@ _identifier = 'canvas/%s Python/%s'%(
 )
 _asset_cache = dict()
 
-define_callback_type('request_received', arguments=[RequestContext], ext=True)
+define_callback_type('request_received', arguments=(RequestContext,), ext=True)
 
 def parse_response_tuple(tpl):
 	if not isinstance(tpl, (list, tuple)):

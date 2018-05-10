@@ -3,6 +3,7 @@
 The base model class definition.
 '''
 
+from ...exceptions import NotFound
 from ...namespace import export
 from ..json_io import json_serializer, serialize_json
 from .columns import Column
@@ -17,7 +18,15 @@ class Model:
 		for accessor in cls.__accessors__[1:]:
 			query = query | (accessor == reference_value).group()
 		return session.query(cls, query, one=True)
-	
+
+	@classmethod
+	def get_or_die(cls, reference_value, session):
+		instance = cls.get(reference_value, session)
+		if not instance:
+			raise NotFound(reference_value)
+
+		return instance	
+
 	@classmethod
 	def onto(cls, attr_name):
 		return Attachment(cls, attr_name)
