@@ -209,12 +209,14 @@ class _Session:
 
 		return self
 
-	def delete(self, model, cascade=False):
-		self.execute(*row_deletion(model, cascade))
+	def delete(self, *models, cascade=False):
+		for model in models:
+			self.execute(*row_deletion(model, cascade))
+			self.detach(model)
 
-		return self.detach(model)
+		return self
 
-	def query(self, target, conditions=True, one=False, count=None, offset=None, order_by=tuple(), for_update=False, for_share=False):
+	def query(self, target, conditions=True, one=False, count=None, distinct=False, offset=None, order_by=tuple(), for_update=False, for_share=False):
 		if conditions is False:
 			return None if one else []
 		
@@ -227,7 +229,7 @@ class _Session:
 		if not isinstance(order_by, (list, tuple)):
 			order_by = (order_by,)
 		
-		self.execute(*selection(target, conditions, count, offset, order_by, for_))
+		self.execute(*selection(target, conditions, distinct, count, offset, order_by, for_))
 
 		#	TODO: Remove.
 		def from_loader_method(loader_method):

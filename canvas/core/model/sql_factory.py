@@ -63,7 +63,7 @@ def table_creation(model_cls):
 	])
 	return statement, ()
 
-def selection(target, query, count, offset, ordering, for_):
+def selection(target, query, distinct, count, offset, ordering, for_):
 	values = []
 	
 	if query is True:
@@ -89,7 +89,7 @@ def selection(target, query, count, offset, ordering, for_):
 		raise InvalidQuery('Bad query selection: %s'%repr(target))
 
 	statement = ' '.join([
-		'SELECT', selection,
+		'SELECT', 'DISTINCT' if distinct else '', selection,
 		'FROM', source
 	])
 
