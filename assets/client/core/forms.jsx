@@ -228,7 +228,7 @@ class RootForm {
 					override = select[1];
 					select = select[0];
 				}
-				filteredFieldData[select] = fieldData[select || override.like] || {};
+				filteredFieldData[select] = fieldData[override.like || select] || {};
 				tk.iter(override, (key, value) => {
 					filteredFieldData[select][key] = value;
 				});
