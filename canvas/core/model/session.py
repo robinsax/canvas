@@ -192,7 +192,7 @@ class _Session:
 		for model in models:
 			model_cls = model.__class__
 			self._precheck_constraints(model)
-
+			
 			self.execute(*row_creation(model))
 
 			self._map_model(model, self.cursor.fetchone())

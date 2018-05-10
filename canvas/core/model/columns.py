@@ -66,13 +66,14 @@ class Column(SQLExpression):
 		self.sql_type, self.input_type = None, None
 		self.is_fk, self.reference = False, None
 		self.incoming_fks = []
+		self.bound_constraints = []
 
 		self.ascending = OrderedColumnReference(self, True)
 		self.descending = OrderedColumnReference(self, False)
 
 	def resolve(self):
 		#	Resolve type.
-		for regex, data in _column_types.items():		
+		for regex, data in _column_types.items():
 			match = re.match(regex, self.type_str, re.I)
 
 			if match is not None:
@@ -118,6 +119,13 @@ class Column(SQLExpression):
 		if callable(self.default):
 			return self.default()
 		return self.default
+
+	def bind_constraint(self, constraint):
+		constraint.resolve(self)
+		self.bound_constraints.append(constraint)
+
+	def all_constraints(self):
+		return (*self.constraints, *self.bound_constraints)
 
 	def value_for(self, model_obj):
 		return getattr(model_obj, self.name)

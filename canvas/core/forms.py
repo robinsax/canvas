@@ -11,7 +11,7 @@ def serialize_form_models(model_classes):
 		form_dict = dict()
 		for name, column in model_cls.__schema__.items():
 			constraints = []
-			for constraint in column.constraints:
+			for constraint in column.all_constraints():
 				try:
 					constraints.append((constraint.as_validator(), constraint.error_message))
 				except NotImplementedError: pass

@@ -65,7 +65,7 @@ def model(table_name, schema, accessors=None, dictized=None, not_dictized=None):
 			self.__populate__()
 			inner_init(self, *args, **kwargs)
 		cls.__init__ = init_wrap
-
+		
 		patched = type(cls.__name__, (cls, Model), dict())
 		_object_relational_map[table_name] = patched
 		return patched
