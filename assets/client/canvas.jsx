@@ -6,6 +6,7 @@
 
 	//	cv::include core/utils
 	//	cv::include core/requests
+	//	cv::include core/persistance
 		
 	//	cv::include core/views
 	//	cv::include core/validators

@@ -33,6 +33,8 @@ class RootView {
 			writable: false
 		});
 
+		this.persistant = options.persistant || this.persistant || [];
+
 		this.data = options.data || this.data || {};
 
 		this.template = options.template || this.template || null;
@@ -66,6 +68,8 @@ class RootView {
 		});
 		
 		this.node = null;
+
+		core._loadPersistedViewState(this.__name__, this);
 	}
 
 	fetch(then=(() => {})) {
@@ -125,12 +129,17 @@ class ViewPart {
 		core.view = this.view.bind(this);
 		core.views = this.views = {};
 		
-		core.utils.resolveEventsAndInspections = (instance, el) => this.resolveEventsAndInspections(instance, el);
+		core.utils.resolveEventsAndInspections = this.resolveEventsAndInspections.bind(this);
 		core.event = (on, selector=null) => this.viewEvent(on, selector);
-		core.inspects = selector => this.viewInspect(selector);
+		core.inspects = this.viewInspect.bind(this);
+
+		core._loadPersistedViewState = this.loadPersistedViewState.bind(this);
 
 		this.defineDefaultViews();
-		tk(window).on('load', () => this.createViews());
+		tk(window).on({
+			load: this.createViews.bind(this),
+			beforeunload: this.persistViewStates.bind(this)
+		});
 	}
 
 	resolveEventsAndInspections(instance, el) {
@@ -153,8 +162,9 @@ class ViewPart {
 
 			core.utils.setRootPrototype(ViewClass, RootView);
 			let View = (() => class View extends ViewClass {
-				constructor() {
+				constructor(label) {
 					super();
+					this.__name__ = label;
 					this.__construct(options);
 					core.attachMixins(this, options.mixins || []);
 				}
@@ -172,7 +182,7 @@ class ViewPart {
 			}
 
 			let label = el.attr('data-name') || el.attr('name') || viewName, 
-				view = new this._viewDefinitions[viewName]();
+				view = new this._viewDefinitions[viewName](label);
 			this.views[label] = view;
 
 			let create = () => {
@@ -184,6 +194,23 @@ class ViewPart {
 			
 			if (view.dataSource){ view.fetch(create); }
 			else { create(); }
+		});
+	}
+
+	loadPersistedViewState(viewName, view) {
+		let persisted = core.unstore(viewName);
+		if (!persisted) return;
+
+		view.state.update(JSON.parse(persisted));
+	}
+
+	persistViewStates() {
+		tk.iter(this.views, (viewName, view) => {
+			let toStore = {};
+			tk.iter(view.persistant, prop => {
+				toStore[prop] = view.state[prop];
+			});
+			core.store(viewName, JSON.stringify(toStore));
 		});
 	}
 

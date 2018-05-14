@@ -55,7 +55,7 @@ class ValidationErrors(Exception):
 		if self.errors:
 			rep['errors'] = self.errors
 		if self.summary:
-			rep['summary'] = self.summary
+			rep['error_summary'] = self.summary
 		return rep
 
 #	TODO: What's the deal with 'message' on these?

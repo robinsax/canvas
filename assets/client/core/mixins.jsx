@@ -99,7 +99,10 @@ class MixinPart {
 			}
 
 			@core.attach
-			open() {
+			open(data=_sentinel) {
+				if (data != _sentinel) {
+					this.host.data = data;
+				}
 				this.openModal();
 			}
 			
