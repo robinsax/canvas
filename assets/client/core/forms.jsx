@@ -76,7 +76,7 @@ class Field {
 					() => {}
 				}
 				{ this.type == 'textarea' ? 
-					<textarea class="input" name={ this.name }>{ this.placeholder }</textarea>
+					<textarea class="input" name={ this.name } placeholder={ this.placeholder }>{ this.placeholder }</textarea>
 					: (
 				  this.type == 'select' ?
 					<select class="input" name={ this.name }>{ this.placeholder ? <option>{ this.placeholder }</option> : () => {} }</select>

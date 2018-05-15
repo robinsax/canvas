@@ -81,6 +81,9 @@ class RootView {
 			.query(this.query)
 			.success(response => {
 				this.data = response.data;
+
+				core.utils.invokeAnnotated(this, 'isOnFetchCallback');
+
 				then();
 			})
 			.send();
@@ -132,6 +135,8 @@ class ViewPart {
 		core.utils.resolveEventsAndInspections = this.resolveEventsAndInspections.bind(this);
 		core.event = (on, selector=null) => this.viewEvent(on, selector);
 		core.inspects = this.viewInspect.bind(this);
+
+		core.onFetch = core.utils.createAnnotationDecorator('isOnFetchCallback');
 
 		core._loadPersistedViewState = this.loadPersistedViewState.bind(this);
 
