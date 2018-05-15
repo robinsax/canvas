@@ -26,10 +26,10 @@ class Endpoint(Controller): pass
 class Page(Controller):
 
 	def on_get(self, context):
-		return self.render()
+		return self.render(context)
 
-	def render(self, params=dict(), code=200, headers=dict()):
-		context = RequestContext.get()
+	def render(self, context=None, params=dict(), code=200, headers=dict()):
+		context = context if context else RequestContext.get()
 
 		params.update({
 			'__route__': context.route,
