@@ -1,9 +1,8 @@
 class State {
-	constructor(state, toCall=null) {
+	constructor(state, toInstall=null) {
 		Object.defineProperty(this, '_', {
 			value: {
-				toInstall: null,
-				toCall: toCall
+				toInstall: toInstall
 			},
 			enumerable: false
 		});
@@ -22,8 +21,8 @@ class State {
 		}
 
 		core.utils.installObjectObservers(this, this._.toInstall);
-		if (this._.toCall) {
-			this._.toCall();
+		if (this._.toInstall) {
+			this._.toInstall();
 		}
 	}
 }
@@ -106,9 +105,6 @@ class RootView {
 		}
 
 		let boundRender = this.render.bind(this);
-		this.state._.toInstall = boundRender;
-		this.state._.toCall = boundRender;
-
 		if (!this._created) {
 			this._created = true;
 			tk.listener(this, 'data').changed(boundRender);
