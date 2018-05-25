@@ -39,6 +39,7 @@ class RootView {
 		this.persistant = options.persistant || this.persistant || [];
 
 		this.data = options.data || this.data || {};
+		this.hasData = (options.hasData !== false) && (this.hasData !== false);
 
 		this.template = options.template || this.template || null;
 		this.templates = this.templates || {};
@@ -111,9 +112,13 @@ class RootView {
 		}
 		this.state.activate(boundRender);
 
-		this.node = this._templateContext
-			.data(this.data, this.state, this.templates)
-			.render();
+		if (this.hasData) {
+			this._templateContext.data(this.data, this.state, this.templates);
+		}
+		else {
+			this._templateContext.data(this.state, this.templates);
+		}
+		this.node = this._templateContext.render();
 		
 		this._rendering = false;
 		return this.node;
@@ -176,6 +181,7 @@ class ViewPart {
 				}
 			})();
 			
+			ViewClass._instances = [];
 			this._viewDefinitions[name] = View;
 			return View;
 		}
@@ -183,12 +189,15 @@ class ViewPart {
 	
 	createViews() {
 		core.utils.iterateNonStandardTags((el, viewName) => {
-			if (!this._viewDefinitions[viewName]) {
+			let ViewClass = this._viewDefinitions[viewName];
+			if (!ViewClass) {
 				return;
 			}
 
 			let label = el.attr('data-name') || el.attr('name') || viewName, 
-				view = new this._viewDefinitions[viewName](label);
+				view = new ViewClass(label);
+
+			ViewClass._instances.push(view);
 			this.views[label] = view;
 
 			let create = () => {

@@ -426,12 +426,14 @@ class FormPart {
 
 	createForms() {
 		core.utils.iterateNonStandardTags((el, formName) => {
-			if (!this._formDefinitions[formName]){
+			let FormClass = this._formDefinitions[formName];
+			if (!FormClass){
 				return;
 			}
 
 			let label = el.attr('data-name') || el.attr('name') || formName, 
-				form = new this._formDefinitions[formName]();
+				form = new FormClass();
+			FormClass._instances.push(form);
 			this.forms[label] = form;
 			
 			el.replace(form.render());
@@ -451,6 +453,7 @@ class FormPart {
 				}
 			})();
 
+			FormClass._instances = [];
 			this._formDefinitions[FormClass.name.toLowerCase()] = Form;
 			return Form;
 		}

@@ -13,6 +13,7 @@
 	//	cv::include core/forms
 
 	//	cv::include core/mixins
+	//	cv::include core/signals
 
 	//	cv::include core/dnd
 	//	cv::include core/svg
