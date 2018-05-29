@@ -80,6 +80,9 @@ def report_error(ex, context=None):
 		log.error(format_exception(ex))
 
 def retrieve_asset(path, recall=False):
+	if path in _asset_cache:
+		return _asset_cache[path]
+	
 	occurrences = get_path_occurrences('assets', 'client', path[1:])
 	if len(occurrences) == 0:
 		return None
