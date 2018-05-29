@@ -125,7 +125,7 @@ class _Session:
 			to_inst = self._load_model(join.target_cls, row[first_cols:])
 
 			if not join.one_side:
-				to_list = getattr(to_inst, attr_name)
+				to_list = getattr(to_inst, attr_name, None)
 				if to_list is None:
 					to_list = []
 					setattr(to_inst, attr_name, to_list)
