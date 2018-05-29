@@ -3,6 +3,8 @@
 The canvas WSGI application implementation.
 '''
 
+import time
+
 from mimetypes import types_map
 from platform import python_version
 
@@ -81,12 +83,14 @@ def report_error(ex, context=None):
 
 def retrieve_asset(path, recall=False):
 	if path in _asset_cache:
+		log.debug('Decached asset "%s"', path)
 		return _asset_cache[path]
 	
 	occurrences = get_path_occurrences('assets', 'client', path[1:])
 	if len(occurrences) == 0:
 		return None
 
+	start_time = time.time()
 	with open(occurrences[-1], 'rb') as asset_file:
 		asset_data = asset_file.read()
 	
@@ -98,6 +102,8 @@ def retrieve_asset(path, recall=False):
 		
 	if not config.development.debug:
 		_asset_cache[path] = asset_data
+	
+	log.debug('Loaded asset "%s" in %.3f', path, time.time() - start_time)
 	return asset_data
 
 def serve_controller(request):
