@@ -135,6 +135,9 @@ def serve_controller(request):
 			if should_assert and expected_type not in content_type:
 				raise UnsupportedMediaType('Expected %s'%expected_type.upper())
 
+			if ';' in content_type:
+				#	TODO: Actually read charset.
+				content_type = content_type.split(';')[0]
 			request_parameters = parse_request(request.get_data(as_text=True), content_type)
 
 	#	Resolve cookie.
