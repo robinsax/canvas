@@ -19,6 +19,7 @@ __verbs__ = ['get', 'post', 'put', 'patch', 'delete', 'options']
 
 try:
 	#	These imports will fail if dependencies haven't been installed.
+	#	TODO: Too broad.
 	from . import core, tests, plugins
 except ImportError as ex: pass
 

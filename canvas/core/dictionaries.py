@@ -9,8 +9,10 @@ from ..namespace import export_ext
 @export_ext
 class AttributedDict(dict):
 
-	def __init__(self, content=dict()):
+	def __init__(self, content=dict(), **kwargs):
 		for key, value in content.items():
+			self[key] = value
+		for key, value in kwargs:
 			self[key] = value
 	
 	def __getattr__(self, attr):

@@ -33,15 +33,13 @@ from .request_parsers import parse_request
 from .request_context import RequestContext, RouteString
 from .request_errors import get_error_response
 from .responses import create_json
-from .styles import compile_less
-from .node_interface import transpile_jsx
+from .assets import get_asset
 from .. import __version__ as canvas_version
 
 log = logger(__name__)
 
 _identifier = 'canvas/%s Python/%s'%(
-	canvas_version,
-	python_version()
+	canvas_version, python_version()
 )
 _asset_cache = dict()
 
