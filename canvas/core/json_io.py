@@ -27,7 +27,7 @@ def json_deserializer(func):
 	return func
 
 @export
-def serialize_json(obj, fallback=None):
+def serialize_json(obj, fallback=None, pretty=False):
 	def serialize_default(value):
 		for serializer in _serializers:
 			for typ in serializer.__serializes__:
@@ -39,7 +39,7 @@ def serialize_json(obj, fallback=None):
 
 		raise TypeError(type(value))
 	
-	return json.dumps(obj, default=serialize_default)
+	return json.dumps(obj, default=serialize_default, indent=4 if pretty else None)
 
 @export
 def deserialize_json(data):

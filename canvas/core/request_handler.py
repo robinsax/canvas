@@ -3,6 +3,8 @@
 The canvas WSGI application implementation.
 '''
 
+import time
+
 from mimetypes import types_map
 from platform import python_version
 
@@ -78,10 +80,15 @@ def report_error(ex, context=None):
 		log.error(format_exception(ex))
 
 def retrieve_asset(path, recall=False):
+	if path in _asset_cache:
+		log.debug('Decached asset "%s"', path)
+		return _asset_cache[path]
+	
 	occurrences = get_path_occurrences('assets', 'client', path[1:])
 	if len(occurrences) == 0:
 		return None
 
+	start_time = time.time()
 	with open(occurrences[-1], 'rb') as asset_file:
 		asset_data = asset_file.read()
 	
@@ -93,6 +100,8 @@ def retrieve_asset(path, recall=False):
 		
 	if not config.development.debug:
 		_asset_cache[path] = asset_data
+	
+	log.debug('Loaded asset "%s" in %.3f', path, time.time() - start_time)
 	return asset_data
 
 def serve_controller(request):
@@ -124,6 +133,9 @@ def serve_controller(request):
 			if should_assert and expected_type not in content_type:
 				raise UnsupportedMediaType('Expected %s'%expected_type.upper())
 
+			if ';' in content_type:
+				#	TODO: Actually read charset.
+				content_type = content_type.split(';')[0]
 			request_parameters = parse_request(request.get_data(as_text=True), content_type)
 
 	#	Resolve cookie.

@@ -125,9 +125,12 @@ class _Session:
 			to_inst = self._load_model(join.target_cls, row[first_cols:])
 
 			if not join.one_side:
-				if not hasattr(to_inst, attr_name):
-					setattr(to_inst, attr_name, [])
-				getattr(to_inst, attr_name).append(from_inst)
+				to_list = getattr(to_inst, attr_name, None)
+				if to_list is None:
+					to_list = []
+					setattr(to_inst, attr_name, to_list)
+				if from_inst not in to_list:
+					to_list.append(from_inst)
 				return to_inst
 			else:
 				setattr(from_inst, attr_name, to_inst)
