@@ -1,12 +1,6 @@
 #	Core.
 werkzeug
 psycopg2
-#	Asset rendering.
-jinja2
-htmlmin
-markdown
-lesscpy
-PyExecJS
 #   Testing.
 coverage
 python-coveralls

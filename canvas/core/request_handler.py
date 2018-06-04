@@ -5,7 +5,7 @@ The canvas WSGI application implementation.
 
 import time
 
-from mimetypes import types_map
+from datetime import datetime
 from platform import python_version
 
 from werkzeug import BaseRequest, BaseResponse
@@ -43,7 +43,7 @@ log = logger(__name__)
 _identifier = 'canvas/%s Python/%s'%(
 	canvas_version, python_version()
 )
-_asset_cache = dict()
+_startup = datetime.now()
 
 define_callback_type('request_received', arguments=(RequestContext,), ext=True)
 
@@ -78,31 +78,6 @@ def report_error(ex, context=None):
 	)
 	if should_report:
 		log.error(format_exception(ex))
-
-def retrieve_asset(path, recall=False):
-	if path in _asset_cache:
-		log.debug('Decached asset "%s"', path)
-		return _asset_cache[path]
-	
-	occurrences = get_path_occurrences('assets', 'client', path[1:])
-	if len(occurrences) == 0:
-		return None
-
-	start_time = time.time()
-	with open(occurrences[-1], 'rb') as asset_file:
-		asset_data = asset_file.read()
-	
-	if recall:
-		if path.endswith('.less'):
-			asset_data = compile_less(asset_data.decode())
-		if path.endswith('.jsx'):
-			asset_data = transpile_jsx(asset_data)
-		
-	if not config.development.debug:
-		_asset_cache[path] = asset_data
-	
-	log.debug('Loaded asset "%s" in %.3f', path, time.time() - start_time)
-	return asset_data
 
 def serve_controller(request):
 	#	Resolve path.
@@ -152,15 +127,15 @@ def serve_controller(request):
 	route_desc.set_variables(variables)
 	
 	#	Create context and handle.
-	context = RequestContext({
-		'cookie': cookie,
-		'session': create_session(),
-		'request': request_parameters,
-		'headers': request.headers,
-		'route': route_desc,
-		'verb': verb,
-		'url': request.url,
-		'__controller__': controller
+	context = RequestContext(
+		cookie=cookie,
+		session=create_session(),
+		request=request_parameters,
+		headers=request.headers,
+		route=route_desc,
+		verb=verb,
+		url=request.url,
+		__controller__=controller
 	})
 	RequestContext.put(context)
 
@@ -176,7 +151,7 @@ def serve_controller(request):
 		response = handler(context)
 	except ValidationErrors as ex:
 		report_error(ex, context)
-		#	TODO: XML plugin should be able to override.
+		#	TODO: Plugin should be able to override.
 		data = ex.dictize()
 		data.update({
 			'code': 422,
@@ -197,24 +172,27 @@ def serve_controller(request):
 	return response
 
 def serve_asset(request):
-	path = request.path[len(config.customization.asset_route_prefix) + 1:]
-	#	TODO: check cache control
-
-	asset_data = retrieve_asset(path)
-	if asset_data is None:
-		if path.endswith('.css'):
-			asset_data = retrieve_asset(path.replace('.css', '.less'), True)
-		if path.endswith('.js'):
-			asset_data = retrieve_asset(path.replace('.js', '.jsx'), True)
-	if asset_data is None:
-		raise NotFound(request.path)
+	#	TODO: Revving support.
+	prefixless_route = request.path[len(config.customization.asset_route_prefix) + 1:]
 	
-	mimetype = types_map.get('.%s'%path.split('.')[-1], 'text/plain')
-	#	TODO: add cache control
+	asset = get_asset(prefixless_route)
+
+	if asset is None:
+		raise NotFound(request.path)
+
+	if 'If-Modified-Since' in request.headers:
+		cache_time = datetime.strptime(request.headers['If-Modified-Since'], '%a, %d %b %Y %H:%m:%m')
+		if asset.valid_time <= cache_time:
+			return BaseResponse(status=304)
+	
 	return BaseResponse(
-		response=asset_data,
+		response=asset.data,
 		status=200,
-		mimetype=mimetype
+		mimetype=asset.mimetype,
+		headers={
+			'Cache-Control': 'must-revalidate',
+			'Last-Modified': latest_mtime.strftime('%a, %d %b %Y %H:%m:%m GMT')
+		}
 	)
 
 def handle_request(environ, start_response):
