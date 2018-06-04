@@ -1,8 +1,8 @@
+'use strict';
 /*
 *	JSX and LESS asset processor invocation. Invoked with either 'jsx' or 
 *	'less' in the command line; reads processing target from stdin.
 */
-"use strict";
 const babel = require('babel-core'), less = require('less');
 
 //	Define JSX transpilation.
@@ -21,7 +21,7 @@ const transpileJSX = source =>
 		]
 	}).code;
 
-//	Define less compilation
+//	Define less compilation.
 const compileLESS = source => {
 	const parser = new less.Parser({processImports: false});
 	let result = null;

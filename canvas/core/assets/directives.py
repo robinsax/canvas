@@ -63,9 +63,10 @@ def apply_import(self, asset, *args):
 def apply_export(self, asset, *args):
 	'''
 	The module exposure directive. The `--hard` option specifies that the
-	referenced object *is* the object to expose, not a property of it.
+	referenced object *is* the object to expose rather than a property of it.
 	'''
 	if args[-1] == '--hard':
+		#	Export the specified object directly.
 		if len(args) != 2:
 			raise AssetError('You can only export a single object with --hard')
 		to_export = args[0]
@@ -80,36 +81,49 @@ def apply_export(self, asset, *args):
 def apply_include(self, asset, *args):
 	'''The literal file inclusion directive.'''
 	for inclusion in args:
-		inclusion_path = '%s.%s'%(inclusion.replace('.', os.pathsep), asset.ext)
+		inclusion_path = '.'.join((
+			inclusion.replace('.', os.pathsep), asset.ext
+		))
 		with open(get_path(inclusion_path), 'r') as included_file:
 			included_source = included_file.read()
 
 		asset.paths.append(inclusion_path)
-		asset.source = '%s\n%s'%(included_source, asset.source)
+		asset.source = '\n'.join((included_source, asset.source))
 
 def apply_directives(asset):
-	ext = asset.paths[0].split('.')[-1]
+	'''
+	Apply all preprocessor directives of `asset`. This will mutate the asset.
+	::asset The `ProcessedAsset` to apply the preprocessor directives of.
+	'''
 	to_apply = list()
 
-	for one in _directive_re.finditer(source):
+	#	Collect directives.
+	for one in _directive_re.finditer(asset.source):
 		key, arg_str = one.group(1), one.group(2)
 		directive = _directives.get(key)
+		
+		#	Assert the use is valid.
 		if not directive:
 			raise AssetError('No such directive: %s'%key)
 		if ext not in directive.__allow_in__:
-			raise AssetError('Directive %s cannot be used in .%s files'%(
-				key, ext
-			))
+			raise AssetError('Directive %s cannot be used in .%s files'\
+					%(key, ext))
 
+		#	Push the directive, argument iterable pair.
 		to_apply.append((directive, [a.strip() for a in arg_str.split(',')]))
 	
+	#	Remove directives from the source.
+	asset.source = _directive_re.sub('', asset.source)
+
+	#	Iterate and apply the directives based on priority.
 	for directive_call in sorted(to_apply, key=lambda d: d[0].__priority__):
 		directive, args = directive_call
 		try:
 			directive(asset, *args)
 		except TypeError as ex:
+			#	TODO: Better safety
 			raise AssetError('Invalid directive usage') from ex
 
-	if ext == 'jsx':
-		return '(() => {\n%s\n})();'%asset.source
-	return asset.source
+	if asset.ext == 'js':
+		#	Closurize JavaScript.
+		asset.source = '(() => {\n%s\n})();'%asset.source

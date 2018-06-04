@@ -22,6 +22,10 @@ _script_path = os.path.join(*(
 ))
 
 def process(source, which):
+	'''
+	Invoke `processor.js` to processes `source` as type `which` ('jsx' or 
+	'less').
+	'''
 	#	Create the command line.
 	cmdline = ' '.join(('node', _script_path, which))
 	log.debug('Compiling asset: %s', cmdline)
@@ -36,7 +40,6 @@ def process(source, which):
 			compile_proc.returncode, stderr
 		))
 
-	#	Return the result.
 	return stdout
 
 def transpile_jsx(source):
