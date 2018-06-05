@@ -1,8 +1,20 @@
 #	TODO Critial: No latebind
+'''
+	def fk_to(self, table):
+		for column in self.columns:
+			typ = column.type
+			if isinstance(typ, ForeignKeyColumnType):
+				if not typ.target.table is table:
+					continue
+				return column
+		return None
+'''
 
 class CyclicSchema(Exception): pass
 
 class InvalidForeignKey(Exception): pass
+
+class InvalidQuery(Exception): pass
 
 ###
 
@@ -26,7 +38,21 @@ class ISelectable:
 	def serialize_source(self, values=tuple()):
 		raise NotImplementedError()
 
-class ObjectReference(Node, ISelectable):#todo as interface
+class IJoinable:
+
+	def join(self, joinable, condition=None):
+		return Join(self, joinable, condition)
+
+	def name_column(self, column):
+		raise NotImplementedError()
+
+	def	link_column(self, joinable):
+		raise NotImplementedError()
+	
+	def has_column(self, column):
+		raise NotImplementedError()
+		
+class ObjectReference(Node, ISelectable):#todo as interface?
 
 	def __init__(self, object_type):
 		self.object_type = object_type
@@ -304,7 +330,7 @@ class Column(ObjectReference, MAllTypes):
 ###
 
 _tables = list()
-class Table(ObjectReference):
+class Table(ObjectReference, IJoinable):
 
 	def __init__(self, name, *contents):
 		super().__init__('TABLE')
@@ -324,22 +350,26 @@ class Table(ObjectReference):
 	
 		_tables.append(self)
 
-	#	TODO: IJoinable
-	def join(self, other, condition=None):
-		my_one = self.fk_to(other):
-		if my_one:
-			return Join(self, other, my_one, condition)
-		my_two = other.fk_to(self)
-		elif my_two:
-			return Join(other, self, my_two, condition)
-		else:
-			raise NotImplementedError()
-
 	def __hash__(self):
 		return hash(self.name)
 
 	def __eq__(self, other):
 		return self.name == other.name
+
+	def contains_column(self, column):
+		for check in self.columns:
+			if check is column:
+				return True
+		return False
+
+	def link_column(self, joinable):
+		for column in self.columns:
+			if not isinstance(column.type, ForeignKeyColumnType):
+				continue
+			typ = column.type
+			if joinable.contains_column(typ.target):
+				return column
+		return None
 
 	def serialize(self, values=tuple()):
 		return self.name
@@ -349,13 +379,6 @@ class Table(ObjectReference):
 
 	def serialize_source(self, values=tuple()):
 		return self.name
-
-	def fk_to(self, table):
-		for column in self.columns:
-			typ = column.type
-			if isinstance(typ, ForeignKeyColumnType) and typ.target.table is table:
-				return column
-		return None
 
 	def describe(self):
 		contents = (*self.columns, *self.constraints)
@@ -391,10 +414,10 @@ def order_tables():
 
 ###
 
-class Join(Node, ISelectable):
+class Join(Node, ISelectable, IJoinable):
 
-	def __init__(self, left, right, link, condition=None):
-		self.left, self.right, self.link = left, right, link
+	def __init__(self, left, right, condition=None):
+		self.left, self.right = left, right
 		self.condition = condition
 		self.name, self.columns = None, [*left.columns, *right.columns]
 	
@@ -407,6 +430,18 @@ class Join(Node, ISelectable):
 			self.left.set_name('%s_l'%self.name)
 		if isinstance(self.right, Join):
 			self.right.set_name('%s_r'%self.name)
+
+	def contains_column(self, column):
+		return self.right.contains_column(column) or self.left.contains_column(column)
+
+	def link_column(self, joinable):
+		for column in self.right.columns:
+			if joinable.contains_column(column):
+				return column
+		for column in self.left.columns:
+			if joinable.contains_column(column):
+				return column
+		return None
 
 	def serialize(self):
 		return self.name
@@ -443,14 +478,24 @@ class Join(Node, ISelectable):
 		return ', '.join(selections_sql)
 
 	def serialize_source(self, values=list()):
-		connection = self.left.fk_to(self.right)
+		link_column, reverse = self.right.link_column(self.left), False
+		if not link_column:
+			link_column, reverse = self.left.link_column(self.right), True
+			if not link_column:
+				raise InvalidQuery('No link between %s and %s'%(self.left.name, self.right.name))
+		
+		#	The problem here is that we can't figure out what the fuck the name of each column is,
+		#	but we know the host.
+		link_column_name = '_'.join([self.left.name, link_column.name])
+		dest_column_name = '_'.join([self.right.name, link_column.name])
+
 		return ' '.join((
 			'( SELECT', self.serialize_selection_transform(), 'FROM',
-			self.left.serialize_source(values), 
-			'JOIN',
-			self.right.serialize_source(values),
-			'ON', link.serialize(values),
-			'WHERE', 'TRUE' if self.condition is None else self.condition.serialize(values),
+				self.left.serialize_source(values), 
+				'JOIN',
+				self.right.serialize_source(values),
+				'ON', link_column.serialize(), '=', link_column.type.target.serialize(),
+				'WHERE', 'TRUE' if self.condition is None else self.condition.serialize(values),
 			') AS', self.name
 		))
 
