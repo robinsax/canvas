@@ -37,21 +37,15 @@ class ISelectable:
 
 	def serialize_source(self, values=tuple()):
 		raise NotImplementedError()
-
+		
 class IJoinable:
 
-	def join(self, joinable, condition=None):
-		return Join(self, joinable, condition)
+	def join(self, other, condition=None):
+		return Join(self, other, condition)
 
-	def name_column(self, column):
+	def column_targets(self):
 		raise NotImplementedError()
 
-	def	link_column(self, joinable):
-		raise NotImplementedError()
-	
-	def has_column(self, column):
-		raise NotImplementedError()
-		
 class ObjectReference(Node, ISelectable):#todo as interface?
 
 	def __init__(self, object_type):
@@ -294,6 +288,10 @@ class Column(ObjectReference, MAllTypes):
 		self.table = None
 		self.constraints = list(constraints)
 
+	@property
+	def safe_name(self):
+		return '_'.join((self.table.name, self.name))
+
 	def bind(self, table):
 		self.table = table
 		self.type.bind(self)
@@ -327,10 +325,26 @@ class Column(ObjectReference, MAllTypes):
 	def min(self):
 		return Aggregation('MIN', self)
 
+class ColumnTarget:
+
+	def __init__(self, column, name):
+		self.column, self.name = column, name
+
+###
+
+class Join(IJoinable):
+
+	def __init__(self, left, right, condition):
+		self.left, self.right = left, right
+		self.condition = condition
+
+	def column_targets(self):
+		return (*self.left.column_targets, *self.right.column_targets)
+
 ###
 
 _tables = list()
-class Table(ObjectReference, IJoinable):
+class Table(ObjectReference):
 
 	def __init__(self, name, *contents):
 		super().__init__('TABLE')
@@ -414,93 +428,6 @@ def order_tables():
 
 ###
 
-class Join(Node, ISelectable, IJoinable):
-
-	def __init__(self, left, right, condition=None):
-		self.left, self.right = left, right
-		self.condition = condition
-		self.name, self.columns = None, [*left.columns, *right.columns]
-	
-		self.set_name('_t')
-
-	def set_name(self, name):
-		self.name = name
-
-		if isinstance(self.left, Join):
-			self.left.set_name('%s_l'%self.name)
-		if isinstance(self.right, Join):
-			self.right.set_name('%s_r'%self.name)
-
-	def contains_column(self, column):
-		return self.right.contains_column(column) or self.left.contains_column(column)
-
-	def link_column(self, joinable):
-		for column in self.right.columns:
-			if joinable.contains_column(column):
-				return column
-		for column in self.left.columns:
-			if joinable.contains_column(column):
-				return column
-		return None
-
-	def serialize(self):
-		return self.name
-
-	def serialize_selection(self):
-		selections_sql = list()
-
-		def write_one(source):
-			columns = source.columns
-			for column in columns:
-				selections_sql.append('.'.join([
-					self.name,  '_'.join([source.name, column.name])
-				]))
-		
-		write_one(self.left)
-		write_one(self.right)
-
-		return ', '.join(selections_sql)
-
-	def serialize_selection_transform(self):
-		selections_sql = list()
-
-		def write_one(source):
-			columns = source.columns
-			for column in columns:
-				selections_sql.append(' AS '.join([
-					'.'.join([source.name, column.name]),
-					'_'.join([source.name, column.name])
-				]))
-		
-		write_one(self.left)
-		write_one(self.right)
-
-		return ', '.join(selections_sql)
-
-	def serialize_source(self, values=list()):
-		link_column, reverse = self.right.link_column(self.left), False
-		if not link_column:
-			link_column, reverse = self.left.link_column(self.right), True
-			if not link_column:
-				raise InvalidQuery('No link between %s and %s'%(self.left.name, self.right.name))
-		
-		#	The problem here is that we can't figure out what the fuck the name of each column is,
-		#	but we know the host.
-		link_column_name = '_'.join([self.left.name, link_column.name])
-		dest_column_name = '_'.join([self.right.name, link_column.name])
-
-		return ' '.join((
-			'( SELECT', self.serialize_selection_transform(), 'FROM',
-				self.left.serialize_source(values), 
-				'JOIN',
-				self.right.serialize_source(values),
-				'ON', link_column.serialize(), '=', link_column.type.target.serialize(),
-				'WHERE', 'TRUE' if self.condition is None else self.condition.serialize(values),
-			') AS', self.name
-		))
-
-###
-
 def create(target):
 	sql = ' '.join((
 		'CREATE', target.object_type, 'IF NOT EXISTS',
@@ -542,7 +469,7 @@ for t in _tables:
 	for c in t.columns:
 		c.type.late_bind(c)
 
-print('\n----\n'.join([create(t)[0] for t in order_tables()]))
+print('\n'.join([create(t)[0] for t in order_tables()]))
 
 class TestModel:
 
@@ -559,6 +486,3 @@ m4 = TestModel(t4)
 
 print(select(m1.x.max(), m1.y < 2))
 print(select(m1.__table__, m1.x > 100))
-print(select(m1.__table__.join(m2.__table__, m1.x < 10), m1.x > 100)[0])
-
-print(select(m1.__table__.join(m2.__table__.join(m3.__table__)), m1.y < 2)[0])
