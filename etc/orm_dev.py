@@ -520,14 +520,18 @@ users = Table('users',
 )
 countries = Table('countries', 
 	Column('id', 'UUID', PrimaryKeyConstraint()),
-	Column('name', 'TEXT')
+	Column('name', 'TEXT'),
+	Column('planet_id', 'fk:planets.id')
 )
 orgs = Table('organizations',
 	Column('id', 'UUID', PrimaryKeyConstraint()),
 	Column('name', 'TEXT'),
 	Column('country_id', 'fk:countries.id')
 )
-
+planets = Table('planets',
+	Column('id', 'UUID', PrimaryKeyConstraint()),
+	Column('name', 'TEXT')
+)
 
 
 for t in _tables: #TODO nononononono
@@ -540,6 +544,5 @@ print(*[create(t)[0] for t in order_tables()])
 
 
 
-j = users.join(orgs)
-j2 = countries.join(j)
-print(select(j2, True)[0])
+j = planets.join(users.join(orgs).join(countries))
+print(select(j, True)[0])
