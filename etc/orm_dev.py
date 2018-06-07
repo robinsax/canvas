@@ -1,14 +1,4 @@
 #	TODO Critial: No latebind
-'''
-	def fk_to(self, table):
-		for column in self.columns:
-			typ = column.type
-			if isinstance(typ, ForeignKeyColumnType):
-				if not typ.target.table is table:
-					continue
-				return column
-		return None
-'''
 
 class CyclicSchema(Exception): pass
 
@@ -17,22 +7,21 @@ class InvalidForeignKey(Exception): pass
 class InvalidQuery(Exception): pass
 
 ###
+def nodeify(target):
+	if isinstance(target, Node):
+		return target
+	return Value(target)
 
 class Node:
 	literal_esq = False
 
-	def nodeify(self, target):
-		if isinstance(target, Node):
-			return target
-		return Value(target)
-
-	def serialize(self, values=list()):
+	def serialize(self, values=None):
 		raise NotImplementedError()
 
 
 class ISelectable:
 
-	def serialize_selection(self):
+	def serialize_selection(self, name_policy=None):
 		raise NotImplementedError()
 
 	def serialize_source(self, values=tuple()):
@@ -43,7 +32,10 @@ class IJoinable:
 	def join(self, other, condition=None):
 		return Join(self, other, condition)
 
-	def column_targets(self):
+	def name_column(self, column):
+		raise NotImplementedError()
+
+	def get_columns(self):
 		raise NotImplementedError()
 
 class ObjectReference(Node, ISelectable):#todo as interface?
@@ -136,7 +128,7 @@ class Value(Node, MAllTypes):
 class Comparison(Node, MFlag):
 
 	def __init__(self, left, operator, right):
-		self.left, self.right = self.nodeify(left), self.nodeify(right)
+		self.left, self.right = nodeify(left), nodeify(right)
 		self.operator = operator
 
 		self.is_grouped = self.left.literal_esq and self.right.literal_esq
@@ -160,7 +152,7 @@ class Aggregation(Node, MNumerical, ISelectable):
 	literal_esq = True
 
 	def __init__(self, producer, source):
-		self.producer, self.source = producer, self.nodeify(source)
+		self.producer, self.source = producer, nodeify(source)
 	
 	def serialize(self, values=list()):
 		return '%s(%s)'%(
@@ -168,7 +160,7 @@ class Aggregation(Node, MNumerical, ISelectable):
 			self.source.serialize(values)
 		)
 
-	def serialize_selection(self):
+	def serialize_selection(self, name_policy=None):
 		return self.serialize()
 
 	def serialize_source(self, values=list()):
@@ -254,7 +246,7 @@ class CheckConstraint(Constraint):
 
 	def describe_rule(self):
 		values = list()
-		sql = self.nodeify(self.condition(self.host)).serialize(values)
+		sql = nodeify(self.condition(self.host)).serialize(values)
 		return ' '.join(('CHECK', sql%tuple(values)))
 
 class PrimaryKeyConstraint(Constraint):
@@ -288,10 +280,6 @@ class Column(ObjectReference, MAllTypes):
 		self.table = None
 		self.constraints = list(constraints)
 
-	@property
-	def safe_name(self):
-		return '_'.join((self.table.name, self.name))
-
 	def bind(self, table):
 		self.table = table
 		self.type.bind(self)
@@ -304,7 +292,7 @@ class Column(ObjectReference, MAllTypes):
 		constraint.bind(self)
 
 	def serialize_selection(self):
-		return self.name
+		return '%s.%s'%(self.table.name, self.name)
 
 	def serialize_source(self, values=tuple()):
 		return self.table.name
@@ -325,6 +313,9 @@ class Column(ObjectReference, MAllTypes):
 	def min(self):
 		return Aggregation('MIN', self)
 
+	def __repr__(self):
+		return '<Column %s (of %s)>'%(self.name, self.table.name if self.table else 'none')
+
 class ColumnTarget:
 
 	def __init__(self, column, name):
@@ -332,19 +323,89 @@ class ColumnTarget:
 
 ###
 
-class Join(IJoinable):
+class Join(Node, ISelectable, IJoinable):
 
 	def __init__(self, left, right, condition):
 		self.left, self.right = left, right
 		self.condition = condition
+		self.link_column, self.is_rtl = self.find_link_column()
 
-	def column_targets(self):
-		return (*self.left.column_targets, *self.right.column_targets)
+		self.set_name('_t')
+
+	def set_name(self, name):
+		self.name = name
+
+		if isinstance(self.left, Join):
+			self.left.set_name('%s_l'%name)
+		if isinstance(self.right, Join):
+			self.right.set_name('%s_r'%name)
+
+	def serialize(self, values=None):
+		return self.name
+
+	def serialize_selection(self, name_policy=None):
+		def referenced(host, column):
+			return '%s.%s%s'%(
+				self.name, self.name_column(column), 
+				(' AS %s'%name_policy(column) if name_policy else str())
+			)
+		
+		return ', '.join((
+			*(referenced(self.right, column) for column in self.right.get_columns()),
+			*(referenced(self.left, column) for column in self.left.get_columns())
+		))
+
+	def serialize_source(self, values=list()):
+		from_host, to_host = (self.right, self.left) if self.is_rtl else (self.left, self.right)
+		join_condition = ' '.join((
+			#	TODO: name_column should take with_self flag
+			'%s.%s'%(from_host.name, from_host.name_column(self.link_column)), '=', 
+			'%s.%s'%(to_host.name, to_host.name_column(self.link_column.type.target))
+		))
+		name_policy = lambda c: self.name_column(c)
+
+		return ' '.join((
+			'( SELECT', 
+				self.left.serialize_selection(name_policy), ',', 
+				self.right.serialize_selection(name_policy),
+			'FROM', 
+				self.left.serialize_source(values), 'JOIN',
+				self.right.serialize_source(values),
+			'ON', join_condition, ') AS', self.name
+		))
+
+	def find_link_column(self):
+		left_columns, right_columns = self.left.get_columns(), self.right.get_columns()
+		for column in left_columns:
+			typ = column.type
+			if not isinstance(typ, ForeignKeyColumnType):
+				continue
+			for right_column in right_columns:
+				if right_column is typ.target:
+					return column, False				
+
+		for column in right_columns:
+			typ = column.type
+			if not isinstance(typ, ForeignKeyColumnType):
+				continue
+			for left_column in left_columns:
+				if left_column is typ.target:
+					return column, True	
+
+		raise InvalidQuery('No link between %s join %s'%(
+			self.left.name, self.right.name
+		))
+
+	def name_column(self, column):
+		return '_%s_%s'%(column.table.name, column.name)
+
+	def get_columns(self):
+		return (*self.left.get_columns(), *self.right.get_columns())
 
 ###
 
 _tables = list()
-class Table(ObjectReference):
+class Table(ObjectReference, IJoinable):
 
 	def __init__(self, name, *contents):
 		super().__init__('TABLE')
@@ -364,32 +425,27 @@ class Table(ObjectReference):
 	
 		_tables.append(self)
 
+	def get_columns(self):
+		return self.columns
+
+	def name_column(self, column):
+		return column.name
+	
 	def __hash__(self):
 		return hash(self.name)
 
 	def __eq__(self, other):
 		return self.name == other.name
 
-	def contains_column(self, column):
-		for check in self.columns:
-			if check is column:
-				return True
-		return False
-
-	def link_column(self, joinable):
-		for column in self.columns:
-			if not isinstance(column.type, ForeignKeyColumnType):
-				continue
-			typ = column.type
-			if joinable.contains_column(typ.target):
-				return column
-		return None
-
 	def serialize(self, values=tuple()):
 		return self.name
 
-	def serialize_selection(self):
-		return ', '.join((column.serialize() for column in self.columns))
+	def serialize_selection(self, name_policy=None):
+		return ', '.join(
+			((
+				'%s%s'%(column.serialize(), ' AS %s'%name_policy(column) if name_policy else str())
+			) for column in self.columns)
+		)
 
 	def serialize_source(self, values=tuple()):
 		return self.name
@@ -440,49 +496,50 @@ def select(target, condition):
 	values = list()
 	sql = ' '.join([
 		'SELECT', target.serialize_selection(),
-		'\n\tFROM', target.serialize_source(values),
-		'\n\tWHERE', condition.serialize(values),
+		'FROM', target.serialize_source(values),
+		'WHERE', nodeify(condition).serialize(values),
 		';'
 	])
 
 	return sql, values
+##
 
-t3 = Table('test3', 
-	Column('b', 'TIMESTAMP'),
-	Column('a_ref', 'fk:test2.a')
+
+
+
+
+
+
+
+
+####
+users = Table('users',
+	Column('id', 'UUID', PrimaryKeyConstraint()),
+	Column('name', 'TEXT', CheckConstraint(lambda x: x < 10)),
+	Column('organization_id', 'fk:organizations.id')
 )
-t4 = Table('test4', 
-	Column('b_ref', 'fk:test3.b')
+countries = Table('countries', 
+	Column('id', 'UUID', PrimaryKeyConstraint()),
+	Column('name', 'TEXT')
 )
-t2 = Table('test2',
-	Column('a', 'THING'),
-	Column('x_ref', 'fk:test.x'),	
-	CheckConstraint(lambda t: True, 'always')
-)
-t = Table('test',
-	Column('x', 'INT', CheckConstraint(lambda x: x < 10)),
-	Column('y', 'SERIAL', PrimaryKeyConstraint()),	
-	CheckConstraint(lambda t: False, 'never')
+orgs = Table('organizations',
+	Column('id', 'UUID', PrimaryKeyConstraint()),
+	Column('name', 'TEXT'),
+	Column('country_id', 'fk:countries.id')
 )
 
-for t in _tables:
+
+
+for t in _tables: #TODO nononononono
 	for c in t.columns:
 		c.type.late_bind(c)
 
-print('\n'.join([create(t)[0] for t in order_tables()]))
+print(*[create(t)[0] for t in order_tables()])
 
-class TestModel:
 
-	def __init__(self, table):
-		self.__table__ = table
 
-		for column in table.columns:
-			setattr(self, column.name, column)
 
-m1 = TestModel(t)
-m2 = TestModel(t2)
-m3 = TestModel(t3)
-m4 = TestModel(t4)
 
-print(select(m1.x.max(), m1.y < 2))
-print(select(m1.__table__, m1.x > 100))
+j = users.join(orgs)
+j2 = countries.join(j)
+print(select(j2, True)[0])
