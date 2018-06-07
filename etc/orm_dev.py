@@ -1,6 +1,6 @@
 #	TODO Critial: No latebind
 
-class CyclicSchema(Exception): pass
+class InvalidSchema(Exception): pass
 
 class InvalidForeignKey(Exception): pass
 
@@ -12,12 +12,21 @@ def nodeify(target):
 		return target
 	return Value(target)
 
+def deproxy(target):
+	if isinstance(target, object.__class__) and issubclass(target, Model):
+		return target.__table__
+	return target
+
 class Node:
 	literal_esq = False
 
 	def serialize(self, values=None):
 		raise NotImplementedError()
 
+class Statement:
+
+	def write(self):
+		raise NotImplementedError()
 
 class ISelectable:
 
@@ -133,12 +142,13 @@ class Comparison(Node, MFlag):
 
 		self.is_grouped = self.left.literal_esq and self.right.literal_esq
 	
-	def serialize(self, values=list()):
-		sql = ' '.join([
-			self.left.serialize(values),
-			self.operator,
-			self.right.serialize(values)
-		])
+	def serialize(self, values=list(), name_policy=None):
+		if name_policy:
+			left, right = name_policy(self.left, values), name_policy(self.right, values)
+		else:
+			left, right = self.left.serialize(values), self.right.serialize(values)
+
+		sql = ' '.join((left, self.operator, right))
 		sql = 'NOT %s'%sql if self.inverted else sql
 		sql = '(%s)'%sql if self.is_grouped else sql
 		return sql
@@ -170,8 +180,8 @@ class Aggregation(Node, MNumerical, ISelectable):
 
 class ColumnType:
 
-	def __init__(self, typ):
-		self.type = typ
+	def __init__(self, lazy):
+		self.lazy = lazy
 
 	def bind(self, host):
 		pass
@@ -182,9 +192,17 @@ class ColumnType:
 	def describe(self):
 		return self.type
 
+class BasicColumnType(ColumnType): # singleton
+
+	def __init__(self, typ, input_type='text', default_policy=None, lazy=False):
+		super().__init__(lazy)
+		self.type, self.input_type = typ, input_type
+		self.default_policy = default_policy
+
 class ForeignKeyColumnType(ColumnType):
 
 	def __init__(self, target_ref):
+		super().__init__(False)
 		self.target_ref = target_ref
 		self.target = None
 
@@ -206,11 +224,29 @@ class ForeignKeyColumnType(ColumnType):
 	def describe(self):
 		return self.target.type.describe()
 
-#	TODO
+_type_map = {
+	'int(?:eger)*': BasicColumnType('INTEGER', 'number'),
+	'real|float': BasicColumnType('REAL'),
+	'serial': BasicColumnType('SERIAL'),
+	'text': BasicColumnType('TEXT'),
+	'longtext': BasicColumnType('TEXT', 'textarea'),
+	'bool(?:ean)*':	BasicColumnType('BOOLEAN', 'checkbox'),
+	'uuid': BasicColumnType('CHAR(32)', 'text', lambda: uuid.uuid4()),
+	'pw|pass(?:word)*': BasicColumnType('TEXT', 'password'),
+	'date$': BasicColumnType('DATE', 'date'),
+	'time$': BasicColumnType('TIME', 'time'),
+	'dt|datetime': BasicColumnType('TIMESTAMP', 'datetime-local'),
+	'json': BasicColumnType('JSON', lazy=True)
+}
+
+import re
 def resolve_type(typ):
 	if typ.startswith('fk:'):
 		return ForeignKeyColumnType(typ[3:])
-	return ColumnType(typ)
+	for regex, checked_typ in _type_map.items():
+		if re.match(regex, typ):
+			return checked_typ
+	raise InvalidSchema('Invalid type definition %s'%typ)
 
 ###
 
@@ -275,8 +311,8 @@ class Column(ObjectReference, MAllTypes):
 	object_type = 'COLUMN'
 	literal_esq = True
 
-	def __init__(self, name, typ, *constraints):
-		self.name, self.type = name, resolve_type(typ)
+	def __init__(self, typ, *constraints):
+		self.name, self.type = None, resolve_type(typ)
 		self.table = None
 		self.constraints = list(constraints)
 
@@ -316,17 +352,12 @@ class Column(ObjectReference, MAllTypes):
 	def __repr__(self):
 		return '<Column %s (of %s)>'%(self.name, self.table.name if self.table else 'none')
 
-class ColumnTarget:
-
-	def __init__(self, column, name):
-		self.column, self.name = column, name
-
 ###
 
 class Join(Node, ISelectable, IJoinable):
 
 	def __init__(self, left, right, condition):
-		self.left, self.right = left, right
+		self.left, self.right = deproxy(left), deproxy(right)
 		self.condition = condition
 		self.link_column, self.is_rtl = self.find_link_column()
 
@@ -362,16 +393,26 @@ class Join(Node, ISelectable, IJoinable):
 			'%s.%s'%(from_host.name, from_host.name_column(self.link_column)), '=', 
 			'%s.%s'%(to_host.name, to_host.name_column(self.link_column.type.target))
 		))
-		name_policy = lambda c: self.name_column(c)
+
+		def name_policy(target, values=None):
+			if isinstance(target, Column):
+				return self.name_column(target)
+			else:
+				return target.serialize(values)
 
 		return ' '.join((
-			'( SELECT', 
-				self.left.serialize_selection(name_policy), ',', 
-				self.right.serialize_selection(name_policy),
-			'FROM', 
-				self.left.serialize_source(values), 'JOIN',
-				self.right.serialize_source(values),
-			'ON', join_condition, ') AS', self.name
+			'(',
+				'SELECT', 
+					self.left.serialize_selection(name_policy), ',', 
+					self.right.serialize_selection(name_policy),
+				'FROM', 
+					self.left.serialize_source(values), 'JOIN',
+					self.right.serialize_source(values),
+				'ON', join_condition, 
+				'WHERE', (
+					self.condition.serialize(values, name_policy=name_policy) if self.condition else 'TRUE'
+				),
+			') AS', self.name
 		))
 
 	def find_link_column(self):
@@ -407,16 +448,19 @@ class Join(Node, ISelectable, IJoinable):
 _tables = list()
 class Table(ObjectReference, IJoinable):
 
-	def __init__(self, name, *contents):
+	def __init__(self, name, contents):
 		super().__init__('TABLE')
 		self.name = name
-		self.constraints, self.columns = list(), list()
+		#	TODO: COLUMNs as ordereddict
+		self.column_names, self.constraints, self.columns = list(), list(), list()
 
-		for item in contents:
+		for name, item in contents.items():
+			item.name = name
 			if isinstance(item, Constraint):
 				self.constraints.append(item)
 			else:
 				self.columns.append(item)
+				self.column_names.append(item)
 
 		for item in self.columns:
 			item.bind(self)
@@ -425,8 +469,14 @@ class Table(ObjectReference, IJoinable):
 	
 		_tables.append(self)
 
+	def bind(self, model_cls):
+		model_cls.__table__ = self
+
+		for column in self.columns:
+			setattr(model_cls, column.name, column)
+
 	def get_columns(self):
-		return self.columns
+		return [column for column in self.columns if not column.type.lazy]
 
 	def name_column(self, column):
 		return column.name
@@ -444,7 +494,7 @@ class Table(ObjectReference, IJoinable):
 		return ', '.join(
 			((
 				'%s%s'%(column.serialize(), ' AS %s'%name_policy(column) if name_policy else str())
-			) for column in self.columns)
+			) for column in self.get_columns())
 		)
 
 	def serialize_source(self, values=tuple()):
@@ -453,9 +503,9 @@ class Table(ObjectReference, IJoinable):
 	def describe(self):
 		contents = (*self.columns, *self.constraints)
 		return ''.join((
-			self.name, ' (\n\t',
-			',\n\t'.join((item.describe() for item in contents)),
-			'\n)'
+			self.name, ' (',
+			', '.join((item.describe() for item in contents)),
+			')'
 		))
 
 def order_tables():
@@ -466,7 +516,7 @@ def order_tables():
 		if table in marked:
 			return
 		if table in tmp_marked:
-			raise CyclicSchema()
+			raise InvalidSchema('Cyclic schema involving %s'%table.name)
 		tmp_marked[table] = True
 		
 		for column in table.columns:
@@ -484,65 +534,125 @@ def order_tables():
 
 ###
 
-def create(target):
-	sql = ' '.join((
-		'CREATE', target.object_type, 'IF NOT EXISTS',
-		target.describe(),
-		';'
-	))
-	return sql, tuple()
+class CreateStatement(Statement):
 
-def select(target, condition):
-	values = list()
-	sql = ' '.join([
-		'SELECT', target.serialize_selection(),
-		'FROM', target.serialize_source(values),
-		'WHERE', nodeify(condition).serialize(values),
-		';'
-	])
+	def __init__(self, target):
+		self.target = deproxy(target)
 
-	return sql, values
+	def write(self):
+		return ' '.join((
+			'CREATE', self.target.object_type, 'IF NOT EXISTS',
+				self.target.describe()
+		)), tuple()
+
+class SelectStatement(Statement):
+
+	def __init__(self, target, condition=True):
+		self.target = deproxy(target)
+		self.condition = nodeify(condition)
+
+	def write(self):
+		values = list()
+		sql = ' '.join((
+			'SELECT', self.target.serialize_selection(),
+			'FROM', self.target.serialize_source(values),
+			'WHERE', nodeify(self.condition).serialize(values)
+		))
+		return sql, values
+
 ##
 
 
-
-
-
-
-
+def exec_statement(statement):
+	sql, values = statement.write()
+	print(sql + ';')
+	print(values)
 
 
 ####
-users = Table('users',
-	Column('id', 'UUID', PrimaryKeyConstraint()),
-	Column('name', 'TEXT', CheckConstraint(lambda x: x < 10)),
-	Column('organization_id', 'fk:organizations.id')
-)
-countries = Table('countries', 
-	Column('id', 'UUID', PrimaryKeyConstraint()),
-	Column('name', 'TEXT'),
-	Column('planet_id', 'fk:planets.id')
-)
-orgs = Table('organizations',
-	Column('id', 'UUID', PrimaryKeyConstraint()),
-	Column('name', 'TEXT'),
-	Column('country_id', 'fk:countries.id')
-)
-planets = Table('planets',
-	Column('id', 'UUID', PrimaryKeyConstraint()),
-	Column('name', 'TEXT')
-)
+
+class Model:
+	__table__ = None
+	__session__ = None
+	__dirty__ = dict()
+
+	def __loaded__(self, session):
+		self.__dirty__ = dict()
+		self.__session__ = session
+
+	def __getattribute__(self, key):
+		cls = super().__getattribute__('__class__')
+		if super().__getattribute__('__session__') and key in cls.__table__.column_names:
+			exec_statement(SelectStatement(getattr(cls, key), getattr(cls, 'id') == 1))
+			return 'TODO'
+
+		return super().__getattribute__(key)
+
+	def __setattr__(self, key, value):
+		if key in self.__table__.column_names: #todo no
+			if key not in self.__dirty__:
+				self.__dirty__[key] = value
+
+		return super().__setattr__(key, value)
+
+	@classmethod
+	def join(cls, other, condition=None):
+		return cls.__table__.join(other, condition)
+	
+def model(table_name, contents):
+	def model_inner(cls):
+		table = Table(table_name, contents)
+		class _Model(cls, Model): pass
+		
+		table.bind(_Model)
+
+		return _Model
+	return model_inner
+
+####
+
+@model('users', {
+	'id': Column('serial', PrimaryKeyConstraint()),
+	'name': Column('text', CheckConstraint(lambda x: x < 10)),
+	'organization_id': Column('fk:organizations.id')
+})
+class User: pass
+
+@model('countries', {
+	'id': Column('serial', PrimaryKeyConstraint()),
+	'name': Column('text'),
+	'misc_data': Column('json'),
+	'planet_id': Column('fk:planets.id')
+})
+class Country: pass
+
+@model('organizations', {
+	'id': Column('serial', PrimaryKeyConstraint()),
+	'name': Column('text'),
+	'country_id': Column('fk:countries.id')
+})
+class Organization: pass
+
+@model('planets', {
+	'id': Column('serial', PrimaryKeyConstraint()),
+	'name': Column('text')
+})
+class Planet: pass
 
 
 for t in _tables: #TODO nononononono
 	for c in t.columns:
 		c.type.late_bind(c)
 
-print(*[create(t)[0] for t in order_tables()])
+for t in order_tables():
+	exec_statement(CreateStatement(t))
 
 
+#j = planets.join(users.join(orgs).join(countries))
+j = User.join(Organization, Organization.name == 'My Org.').join(Country)
 
+exec_statement(SelectStatement(j))
 
-
-j = planets.join(users.join(orgs).join(countries))
-print(select(j, True)[0])
+c = Country()
+c.__loaded__(True)
+c.misc_data
