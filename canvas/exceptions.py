@@ -5,6 +5,15 @@ Exception definitions.
 
 from .namespace import export, export_ext
 
+### model
+@export
+class InvalidSchema(Exception): pass
+
+@export
+class InvalidQuery(Exception): pass
+
+####
+
 @export 
 class ConfigurationError(Exception): pass
 
@@ -22,18 +31,6 @@ class TemplateNotFound(Exception): pass
 
 @export
 class TemplateOverlayError(Exception): pass
-
-@export
-class InvalidSchema(Exception): pass
-
-@export
-class InvalidConstraint(Exception): pass
-
-@export
-class InvalidQuery(Exception): pass
-
-@export
-class UnadaptedType(Exception): pass
 
 @export
 class IllegalEndpointRoute(Exception): pass
