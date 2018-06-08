@@ -54,8 +54,19 @@ def model(table_name, contents):
 	def model_inner(cls):
 		#	Patch the type to extend Model.
 		_Model = type(cls.__name__, (cls, Model), dict())
-		#	Create and bind a table.
-		Table(table_name, contents).bind(_Model)
+		#	Create the table.
+		table = Table(table_name, contents)
+
+		#	Override __init__ to assign default or sentinel values.
+		inner_init = _Model.__init__
+		def init_wrap(self, *args, **kwargs):
+			for column in table.columns.values():
+				column.apply_to_model(self)
+			inner_init(self, *args, **kwargs)
+		_Model.__init__ = init_wrap
+
+		#	Bind the table.
+		table.bind(_Model)
 
 		return _Model
 	return model_inner

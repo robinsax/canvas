@@ -91,9 +91,12 @@ class IJoinable:
 		'''Create a join of `other` onto this joinable.'''
 		return Join(self, other, condition, attr)
 
-	def load_row(self, row):
-		'''TODO'''
-		pass
+	def get_loader(self):
+		'''
+		Create or return a `Loader` for with which rows can be loaded from the
+		selection of this joinable.
+		'''
+		raise NotImplementedError()
 
 	def name_column(self, column):
 		'''
@@ -104,6 +107,17 @@ class IJoinable:
 
 	def get_columns(self):
 		'''Return a list containing all constituent columns.'''
+		raise NotImplementedError()
+
+class ILoader:
+	'''
+	`ILoader`s are stateful objects that load models from rows selected with 
+	`IJoinable`s. Packaged here despite being not strictly an abstract syntax 
+	tree node. TODO: Review previous.
+	'''
+
+	def load_next(self, row_segment, session):
+		'''Return a `row_segment` loaded onto `model_cls`.'''
 		raise NotImplementedError()
 
 class MFlag:

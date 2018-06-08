@@ -17,6 +17,7 @@ from ...exceptions import InvalidSchema
 from .ast import ObjectReference, ILiteral, MAllTypes
 from .constraints import ForeignKeyConstraint
 from .tables import Table
+from . import _sentinel
 
 #	Define the default type map.
 _type_map = {
@@ -35,8 +36,12 @@ _type_map = {
 	'json':				BasicColumnType('JSON', lazy=True)
 }
 
+#	Define a meta-null for identifying whether a column default has been 
+#	specified.
+_meta_null = object()
+
 class ColumnType:
-	'''The abstract root column type class.'''
+	'''The root column type class.'''
 
 	def __init__(self, lazy):
 		'''::lazy Whether this column type is lazy-loaded.'''
@@ -69,6 +74,12 @@ class ColumnType:
 		'''Return an SQL serialization of this column type.'''
 		raise NotImplementedError()
 	
+	def get_default(self):
+		'''
+		Return the default value for this column type, or the sentinel value.
+		'''
+		return _sentinel
+
 class BasicColumnType(ColumnType):
 	'''
 	The trivial case of a column type. Instances are assumed to be singleton.
@@ -88,6 +99,10 @@ class BasicColumnType(ColumnType):
 
 	def describe(self):
 		return self.type
+
+	def get_default(self):
+		'''Return the result of `default_policy` or the sentinel value.'''
+		return self.default_policy() if self.default_policy else _sentinel
 
 class ForeignKeyColumnType(ColumnType):
 	'''
@@ -135,7 +150,7 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 	of `Aggregation`s.
 	'''
 
-	def __init__(self, typ, *constraints):
+	def __init__(self, typ, *constraints, default=_meta_null):
 		'''
 		Create a new column. This should generally be done while defining the
 		attribute map of a model within it's decorator.
@@ -145,7 +160,12 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 		super().__init__('COLUMN')
 		self.name, self.type = None, resolve_type(typ)
 		self.constraints = list(constraints)
+		self.default = default
 		self.table = None
+
+	def value_on(self, model):
+		'''Return the value on this column on `model`.'''
+		return getattr(model, self.name)
 
 	def bind(self, table):
 		'''Perform binding for this column given it's `Table`.'''
@@ -160,6 +180,14 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 		'''Add and bind a constraint to this column.'''
 		self.constraints.append(constraint)
 		constraint.bind(self)
+
+	def apply_to_model(self, model):
+		'''
+		Apply a default value or the sentinel value to the attribute for this 
+		column of `model`.
+		'''
+		default = self.type.get_default() self.default is _meta_null else self.default
+		setattr(model, self.name, default)
 
 	def serialize(self, values=None):
 		'''Serialize a reference to this column.'''

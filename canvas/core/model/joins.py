@@ -3,7 +3,10 @@
 The `Join` AST node and API definition.
 '''
 
-class Join(Node, ISelectable, IJoinable):
+from .ast import ISelectable, IJoinable, ILoader, deproxy
+from .columns import Column, ForeignKeyColumnType
+
+class Join(Node, ISelectable, IJoinable, ILoader):
 	'''
 	`Join`s are selectable, joinable AST nodes. They represent the join of one
 	or more destination joinables (tables or subsequent joins) onto a source

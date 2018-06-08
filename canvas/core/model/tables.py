@@ -6,7 +6,7 @@ The `Table` object definition.
 from collections import OrderedDict
 
 from ...exceptions import InvalidSchema
-from .ast import ObjectReference, IJoinable
+from .ast import ObjectReference, ILoader, IJoinable
 from .constraints import PrimaryKeyConstraint
 
 #	Define the global table storage list, used for issuing creation.
@@ -44,9 +44,12 @@ class Table(ObjectReference, IJoinable):
 							raise InvalidSchema('Multiple primary keys for %s'%self.name)
 						self.primary_key = item
 				self.columns[name] = item
-		#	Assert a primary key was found.
+		#	Assert one was found.
 		if not self.primary_key:
 			raise InvalidSchema('No primary key for %s'%self.name)
+		#	Ensure the primary key is the first entry within the column map.
+		#	This invariant supports the Session class's functionality.
+		self.columns.move_to_end(self.primary_key.name, False)
 
 		#	Bind constituents.
 		for item in self.columns.values():
@@ -145,3 +148,12 @@ class Table(ObjectReference, IJoinable):
 			', '.join((item.describe() for item in contents)),
 			')'
 		))
+
+class SimpleModelLoader(ILoader):
+	'''The trivial model loader for loading models from a table.'''
+
+	def __init__(self, table):
+		self.table = table
+
+	def load_next(self, row_segment, session):
+		pass
