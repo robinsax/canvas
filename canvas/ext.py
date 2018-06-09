@@ -3,4 +3,5 @@
 A namespace module providing access to lower-level canvas functionality.
 '''
 
-pass
+from .dictionaries import AttributedDict, RequestParameters, Configuration
+from .json_io import json_deserializer, json_serializer

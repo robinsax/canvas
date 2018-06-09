@@ -136,7 +136,7 @@ def serve_controller(request):
 		verb=verb,
 		url=request.url,
 		__controller__=controller
-	})
+	)
 	RequestContext.put(context)
 
 	def cleanup(response=None):

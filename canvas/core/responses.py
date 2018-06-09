@@ -6,7 +6,7 @@ Response generation methods.
 from ..namespace import export
 from .json_io import serialize_json
 from .request_context import RequestContext
-from .templates import render_template
+from .html import Page
 
 @export
 def create_json(status, data=None, code=200, headers=None):
@@ -37,6 +37,6 @@ def create_redirect(target_url, code=302, headers=dict()):
 		return None, code, headers, None
 
 @export
-def create_page(template_path, params=dict(), code=200, headers=dict()):
-	rendered_template = render_template(template_path, params)
-	return rendered_template, code, headers, 'text/html'
+def create_page(title, *assets, description=None, code=200, headers=None):
+	page = Page(RequestContent.get().route, title, assets=assets)
+	return page.render(), code, headers, 'text/html'

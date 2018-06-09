@@ -1,26 +1,34 @@
 #	coding utf-8
 '''
-canvas is a full-stack web application framework designed to make modern web
-application development easier.
+canvas is a full-stack web application framework for building API-driven,
+reactive web applications.
 '''
 
-__version__ = '0.2'
+#	Define the version.
+__version__ = '0.3'
 
 import os
 import sys
 import inspect
 
+#	Locate the current directory.
 __home__ = os.path.abspath(
 	os.path.dirname(
 		os.path.dirname(inspect.getfile(sys.modules[__name__]))
 	)
 )
+#	Define the supported verb set.
 __verbs__ = ['get', 'post', 'put', 'patch', 'delete', 'options']
 
+#	Check whether requirements have been installed.
+__installed__ = True
 try:
-	#	These imports will fail if dependencies haven't been installed.
-	#	TODO: Too broad.
-	from . import core, tests, plugins
-except ImportError as ex: pass
+	import werkzeug, psycopg2
+except ImportError:
+	__installed__ = False
 
+if __installed__:
+	#	Fully initialize canvas.
+	from . import core, tests, plugins
+#	Initialize the loader API for launch.
 from . import launchers

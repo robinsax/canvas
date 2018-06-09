@@ -19,8 +19,10 @@ class Comparator(Enum):
 	MATCHES 			= '~'
 	MATCHES_I 			= '~*'
 
-def nodeify(target):
+def nodeify(target, permit_strings=False):
 	'''Return `target` as an AST node.'''
+	if permit_strings and isinstance(target, str):
+		return target
 	if isinstance(target, Node):
 		return target
 	return Value(target)
@@ -212,9 +214,12 @@ class MAllTypes(MFlag, MNumerical, MString):
 class Literal(Node):
 	'''A node containing a literal SQL string.'''
 
-	def __init__(self, *parts):
-		'''::parts The parts of this SQL string to join with ' '.'''
-		self.sql = ' '.join(parts)
+	def __init__(self, *parts, joiner=' '):
+		'''
+		::parts The parts of this SQL string to join.
+		::joiner The string with which to join `parts`.
+		'''
+		self.sql = joiner.join([nodify(p, True).serialize() for p in parts])
 	
 	def serialize(self, values=None):
 		'''Return the SQL represented by this literal node.'''

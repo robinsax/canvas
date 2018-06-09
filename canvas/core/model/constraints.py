@@ -12,6 +12,7 @@ class Constraint(ObjectReference):
 	Whether a `Constraint` is table and/xor column level constraint is subclass
 	specific.
 	'''
+	instances = dict()
 
 	def __init__(self, postfix, error_message=None):
 		'''
@@ -25,8 +26,13 @@ class Constraint(ObjectReference):
 		self.postfix, self.error_message = postfix, error_message
 		self.host = self.name = None
 
+	@classmethod
+	def get(cls, name):
+		'''Retrieve a constraint by name.'''
+		return Constraint.instances.get(name)
+
 	def bind(self, host):
-		'''Bind this constraint to it's host.'''
+		'''Bind this constraint to its host.'''
 		self.host = host
 
 		if not self.name:
@@ -34,6 +40,9 @@ class Constraint(ObjectReference):
 			self.name = '_'.join((
 				host.serialize().replace('.', '_'), self.postfix
 			))
+
+		#	Register self.
+		Constraint.instances[self.name] = self
 
 	def precheck_violation(self, model, value):
 		'''

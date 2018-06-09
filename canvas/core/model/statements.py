@@ -3,6 +3,8 @@
 Top-level statement objects.
 '''
 
+from .ast import deproxy, nodeify
+
 class Statement:
 	'''The top-level AST node type, which must facilitate value collection.'''
 
@@ -11,7 +13,7 @@ class Statement:
 		raise NotImplementedError()
 
 class CreateStatement(Statement):
-	'''A lazy SQL CREATE statement.'''
+	'''A lazy SQL `CREATE` statement.'''
 
 	def __init__(self, target):
 		self.target = deproxy(target)
@@ -23,19 +25,59 @@ class CreateStatement(Statement):
 		)), tuple()
 
 class SelectStatement(Statement):
-	'''An SQL SELECT statement.'''
+	'''An SQL `SELECT` statement.'''
 
-	def __init__(self, target, condition=True):
-		self.target = deproxy(target)
-		self.condition = nodeify(condition)
+	def __init__(self, target, condition=True, modifiers=tuple(), distinct=False):
+		self.target, self.condition = deproxy(target), nodeify(condition)
+		self.modifiers = modifiers
+		self.distinct = distinct
 
 	def write(self):
 		values = list()
 		sql = ' '.join((
 			'SELECT', self.target.serialize_selection(),
 			'FROM', self.target.serialize_source(values),
-			'WHERE', nodeify(self.condition).serialize(values)
+			'WHERE', nodeify(self.condition).serialize(values),
+			*(modifier.serialize(values) for modifier in modifiers)
 		))
 		return sql, values
+
+class InsertStatement(Statement):
+	'''An SQL `INSERT` statement.'''
+
+	def __init__(self, target, values):
+		'''
+		::target The target object reference.
+		::values A list of value, object-reference-esq tuples.
+		'''
+		self.target = deproxy(target)
+		self.values = [(nodeify(value[0]), value[1]) for value in values]
+
+	def write(self):
+		values = list()
+		sql = ' '.join((
+			'INSERT INTO', target.serialize(values), '(', 
+				*(value[1].serialize(values) for value in self.values), 
+			') VALUES (', 
+				*(value[0].serialize(values) for value in self.values), 
+			')'
+		))
+		return sql, values
+
+class DeleteStatement(Statement):
+	'''An SQL 'DELETE FROM' statement.'''
+
+	def __init__(self, host, condition, cascade):
+		self.host, self.condition = deproxy(host), condition
+		self.cascade = cascade
+
+	#	TODO: Handle cascade options.
+	def write(self):
+		values = list()
+		sql = ' '.join((
+			'DELETE FROM', self.host.serialize(values),
+			'WHERE', self.condition.serialize(values)
+		))
+		return values, sql
 
 class UpdateStatement(Statement): pass

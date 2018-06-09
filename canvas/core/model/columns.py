@@ -14,27 +14,10 @@ import re
 import uuid
 
 from ...exceptions import InvalidSchema
-from .ast import ObjectReference, ILiteral, MAllTypes
+from .ast import Literal, ObjectReference, ILiteral, MAllTypes
 from .constraints import ForeignKeyConstraint
 from .tables import Table
 from . import _sentinel
-
-#	Define the default type map.
-_type_map = {
-	'int(?:eger)*': 	BasicColumnType('INTEGER', 'number'),
-	'real|float': 		BasicColumnType('REAL'),
-	'serial': 			BasicColumnType('SERIAL'),
-	'text': 			BasicColumnType('TEXT'),
-	'longtext': 		BasicColumnType('TEXT', 'textarea'),
-	'bool(?:ean)*':		BasicColumnType('BOOLEAN', 'checkbox'),
-	'uuid': 			BasicColumnType('CHAR(32)', 'text', 
-							default_policy=uuid.uuid4),
-	'pass(?:word)*':	BasicColumnType('TEXT', 'password'),
-	'date$': 			BasicColumnType('DATE', 'date'),
-	'time$': 			BasicColumnType('TIME', 'time'),
-	'dt|datetime':		BasicColumnType('TIMESTAMP', 'datetime-local'),
-	'json':				BasicColumnType('JSON', lazy=True)
-}
 
 #	Define a meta-null for identifying whether a column default has been 
 #	specified.
@@ -143,6 +126,23 @@ class ForeignKeyColumnType(ColumnType):
 		'''Return the SQL type of this column (from the target column).'''
 		return self.target.type.describe()
 
+#	Define the default type map.
+_type_map = {
+	'int(?:eger)*': 	BasicColumnType('INTEGER', 'number'),
+	'real|float': 		BasicColumnType('REAL'),
+	'serial': 			BasicColumnType('SERIAL'),
+	'text': 			BasicColumnType('TEXT'),
+	'longtext': 		BasicColumnType('TEXT', 'textarea'),
+	'bool(?:ean)*':		BasicColumnType('BOOLEAN', 'checkbox'),
+	'uuid': 			BasicColumnType('CHAR(32)', 'text', 
+							default_policy=uuid.uuid4),
+	'pass(?:word)*':	BasicColumnType('TEXT', 'password'),
+	'date$': 			BasicColumnType('DATE', 'date'),
+	'time$': 			BasicColumnType('TIME', 'time'),
+	'dt|datetime':		BasicColumnType('TIMESTAMP', 'datetime-local'),
+	'json':				BasicColumnType('JSON', lazy=True)
+}
+
 class Column(ObjectReference, ILiteral, MAllTypes):
 	'''
 	`Column`s are comparable SQL `Node`s that maintain a type and a set of 
@@ -174,7 +174,15 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 		#	Bind the type and constraints.
 		self.type.pre_bind(self)
 		for constraint in self.constraints:
-			constraint.bind(self)		
+			constraint.bind(self)
+
+	@classmethod
+	def asc(self):
+		return Literal(self.serialize(), 'ASC')
+
+	@classmethod
+	def desc(self):
+		return Literal(self.serialize(), 'DESC')
 
 	def add_constraint(self, constraint):
 		'''Add and bind a constraint to this column.'''
@@ -186,7 +194,10 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 		Apply a default value or the sentinel value to the attribute for this 
 		column of `model`.
 		'''
-		default = self.type.get_default() self.default is _meta_null else self.default
+		if self.default is _meta_null:
+			default = self.type.get_default()
+		else:
+			default = self.default
 		setattr(model, self.name, default)
 
 	def serialize(self, values=None):

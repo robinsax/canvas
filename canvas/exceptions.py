@@ -1,130 +1,179 @@
 #	coding utf-8
 '''
-Exception definitions.
+All of canvas's exception definitions.
 '''
 
-from .namespace import export, export_ext
+class InvalidSchema(Exception):
+	'''Raised when the defined schema is recognized as invalid.'''
+	pass
 
-### model
-@export
-class InvalidSchema(Exception): pass
+class InvalidQuery(Exception):
+	'''Raised when a database query is recognized as invalid.'''
+	pass
 
-@export
-class InvalidQuery(Exception): pass
+class InvalidTag(Exception):
+	'''Raised when an invalid `Tag` is created.'''
+	pass
 
-####
+class InvalidAsset(Exception):
+	'''Raised when an invalid asset type is included on a page.'''
+	pass
 
-@export 
-class ConfigurationError(Exception): pass
+class AssetError(Exception):
+	'''Raised when an error occurs while preparing an asset.'''
+	pass
 
-@export
-class AssetError(Exception): pass
+class Unrecognized(Exception):
+	'''Used by deserializers to indicate they can't handle a given value.'''
+	pass
 
-class InvalidDecoration(Exception): pass
+class IllegalEndpointRoute(Exception):
+	'''Raised when an un-prefixed API route is specified.'''
+	pass
 
-@export
-@export_ext
-class Unrecognized(Exception): pass
+class DependencyError(Exception):
+	'''Raised when a plugin dependency is not found.'''
+	pass
 
-@export
-class TemplateNotFound(Exception): pass
-
-@export
-class TemplateOverlayError(Exception): pass
-
-@export
-class IllegalEndpointRoute(Exception): pass
-
-@export
-class DependencyError(Exception): pass
-
-#	TODO: Improve how this works.
-@export
-class ValidationErrors(Exception):
-	
-	def __init__(self, errors_or_summary, summary=None):
-		if isinstance(errors_or_summary, str):
-			self.errors, self.summary = False, errors_or_summary
-		else:
-			self.errors, self.summary = errors_or_summary, summary
-
-	def	dictize(self):
-		rep = dict()
-		if self.errors:
-			rep['errors'] = self.errors
-		if self.summary:
-			rep['error_summary'] = self.summary
-		return rep
-
-#	TODO: What's the deal with 'message' on these?
-@export
 class HTTPException(Exception):
+	'''An exeception class associated to an error response to the client.'''
 
-	def __init__(self, title, status_code, message='', headers=None):
-		super().__init__(message)
-		self.title, self.status_code = title, status_code
+	def __init__(self, status_code, title, description=None, headers=None):
+		'''
+		Configure an overriding exception.
+		::status_code The status code associated with the error.
+		::title The title of this type of error.
+		::description An additional description of the error.
+		'''
+		self.status_code = status_code
+		self.title, self.description = title, description
 		self.headers = headers
-		self.diag = (self,)
 
-	def response(self):
-		return self.title, self.status_code, self.headers, None
+	def get_info(self):
+		'''
+		Return a dictionary containing the information about this error that
+		should be supplied to the client.
+		'''
+		info = {
+			'code': self.status_code,
+			'title': self.title
+		}
+		if self.description:
+			info['description'] = self.description
+		return info
 
-@export
+	def __str__(self):
+		return self.description
+
 class BadRequest(HTTPException):
+	'''An exception indicating a request was not understood.'''
 
-	def __init__(self, message):
-		super().__init__('Bad Request', 400, message)
+	def __init__(self, description=None):
+		super().__init__(400, 'Bad Request', description)
 
-@export
 class Unauthorized(HTTPException):
+	'''
+	An exception indicating the client is not authorized to make the given 
+	request.
+	'''
 
-	def __init__(self, message='', realm=None):
-		headers = {'WWW-Authenticate': 'Basic realm="%s"'%realm} if realm else None
-		super().__init__('Unauthorized', 401, message, headers)
+	def __init__(self, description=None, realm=None):
+		'''
+		::realm The realm in which further requests should be authorized, if 
+			any. Ignored if `authorization_method` is not specified in
+			configuration.
+		'''
+		#	Clearly this import is circular.
+		from .configuration import config
 
-@export
+		#	Resolve the auth. scheme with which to inform the client.
+		auth_scheme, headers = config.security.authorization_method, None
+		if auth_scheme:
+			if realm:
+				auth_scheme = ' '.join((auth_scheme, 'realm="%s"'%realm))
+			headers = {'WWW-Authenticate': auth_scheme}
+		
+		super().__init__(401, 'Unauthorized', description, headers)
+
 class NotFound(HTTPException):
+	'''An exception indicating the requested resource was not found.'''
 
 	def __init__(self, path):
-		super().__init__('Not Found', 404, path)
+		super().__init__(404, 'Not Found', path)
 
-@export
 class UnsupportedVerb(HTTPException):
+	'''
+	An exception indicating the current request verb is not supported on 
+	this route.
+	'''
 
-	def __init__(self, verb, supported):
-		super().__init__('Method Not Allowed', 405, verb, {
-			'Allow': supported
+	def __init__(self, which_verb, supported):
+		'''
+		::which_verb The attempted verb.
+		::supported A list of verbs that are supported.
+		'''
+		super().__init__(405, 'Method Not Allowed', which_verb, {
+			'Allow': ', '.join(verb.upper() for verb in supported)
 		})
 
-@export
 class OversizeEntity(HTTPException):
+	'''
+	An exception indicating that the body of a request exceeded the configured 
+	maximum.
+	'''
 
 	def __init__(self, size):
-		super().__init__('Request Entity Too Large', 413, size, {
+		'''::size The content length of the request.'''
+		super().__init__(413, 'Request Entity Too Large', size, {
 			'Retry-After': 0
 		})
 
-@export
 class UnsupportedMediaType(HTTPException):
+	'''An exception indicating the request's content type was invalid.'''
 
 	def __init__(self, content_type):
-		super().__init__('Unsupported Media Type', 415, content_type)
+		'''::content_type The content type of the request.'''
+		super().__init__(415, 'Unsupported Media Type', content_type)
 
-@export
 class UnprocessableEntity(HTTPException):
+	'''
+	An exception indicating that a request was understood but could not be 
+	fufilled.
+	'''
 
-	def __init__(self, message=''):
-		super().__init__('Unprocessable Entity', 422, message)
+	def __init__(self, description=None):
+		super().__init__(422, 'Unprocessable Entity', description)
 
-@export
-class UnknownAction(UnprocessableEntity):
+class ValidationErrors(UnprocessableEntity):
+	'''
+	An exception indicating that one or more request parameters did not pass 
+	validation. Raised when model constraints are violated.
+	'''
+	
+	def __init__(self, errors, summary=None):
+		'''
+		::errors A parameter key, error description map.
+		::summary A summary string.
+		'''
+		super().__init__()
+		self.errors, self.summary = errors, summary
 
-	def __init__(self, action):
-		super().__init__('Unknown action "%s"'%action)
+	def	get_info(self):
+		info = super().get_info()
+		info['errors'] = self.errors
+		if self.summary:
+			info['error_summary'] = self.error_summary
+		return info
 
-@export
 class InternalServerError(HTTPException):
+	'''
+	An exception indicating an error was encountered while handling the 
+	request.
+	'''
 
-	def __init__(self, reraise=False):
-		super().__init__('Internal Server Error', 500)
-		self.reraise = reraise
+	def __init__(self, is_reraise=False):
+		'''
+		::is_reraise Whether or not this is a reraise of another exception.
+		'''
+		super().__init__(500, 'Internal Server Error')
+		self.is_reraise = is_reraise

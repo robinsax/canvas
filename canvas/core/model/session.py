@@ -3,13 +3,19 @@
 The `Session` class definition.
 '''
 
-import inspect
-
 from psycopg2 import IntegrityError, connect
 
 from ...exceptions import ValidationErrors
 from ...configuration import config
+from ...utils import logger
+from .ast import Aggregation
+from .constraints import Constraint
+from .columns import Column
+from .statements import InsertStatement, CreateStatement, UpdateStatement \
+		DeleteStatement
 from . import _sentinel
+
+log = logger(__name__)
 
 class Session:
 	'''
@@ -20,6 +26,8 @@ class Session:
 	def __init__(self):
 		'''Create a new session.'''
 		self._connection = self._cursor = None
+		#	A dictionary for storing all actively loaded models. Keys are
+		#	of the format <host table name>=><primary key value>.
 		self.loaded_models = dict()
 
 	@property
@@ -110,152 +118,137 @@ class Session:
 		self.assign_row_to_model(model, row_segment)
 		return model
 
-	def _load_join(self, join, one):		
-		first_cols = len(join.source_cls.__schema__)
-		attr_name = join.load_onto
-
-		def load_one(row):
-			#	Load a single instance of each, childing and returning the appropriate ones.
-			
-			from_inst = self._load_model(join.source_cls, row[:first_cols])
-			to_inst = self._load_model(join.target_cls, row[first_cols:])
-
-			if not join.one_side:
-				to_list = getattr(to_inst, attr_name, None)
-				if to_list is None:
-					to_list = []
-					setattr(to_inst, attr_name, to_list)
-				if from_inst not in to_list:
-					to_list.append(from_inst)
-				return to_inst
-			else:
-				setattr(from_inst, attr_name, to_inst)
-				return from_inst
-		
-		result = []
-		last = None
-		row = self.cursor.fetchone()
-
-		while row is not None:
-			#	Load it.
-			loaded = load_one(row)
-
-			#	First time.
-			if last is None:
-				last = loaded
-
-			if loaded is not last:
-				#	New host.
-				if one:
-					#	Done, we loaded one.
-					break
-				
-				#	Keep going.
-				result.append(last)
-				last = loaded
-
-			row = self.cursor.fetchone()
-
-		#	Eat last.
-		if last is not None:
-			result.append(last)
-
-		if one:
-			return result[0] if len(result) > 0 else None
-		else:
-			return result
-
 	def execute(self, sql, values=tuple()):
+		'''
+		Execute a prepared statement with constraint violation identification.
+		'''
 		if config.development.log_emitted_sql:
+			#	Log the prepared statement.
 			log.debug(sql)
-
-			if len(values) > 0:
+			if values:
 				log.debug('\t%s'%str(values))
 			
 		try:
 			self.cursor.execute(sql, values)
 		except IntegrityError as ex:
-			constraint = get_constraint(ex.diag.constraint_name)
-			try:
+			#	Retrieve the violated constraint.
+			constraint = Constraint.get(ex.diag.constraint_name)
+			if not constraint:
+				#	Some cases are not yet handled.
+				raise NotImplementedError() from ex
+			
+			if isinstance(constraint, Column):
+				#	The violation occured against a given column.
 				raise ValidationErrors({
-					constraint.column.name: constraint.error_message
+					constraint.host.name: constraint.error_message
 				})
-			except BaseException as inner_ex:
-				if isinstance(inner_ex, ValidationErrors):
-					raise inner_ex
-				raise ex from None
+			else:
+				#	Table-level violation.
+				raise ValidationErrors(constraint.errors_message)
 		
+		#	Chain.
 		return self
 
+	def execute_statement(statement):
+		'''Execute a `Statement` object.'''
+		sql, values = statement.write()
+		self.execute(sql + ';', values)
+
 	def save(self, *models):
+		'''Save `models` to the database.'''
 		for model in models:
-			model_cls = model.__class__
-			self._precheck_constraints(model)
+			table = model.__class__.__table__
+
+			#	Precheck for violations.
+			self.precheck_constraints(model)
+
+			#	Collect values, ignoring sentinels which may be in-database
+			#	defaults.
+			to_insert = list()
+			for column in table.columns:
+				value = getattr(model, column.name)
+				if value is not _sentinel:
+					values.append((value, column))
 			
-			self.execute(*row_creation(model))
-
-			self._map_model(model, self.cursor.fetchone())
-
-			model.__session__ = self
-
-			model.__create__()
+			#	Create and execute an insert statement.
+			self.execute_statement(InsertStatement(model.__class__, values))
+			#	Re-load the result onto the model.
+			self.assign_row_to_model(model, self.cursor.fetchone())
 		return self
 
 	def detach(self, model):
-		del self.active_mappings[self._row_reference(model)]
-
-		model.__session__ = None
+		'''Detach an object from its mapped row.'''
+		table = model.__class__.__table__
+		#	Delete the entry.
+		del self.loaded_models[
+			'=>'.join([table.name, table.primary_key.value_on(model)])
+		]
+		#	Inform the model.
+		model.__loaded__(None)
 
 		return self
 
 	def delete(self, *models, cascade=False):
+		'''Delete each of `models` from the database.'''
 		for model in models:
-			self.execute(*row_deletion(model, cascade))
+			table = model.__class__.__table__
+			#	Create and execute a delete statement.
+			condition = table.primary_key == table.primary_key.value_on(model)
+			self.execute_statement(*DeleteStatement(table, condition, cascade))
+			#	Detach the now-orphaned model.
 			self.detach(model)
 
 		return self
 
-	def query(self, target, conditions=True, one=False, count=None, distinct=False, offset=None, order_by=tuple(), for_update=False, for_share=False):
-		if conditions is False:
-			return None if one else []
+	def query(self, target, condition=True, one=False, count=None, 
+				offset=None, distinct=False, order=tuple(), for_update=False, 
+				for_share=False):
+		'''
+		Query the database, returning loaded models.
+		::condition A flag-like AST node representing the query condition.
+		::one Whether to retrieve a single entry or a list.
+		::count The number of entries to retrieve.
+		::offest The offset at which to begin.
+		::distinct Whether to only retrieve distinct entries.
+		::order One or more ordering directive generated by the `Column.asc` or 
+			`Column.desc` methods.
+		::for_update Whether all selections should be `FOR UPDATE`.
+		::for_share Whether all selections should be `FOR SHARE`.
+		'''
+		if condition is False:
+			#	Nothing would be returned.
+			return None if one else list()
+		#	Process arguments.
+		if isinstance(target, Aggregation):
+			one = True
 		
-		for_ = None
-		if for_share:
-			for_ = 'SHARE'
-		if for_update:
-			for_ = 'UPDATE'
+		#	Create a list of modifier AST nodes.
+		modifiers = list()
+
+		#	Transform optional arguments to modifiers.
+		if count:
+			modifiers.append(Literal('COUNT', count))
+		if offset:
+			modifiers.append(Literal('OFFSET', offset))
+		if not isinstance(order, (list, tuple)):
+			order = (order,)
+		modifiers.append(Literal('ORDER BY', Literal(*order, joiner=', ')))
+		if for_share or for_update:
+			which = 'SHARE' if for_share else 'UPDATE'
+			modifiers.append(Literal('FOR', which))
 		
-		if not isinstance(order_by, (list, tuple)):
-			order_by = (order_by,)
-		
-		self.execute(*selection(target, conditions, distinct, count, offset, order_by, for_))
+		self.execute_statement(
+			SelectStatement(target, condition, modifiers, distinct)
+		)
 
-		#	TODO: Remove.
-		def from_loader_method(loader_method):
-			if one:
-				row = self.cursor.fetchone()
-				if row is None:
-					return None
-
-				return loader_method(target, row)
-			else:
-				result = []
-				for i, row in enumerate(self.cursor):
-					result.append(loader_method(target, row))
-				return result
-
-		if inspect.isclass(target) and issubclass(target, Model):
-			return from_loader_method(self._load_model)
-		elif isinstance(target, Join):
-			return self._load_join(target, one)
+		#	Retrieve a loader and return.
+		loader = target.get_loader()
+		if one:
+			return loader.load_next(self.cursor.fetchone(), self)
 		else:
-			if isinstance(target, SQLAggregatorCall):
-				one = True
-			
-			if one:
-				return self.cursor.fetchone()[0]
-			else:
-				return [r[0] for r in self.cursor.fetchall()]
+			return [
+				loader.load_next(row) for row in self.cursor.fetchall()
+			]
 
 	def _commit_one(self, model):
 		if len(model.__dirty__) > 0:

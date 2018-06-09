@@ -9,15 +9,13 @@ from ...exceptions import InvalidSchema
 from .ast import ObjectReference, ILoader, IJoinable
 from .constraints import PrimaryKeyConstraint
 
-#	Define the global table storage list, used for issuing creation.
-_tables = list()
-
 class Table(ObjectReference, IJoinable):
 	'''
 	`Table`s are joinable AST object references to in-database tables that 
 	maintain and manage the database link for `Model`s. They are transparent 
 	in most use-cases.
 	'''
+	instances = list()
 	
 	def __init__(self, name, contents):
 		'''
@@ -58,7 +56,7 @@ class Table(ObjectReference, IJoinable):
 			item.bind(self)
 
 		#	Add this table to the master list.
-		_tables.append(self)
+		Table.instances.append(self)
 	
 	@classmethod
 	def topo_order(cls):
@@ -95,7 +93,6 @@ class Table(ObjectReference, IJoinable):
 		while remaining:
 			visit(remaining.pop())
 		
-		#	Return output.
 		return result
 
 	def bind(self, model_cls):
@@ -107,6 +104,10 @@ class Table(ObjectReference, IJoinable):
 		#	Attach columns.
 		for name, column in self.columns.items():
 			setattr(model_cls, name, column)
+
+	def get_loader(self):
+		'''Create and return a simple model loader.'''
+		return SimpleModelLoader(self)
 
 	def get_columns(self):
 		'''Return all non-lazy constituent columns.'''
@@ -150,10 +151,11 @@ class Table(ObjectReference, IJoinable):
 		))
 
 class SimpleModelLoader(ILoader):
-	'''The trivial model loader for loading models from a table.'''
+	'''The base model loader.'''
 
 	def __init__(self, table):
 		self.table = table
 
 	def load_next(self, row_segment, session):
-		pass
+		'''Return the direct result of the session load method.'''
+		return session.load_model_instance(self.table.model_cls, row_segment)

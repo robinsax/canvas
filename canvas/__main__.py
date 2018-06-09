@@ -1,10 +1,12 @@
 #	coding utf-8
 '''
-Command-line invocation.
+canvas's command line invocation entry point.
 '''
 
+#	Ensure canvas is importable.
 import sys
 sys.path.insert(0, '.')
 
+#	Import and invoke the launch handler.
 from canvas import launch
-launch([''] if len(sys.argv) == 1 else sys.argv[1:])
+launch(('',) if len(sys.argv) == 1 else sys.argv[1:])

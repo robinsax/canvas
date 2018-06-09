@@ -6,7 +6,7 @@ Python to Postgres type adaption is extended via the `type_adapter` decorator.
 import uuid
 
 from datetime import datetime
-from psycopg2.extensions import adapt, register_adapter, new_type, /
+from psycopg2.extensions import adapt, register_adapter, new_type, \
 		register_type
 
 from ..json_io import serialize_json, deserialize_json

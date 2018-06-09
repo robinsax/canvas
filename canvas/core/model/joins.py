@@ -64,6 +64,21 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 		#	Chain.
 		return self
 
+	def get_loader(self):
+		'''Since joins can be stateful, they are their own loader.'''
+		return self
+	
+	def load_next(self, row_segment, session):
+		#	Get children and loaders.
+		children = (self.source, *self.dests)
+		child_loaders = tuple(child.get_loader() for child in children)
+
+		#	Iterate the parts of the row segment.
+		k = 0
+		for child, loader in zip(children, child_loaders):
+			loader.load_next(row_segment[k:], session)
+			k += len(child.get_columns())
+
 	def serialize(self, values=None):
 		return self.name
 
@@ -100,7 +115,7 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 
 			#	Serialize.
 			return ' '.join((
-				'JOIN', dest.serialize_source(values),
+				'LEFT OUTER JOIN', dest.serialize_source(values),
 				'ON',
 					'%s.%s'%(on_src.name, on_src.name_column(link_column)), '=', 
 					'%s.%s'%(on_dest.name, on_dest.name_column(link_column.type.target))
