@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 A set of special dictionaries used throughout canvas.
 '''

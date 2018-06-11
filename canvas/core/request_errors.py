@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Graceful controller service error handling.
 '''

@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 canvas is a full-stack web application framework for building API-driven,
 reactive web applications.

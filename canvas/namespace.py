@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 This module is used to collect the root namespace.
 '''
@@ -14,3 +14,5 @@ from .utils import create_callback_registrar, cached_property, \
 	format_exception, logger
 from .configuration import config, plugin_config
 from .json_io import serialize_datetime, deserialize_json, serialize_datetime
+from .core import initialize, serve, on_init, on_post_init, handle_request, \
+	handle_request as application,

@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 The HTML page creation API. The recommended pattern is to minimize server-side
 page content generation, serving pages that contain the information required
@@ -8,9 +8,7 @@ page itself.
 
 from ...exceptions import InvalidAsset
 from ...configuration import config
-from .tags import TagType, Tag, TagFactory
-
-#	TODO: Caching mechanism.
+from .tags import TagType, Tag, tag_factory as tf
 
 class Page:
 
@@ -20,10 +18,7 @@ class Page:
 		self.description = description
 		self.assets = assets
 
-	def render(self):
-		#	Create a tag factory.
-		tf = TagFactory()
-		
+	def head(self):
 		#	Tagify the asset list.
 		asset_tags = list()
 		for asset in (*config.customization.global_assets, *self.assets):
@@ -46,34 +41,45 @@ class Page:
 			else:
 				raise InvalidAsset(asset)
 
-		#	Return the HTML.
+		return <head></head>
+
+		return tf.head({
+			'data-debug': config.development.debug, 
+			'data-route': self.route
+		},
+			tf.meta({'charset': 'utf-8'}),
+			tf.meta({
+				'name': 'viewport', 
+				'content': 'width=device-width, initial-scale=1'
+			}),
+			tf.title(text=self.title),
+			tf.meta({
+				'name': 'description', 
+				'content': self.description if self.description else str()
+			}),
+			tf.link({
+				'rel': 'icon', 'type': 'image/png', 
+				'href': '/media/site_icon.png'
+			}),
+			*self.head_extras(),
+			tf.script({'type': 'text/javascript'}, text='TODO Model Defns'),
+			*asset_tags
+		)
+
+	def head_extras(self):
+		return tuple()
+
+	def body(self):
+		return tf.body({
+			'data-route': self.route
+		},
+			tf.header({'class': 'header'}),
+			tf.div({'class': 'body'}),
+			tf.footer({'class': 'footer'})
+		)
+
+	def create(self):
 		return tf.html(
-			tf.head({
-				'data-debug': config.development.debug, 
-				'data-route': self.route
-			},
-				tf.meta({'charset': 'utf-8'}),
-				tf.meta({
-					'name': 'viewport', 
-					'content': 'width=device-width, initial-scale=1'
-				}),
-				tf.title(text=self.title),
-				tf.meta({
-					'name': 'description', 
-					'content': self.description if self.description else str()
-				}),
-				tf.link({
-					'rel': 'icon', 'type': 'image/png', 
-					'href': '/media/site_icon.png'
-				}),
-				tf.script({'type': 'text/javascript'}, text='TODO Model Defns'),
-				*asset_tags
-			),
-			tf.body({
-				'data-route': self.route
-			},
-				tf.header({'class': 'header'}),
-				tf.div({'class': 'body'}),
-				tf.footer({'class': 'footer'})
-			)
-		).render()
+			self.head(),
+			self.body()
+		)

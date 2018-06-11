@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 The interface with `./processor.js`, which contains the asset
 processor invocation logic.

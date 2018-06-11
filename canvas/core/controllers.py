@@ -1,41 +1,33 @@
-#	coding utf-8
+# coding: utf-8
 '''
-Controller registration and management.
+Controller base type definitions and registrars. Since registrars implicitly
+cause inheritance of their associated controller type, parent classes need
+not be specified when defining controller classes.
 '''
 
-from .exceptions import IllegalEndpointRoute
-from .namespace import export
-from .configuration import config
-from .utils import logger
-from .core.request_context import RequestContext
-from .core.responses import create_page
-from .core.forms import serialize_form_models
+from ..exceptions import IllegalEndpointRoute
+from ..configuration import config
+from ..utils import logger
+from .request_context import RequestContext
+from .responses import create_page
+from .forms import serialize_form_models
 from . import __verbs__
 
-_definitions = []
+_definitions = list()
 
 log = logger(__name__)
 
-@export
 class Controller: pass
 
-@export
 class Endpoint(Controller): pass
 
-@export
 class Page(Controller):
-
+	
 	def on_get(self, context):
 		return self.render(context)
 
-	def render(self, context=None, params=dict(), code=200, headers=dict()):
-		context = context if context else RequestContext.get()
-
-		params.update({
-			'__route__': context.route,
-			'__models__': serialize_form_models(self.__models__)
-		})
-		return create_page(self.__template__, params, code=code, headers=headers)
+	def render(self, code=200, headers=dict()):
+		return create_page(self.__view__, code, headers)
 
 class _ControllerDefinition:
 

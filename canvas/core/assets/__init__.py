@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 This package handles asset preparation and retrieval. It manages an in-memory 
 cache which is kept up-to-date with the filesystem, and implicitly handles the

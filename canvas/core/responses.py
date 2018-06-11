@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Response generation methods.
 '''
@@ -37,6 +37,5 @@ def create_redirect(target_url, code=302, headers=dict()):
 		return None, code, headers, None
 
 @export
-def create_page(title, *assets, description=None, code=200, headers=None):
-	page = Page(RequestContent.get().route, title, assets=assets)
-	return page.render(), code, headers, 'text/html'
+def create_page(view, code=200, headers=None):
+	return ''.join(('<!DOCTYPE html>', view.render())), code, headers, 'text/html'

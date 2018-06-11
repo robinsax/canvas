@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 `Palette`s are style definition files comprised of font file inclusions and a
 one to many map of style keys to values. less files are compiled as a function 

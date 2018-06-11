@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 SQL statement abstract syntax tree primative and final nodes, as well as helper
 methods. Contained interfaces are prefixed with I and mixins with M.

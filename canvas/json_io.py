@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 An extension of the Python JSON serialization and deserialization API with
 improved extensibility and security.

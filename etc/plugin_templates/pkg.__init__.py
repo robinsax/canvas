@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 The $plugin_name plugin for canvas.
 '''

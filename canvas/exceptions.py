@@ -1,6 +1,6 @@
-#	coding utf-8
+# coding: utf-8
 '''
-All of canvas's exception definitions.
+All of canvas's exceptions are packaged here.
 '''
 
 class InvalidSchema(Exception):
@@ -36,7 +36,10 @@ class DependencyError(Exception):
 	pass
 
 class HTTPException(Exception):
-	'''An exeception class associated to an error response to the client.'''
+	'''
+	An exeception class associated to an error response to the client, with 
+	an associated status code, header map, and diagonostic dictionary.
+	'''
 
 	def __init__(self, status_code, title, description=None, headers=None):
 		'''

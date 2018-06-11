@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Configuration loading and management. canvas's core configuration file is
 `settings.json`. Instances of `plugin.json` in activated plugins have the

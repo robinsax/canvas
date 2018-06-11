@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 HTML generation and rendering utilities.
 '''
@@ -94,17 +94,17 @@ class Tag:
 			))
 		return html
 
-class TagFactory:
+class _TagFactory:
 	'''
 	A helper class that improves tag-creation syntax by allowing the following
-	usage:
-	```
-	tf = TagFactory()
-	tag = tf.div({'class': 'my-div'})
-	```
+	usage. Since it is singleton, the class itself is not exported; an instance
+	(`tag_factory`) is.
 	'''
 
 	def __getattr__(self, key):
 		def create_tag(*items, **kwargs):
 			return Tag(key, *items, **kwargs)
 		return create_tag
+
+#	Create the global tag factory.
+tag_factory = _TagFactory()

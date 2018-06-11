@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Column and table constraint definitions.
 '''

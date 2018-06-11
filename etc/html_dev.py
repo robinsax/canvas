@@ -1,69 +1,48 @@
-from enum import Enum
+# coding: pyxl
+'''
+Native views are PYX-enabled views useful for rendering static pages. Source
+files containing native views must declare a `pyxl` encoding and use spaces
+for indentation.
+'''
 
-class TagType(Enum):
-	NORMAL = 1
-	SELF_CLOSING = 2
-	UNCLOSED = 3
+from pyxl import html
+from pyxl.element import x_element
 
-	@classmethod
-	def guess(cls, name):
-		if name in ('link',):
-			return TagType.SELF_CLOSING
-		if name in ('meta',):
-			return TagType.UNCLOSED
-		return TagType.NORMAL
+class View(x_element):
 
-class Tag:
+    def __init__(self, data=None):
+        self.data = data
 
-	def __init__(self, name, *items, text=None, typ=None):
-		self.name, self.type = name, typ if typ else TagType.guess(name)
-		self.text = text
+    def render(self):
+        return self.__class__.__template__(self.data)
 
-		self.attributes, self.children = None, list()
-		for item in items:
-			if isinstance(item, dict):
-				self.attributes = item
-			else:
-				self.children.append(item)
+def view(template=None):
+    def view_wrap(cls):
+        cls = type(cls.__name__, (cls, View), dict())
+        cls.__template__ = template
+        return cls
+    return view_wrap
 
-	def render(self, depth=0):
-		tabs, nl = ('\t'*depth, '\n')
-		if self.text:
-			return ''.join((tabs, '<', self.name, '>', self.text, '</', self.name, '>', nl))
-
-		if self.attributes:
-			attrs = ' ' + ' '.join(
-				'%s="%s"'%tpl for tpl in self.attributes.items()
-			)
-		else:
-			attrs = str()
-		
-		rep = ''.join((tabs, '<', self.name, attrs, '/>' if self.type is TagType.SELF_CLOSING else '>', nl))
-		if self.type is TagType.NORMAL:
-			rep = ''.join((
-				rep,
-					*((child if isinstance(child, str) else child.render(depth + 1)) for child in self.children),
-				tabs, '</', self.name, '>', nl
-			))
-		return rep
-
-class TagFactory:
-
-	def __getattr__(self, key):
-		def create_tag(*items, **kwargs):
-			return Tag(key, *items, **kwargs)
-		return create_tag
-
-tf = TagFactory()
-def f(debug, route, title, description):
-	return tf.html(
-		tf.head({'data-debug': debug, 'data-route': route},
-			tf.meta({'charset': 'utf-8'}),
-			tf.meta({'name': 'viewport', 'content': 'width=device-width, initial-scale=1'}),
-			tf.title(text=title),
-			tf.meta({'name': 'description', 'content': description}),
-			tf.link({'rel': 'icon', 'type': 'image/png', 'href': '/media/site_icon.png'}),
-			tf.script({'type': 'text/javascript'}, text='TODO Model Defns')
-		)
+@view(
+	template=lambda data: (
+		<html>
+			<head>
+				<meta charset="utf-8"/>
+				<meta name="viewport" content="width=device-width, initial-scale=1"/>
+				<meta name="description" content="TODO"/>
+				<title>{ data }</title>
+			</head>
+			<body>
+				<header class="header">
+				</header>
+				<div class="page">
+				</div>
+				<footer class="footer">
+				</footer>
+			</body>
+		</html>
 	)
-print(f('true', '/test', 'Foo', 'Foobar').render())
+)
+class PageView: pass
+
+print(PageView('Test page').render())

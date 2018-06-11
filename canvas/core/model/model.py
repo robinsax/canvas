@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 The base `Model` class and `model` decorator definitions. Inheritance over
 `Model` occurs implicitly when the model decorator is used.

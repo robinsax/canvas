@@ -1,4 +1,4 @@
-#	codidng utf-8
+# coding: utf-8
 '''
 Top-level statement objects.
 '''

@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Asset preprocessor directives are used to make JavaScript dependency and 
 stylesheet management easier. They have the following format:

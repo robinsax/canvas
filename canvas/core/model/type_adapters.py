@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Python to Postgres type adaption is extended via the `type_adapter` decorator.
 '''

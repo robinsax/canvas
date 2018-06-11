@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Column type management and the `Column` class definition. `Column`s are the 
 sole definition eagerly exposed by this module. They are accessed as class

@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 This package contains the implementation of canvas's database interaction API.
 

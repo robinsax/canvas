@@ -1,4 +1,4 @@
-#	coding utf-8
+# coding: utf-8
 '''
 Routing management.
 '''
@@ -9,6 +9,8 @@ from ..exceptions import NotFound
 from ..callbacks import define_callback_type, invoke_callbacks
 
 define_callback_type('routing', arguments=[dict])
+
+#	TODO: get controller and get controllers
 
 _route_map = dict()
 
