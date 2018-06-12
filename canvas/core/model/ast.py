@@ -8,16 +8,16 @@ from enum import Enum
 
 class Comparator(Enum):
 	'''The comparison operator enumerable.'''
-	EQUALS 				= '='
-	NOT_EQUALS 			= '<>'
-	LESS 				= '<'
-	GREATER 			= '>'
-	LESS_OR_EQUAL 		= '<='
+	EQUALS				= '='
+	NOT_EQUALS			= '<>'
+	LESS				= '<'
+	GREATER				= '>'
+	LESS_OR_EQUAL		= '<='
 	GREATER_OR_EQUAL	= '>='
 	AND					= 'AND'
-	OR 					= 'OR'
-	MATCHES 			= '~'
-	MATCHES_I 			= '~*'
+	OR					= 'OR'
+	MATCHES				= '~'
+	MATCHES_I			= '~*'
 
 def nodeify(target, permit_strings=False):
 	'''Return `target` as an AST node.'''
@@ -119,7 +119,7 @@ class ILoader:
 	'''
 
 	def load_next(self, row_segment, session):
-		'''Return a `row_segment` loaded onto `model_cls`.'''
+		'''Return a `row_segment` loaded onto its valid target.'''
 		raise NotImplementedError()
 
 class MFlag:

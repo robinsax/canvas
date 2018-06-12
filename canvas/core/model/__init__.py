@@ -1,6 +1,8 @@
 # coding: utf-8
 '''
 This package contains the implementation of canvas's database interaction API.
+The large majority of its definition are not exposed as they are not stable 
+enough to be extended by plugins.
 
 Note: Within this package's documentation, 'serialize' is equivalent to 
 'serialize into SQL'. 

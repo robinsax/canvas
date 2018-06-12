@@ -113,7 +113,7 @@ def apply_model_load(asset, *model_cls_list):
 		
 		#	Save the output on the to-be-generated object.
 		models_dict[table.model_cls.__name__] = schema_dict
-	asset.source = '\n'.join(('='.join(('const model', serialize_json(models_dict)), asset.source))
+	asset.source = '\n'.join(('='.join(('const model', serialize_json(models_dict)), asset.source)))
 
 def apply_directives(asset):
 	'''

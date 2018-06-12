@@ -12,10 +12,10 @@ from datetime import datetime
 from mimetypes import guess_type
 
 from ...utils import logger
-from ...namespace import export_ext
 from ..plugins import get_path
-from .directives import apply_directives
+from .directives import directive, apply_directives
 from .processor import transpile_jsx, compile_less
+from .palettes import Palette, get_palette
 
 #	Create a logger.
 log = logger(__name__)
@@ -26,7 +26,6 @@ _processed_asset_sources = dict(js='jsx', css='less')
 #	Define the asset cache.
 _asset_cache = dict()
 
-@export_ext
 class Asset:
 	'''
 	The class representing a in-memory file system asset used internally by 
@@ -68,7 +67,6 @@ class Asset:
 		if self.load_time < self.mtime:
 			self.load()
 
-@export_ext
 class ProcessedAsset(Asset):
 	'''A JSX or LESS asset that requires processing when loaded.'''
 
@@ -143,7 +141,6 @@ def new_asset(path):
 		asset.load()
 	return asset
 
-@export_ext
 def get_asset(path):
 	'''
 	Retrieve an asset given `path` as exposed within the `/assets` realm, or

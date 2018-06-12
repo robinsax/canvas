@@ -1,73 +1,32 @@
 # coding: utf-8
 '''
-Command line invocation.
+The CLI API definition, available to both the core and plugins.
 '''
 
-import re
-import sys
-
-from ..namespace import export
-from ..tests import run_tests
-from .. import __home__, __version__
-
+#	Define the global name to launcher function map.
 _launchers = dict()
 
-@export
 def launcher(name, **info):
+	'''
+	Register a launcher function to be referenced from the CLI as `name`. An
+	abbreviation will be automatically assigned if one is available. The `info`
+	keyword arguments can contain one or more of:
+	* `description` - A textual description of the launch mode.
+	* `argspec` - A CLI argument specification.
+	* `init` - A flag indicating a full initialization is required before the
+		handler is invoked.
+	'''
 	def launcher_wrap(func):
 		func.__info__ = info
 		_launchers[name] = func
 		return func
 	return launcher_wrap
 
-@launcher('version',
-	description='Show the current version'
-)
-def show_version(args):
-	print('canvas %s'%__version__)
-	return True
-
-@launcher('serve',
-	argspec='<port>', 
-	description='Launch the development server', 
-	init=True
-)
-def launch_serve(args):
-	from ..core import serve
-
-	try:
-		port = int(args[0])
-	except:
-		return False
-	
-	serve(port)
-	return True
-
-@launcher('test',
-	argspec='<?plugin>',
-	description='Run unit tests on the core or a plugin',
-	init=True
-)
-def launch_tests(args):
-	from ..core.plugins import plugin_base_path
-
-	if len(args) > 0:
-		import_from = plugin_base_path(args[0])
-	else:
-		import_from = __home__
-
-	sys.path.insert(0, import_from)
-	import tests
-	
-	if not run_tests():
-		sys.exit(1)
-	return True
-
-@export
-def launch(args):	
+def launch_cli(args):
+	'''Launch the CLI given the commandline arguments `args`.'''
 	def print_usage():
 		def create_string(name, launcher):
-			first = '--%s %s'%(name, launcher.__info__.get('argspec', ''))
+			first = '%s %s'%(name, launcher.__info__.get('argspec', ''))
 			first = '%s%s%s'%(first, ' '*(35 - len(first)), launcher.__info__.get('description', ''))
 			return first
 		
@@ -118,5 +77,3 @@ def launch(args):
 
 		if not launcher(args_here):
 			print_usage()
-
-from . import plugin_creation, setup, doc_builder

@@ -5,6 +5,8 @@ Top-level statement objects.
 
 from .ast import deproxy, nodeify
 
+#	TODO: Constructor docs.
+
 class Statement:
 	'''The top-level AST node type, which must facilitate value collection.'''
 
@@ -80,4 +82,24 @@ class DeleteStatement(Statement):
 		))
 		return values, sql
 
-class UpdateStatement(Statement): pass
+class UpdateStatement(Statement):
+	'''An SQL 'UPDATE' statement.'''
+
+	def __init__(self, target, assignments, condition):
+		self.target, self.condition = deproxy(target), nodeify(condition)
+		self.assignments = (
+			(target, nodeify(value)) for target, value in assignments
+		)
+
+	def write(self):
+		values, assignment_expressions = list(), list()
+		for target, value in self.assignments:
+			assignment_expressions.append(
+				'='.join((target.serialize(), value.serialize(values)))
+			)
+		sql = ' '.join((
+			'UPDATE', target.serialize(),
+			'SET', ', '.join(assignment_expressions),
+			'WHERE', condition.serialize(values)
+		))
+		return sql, values

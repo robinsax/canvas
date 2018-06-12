@@ -20,7 +20,7 @@ from .controllers import Endpoint
 from .model import create_session
 from .plugins import get_path_occurrences
 from .routing import RouteString, resolve_route
-from .request_parsers import parse_request
+from .request_parsers import parse_request_body
 from .request_context import RequestContext
 from .request_errors import get_error_response
 from .responses import create_json
@@ -105,8 +105,12 @@ def serve_controller(request):
 				content_type, charset = content_type.split(';')
 			
 			#	Parse the request parameters.
-			request_parameters = parse_request(request.get_data(as_text=True), 
-					content_type, charset)
+			request_parameters = parse_request_body(
+				request.get_data(as_text=True), content_type, charset
+			)
+	query_parameters.propagate_and_lock()
+	if isinstance(request_parameters, RequestParameters):
+		request_parameters.propagate_and_lock()
 
 	#	Resolve the cookie.
 	cookie_key, secret = (
@@ -118,14 +122,15 @@ def serve_controller(request):
 		cookie = SecureCookie.unserialize(cookie_data, secret)
 	else:
 		cookie = SecureCookie(secret_key=secret)
-
+	
 	#	Create and associate the request context.
 	context = RequestContext(
 		cookie=cookie,
 		session=create_session(),
 		request=request_parameters,
+		query=query_parameters,
 		headers=request.headers,
-		route=RouteString(route).with_variables(variables),
+		route=RouteString(route, variables),
 		verb=verb,
 		url=request.url,
 		__controller__=controller

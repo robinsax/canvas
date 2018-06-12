@@ -12,5 +12,4 @@ from . import launcher
 	description='Build documentation for canvas, or a plugin if one is specified'
 )
 def build_docs():
-	
 	return True

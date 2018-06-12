@@ -1,6 +1,11 @@
 # coding: utf-8
 '''
-Routing management.
+The module manages a dictionary tree with controller leaves to allow 
+approximately O(log n) route resolution. The tree is generated from a list of
+controllers, as supplied by `create_controllers`, by `create_routing`. To 
+modify the resultant route map at create time, register an `on_routing`
+callback which takes the root of the route map dictionary as an argument.
+The return value of the callback will be ignored.
 '''
 
 import re
@@ -15,7 +20,7 @@ _variable_sentinel = object()
 _route_map = dict()
 
 #	Define the route map modification callback.
-on_route_mapping = create_callback_registrar(loop_arg=True)
+on_routing = create_callback_registrar()
 
 class Variable:
 	'''Used to store named variable route parts.'''
@@ -37,8 +42,8 @@ class RouteString(str):
 	this string.
 	'''
 
-	def with_variables(self, variables):
-		'''Assign all resolved route variables.'''
+	def __init__(self, value, variables):
+		super().__init__(value)
 		for key, value in variables.items():
 			setattr(self, key, value)
 		return self
@@ -73,6 +78,8 @@ def create_routing(controller_list):
 	for controller in controller_list:
 		for route in controller.__routes__:
 			update_route_map(route, controller)
+	#	Invoke modification callbacks.
+	on_routing.invoke(_route_map)
 
 def resolve_route(route):
 	current_node, variables = _route_map, dict()

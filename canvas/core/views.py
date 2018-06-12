@@ -13,9 +13,9 @@ from ..exceptions import InvalidAsset
 from ..utils import create_callback_registrar
 from ..dictionaries import AttributedDict
 
-#	Define the page view definition callback, used to override the root page 
+#	Define the page view alteration callback, used to override the root page 
 #	view.
-on_page_view_defined = create_callback_registrar(loop_arg=True)
+alter_root_page_view = create_callback_registrar(loop_arg=True)
 
 class View(x_element):
 	'''
@@ -37,7 +37,7 @@ def view(_=None):
 class PageView:
 	'''
 	The base view used to render pages. To override or extend, register an 
-	`on_page_view_defined` callback that accepts this class or a subclass of it
+	`alter_root_page_view` callback that accepts this class or a subclass of it
 	and returns a further subclass.
 	'''
 	#	Used to store the plugin-modified version of this class.
@@ -57,7 +57,7 @@ class PageView:
 	def resolved(cls):
 		'''Return the plugin-modified version of this class.'''
 		if not PageView.resolved_class:
-			PageView.resolved_class = on_page_view_defined.invoke(PageView)
+			PageView.resolved_class = alter_root_page_view.invoke(PageView)
 		return PageView.resolved_class
 
 	def meta_fragment(self):

@@ -3,6 +3,10 @@
 All of canvas's exceptions are packaged here.
 '''
 
+class Immutable(Exception):
+	'''Raised when an immutable container is modified.'''
+	pass
+
 class InvalidSchema(Exception):
 	'''Raised when the defined schema is recognized as invalid.'''
 	pass

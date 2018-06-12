@@ -62,6 +62,12 @@ class Session:
 		#	Invoke load callback.
 		model.__loaded__(self)
 
+		#	Track this model.
+		row_reference = '=>'.join((
+			table.__name__, table.primary_key.value_on(model)
+		))
+		self.loaded_models[row_reference] = model
+
 	def precheck_constraints(self, model):
 		'''
 		Precheck all constraints in the schema of `model` for violations,
@@ -241,7 +247,7 @@ class Session:
 			SelectStatement(target, condition, modifiers, distinct)
 		)
 
-		#	Retrieve a loader and return.
+		#	Retrieve a loader and return it's output.
 		loader = target.get_loader()
 		if one:
 			return loader.load_next(self.cursor.fetchone(), self)
@@ -250,47 +256,81 @@ class Session:
 				loader.load_next(row) for row in self.cursor.fetchall()
 			]
 
-	def _commit_one(self, model):
-		if len(model.__dirty__) > 0:
-			self._precheck_constraints(model)
+	def update(self, model):
+		'''Update a single model.'''
+		if not model.__dirty__:
+			#	Nothing to commit.
+			return
+		
+		#	Precheck for constraint violations.
+		self.precheck_constraints(model)
+		table = model.__table__
 
-			self.execute(*row_update(model))
+		#	Collect assignments.
+		assignments = list()
+		for column_name in model.__dirty__:
+			column = table.columns[column_name]
+			assignments.append(column, column.value_on(model))
+		
+		#	Create condition.
+		condition = table.primary_key = table.primary_key.value_on(model)
+		#	Execute the update.
+		self.execute(*UpdateStatement(model, assignments, condition))
 
-			self._update_reference(model)
-			model.__dirty__ = dict()
+		#	Inform model.
+		model.__loaded__(self)
 
 	def commit(self, model=None):
+		'''
+		Issue the updates that occurred to all loaded models then commit the 
+		transaction.
+		::model The model to update before commit. If none is specified, all
+			loaded models are updated.
+		'''
 		if model is None:
-			to_commit = list(self.active_mappings.items())
-
-			for ref, model in to_commit:
-				self._commit_one(model)
+			#	Update all models.
+			for model in list(self.loaded_models.values()):
+				self.update_one(model)
 		else:
-			self._commit_one(model)
+			#	Update the specified model.
+			self.update_one(model)
 		
+		#	Commit the transaction.
 		self.connection.commit()
 		return self
 
-	def reset(self):
-		self.rollback()
-		self.active_mappings = dict()
+	def rollback(self, reset_loaded=True):
+		'''
+		Rollback the current transaction.
+		::reset_loaded Whether to also rollback changes made to models.
+		'''
+		if reset_loaded:
+			#	Reset loaded models.
+			for model in self.loaded_models.values():
+				for attribute, clean_value in model.__dirty__.items():
+					model[attribute] = clean_value
+				model.__loaded__(self)
 
+		#	If a connection exists, roll it back.
+		if self._connection:
+			self._connection.rollback()
 		return self
 	
-	def rollback(self, reset_loaded=True):
-		if reset_loaded:
-			for model in self.active_mappings.values():
-				for attr, reset_to in model.__dirty__.items():
-					model[attr] = reset_to
-			model.__dirty__ = dict()
+	def reset(self):
+		'''
+		Rollback the current transaction and un-map all loaded models.
+		'''
+		self.rollback()
+		self.loaded_models = dict()
 
-		if self._connection is not None:
-			self._connection.rollback()
-			
 		return self
 
 	def close(self):
-		if self._connection is not None:
+		'''
+		Close the active database connection. This occurs automatically in the
+		destructor.
+		'''
+		if self._connection:
 			self._connection.close()
 
 		return self

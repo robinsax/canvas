@@ -13,7 +13,6 @@ import os
 import re
 
 from ...utils import logger
-from ...namespace import export_ext
 from ..plugins import get_path
 
 log = logger(__name__)
@@ -21,7 +20,6 @@ log = logger(__name__)
 #	The global palette storage mapping names to Palette instances.
 _palettes = dict()
 
-@export_ext
 def get_palette(name):
 	'''Retrieve the `Palette` called `name`, or `None` if none exists.'''
 	#	Check for a loaded version, returning it if it exists.
