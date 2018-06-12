@@ -35,9 +35,9 @@ def process(source, which):
 	stdout, stderr = proc_proc.communicate()
 
 	#	Assert the processing was successful.
-	if compile_proc.returncode != 0:
-		raise AssetError('%s compilation failed with code %s:\n%s\n'%(
-			compile_proc.returncode, stderr
+	if proc_proc.returncode != 0:
+		raise AssetError('Asset processing failed with code %s:\n%s\n'%(
+			proc_proc.returncode, stderr.decode('utf-8')
 		))
 
 	return stdout
@@ -51,5 +51,5 @@ def compile_less(source, palette='default'):
 	Compile LESS into CSS.
 	::palette The name of the palette to use.
 	'''
-	source = '\n'.join(source, get_palette(palette))
+	source = '\n'.join((source, get_palette(palette).as_less()))
 	return process(source, 'less')

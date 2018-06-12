@@ -1,69 +1,56 @@
 # coding: utf-8
 '''
-Setup and configuration.
+Setup and configuration launch modes for easier installation.
 '''
 
 import os
 import pip
-import sys
 import json
 import shutil
 
 from subprocess import Popen, PIPE
 
-from ..utils import format_exception
+from ..utils import trying
 from .. import __home__
-from . import launcher
-
-def fail():
-	print('Failed')
-	sys.exit(1)
-
-class step:
-	def __init__(self, label):
-		self.label = label
-
-	def __enter__(self):
-		print(self.label)
-
-	def __exit__(self, type, value, traceback):
-		if traceback and not isinstance(value, SystemExit):
-			print(format_exception(value))
-			fail()
-		else:
-			print('Done')
+from .api import launcher
 
 @launcher('init',
 	description="Install canvas's dependencies and create a configuration file"
 )
 def launch_setup(args):
-	with step('Installing Python requirements...'):
+	'''
+	The installation launcher which installs canvas's Python and Node 
+	dependencies.
+	'''
+	with trying('Installing Python requirements...'):
+		#	Read the list of required packages.
 		with open(os.path.join(__home__, 'requirements.txt'), 'r') as req_file:
 			requirements = req_file.readlines()
 		
-		exit_code = pip.main(['install'] + [
+		#	Run pip.
+		exit_code = pip.main(['install', *(
 			l.strip() for l in requirements if not l.startswith('#')
-		])
-		if exit_code > 0:
-			fail()
+		)])
+		if exit_code:
+			trying.fail()
 
-	with step('Installing Node requirements...'):
+	with trying('Installing Node requirements...'):
+		#	Read the list of required packages.
 		with open(os.path.join(__home__, 'required_packages'), 'r') as pkg_file:
 			packages = pkg_file.readlines()
+		
+		#	Run npm.
+		npm_process = Popen(' '.join((
+			'npm', 'install', *(p.strip() for p in packages
+		))), shell=True, stdout=PIPE,  stderr=PIPE)
+		out, err = npm_process.communicate()
 
-		proc = Popen(' '.join(['npm', 'install'] + [p.strip() for p in packages]), 
-			shell=True, 
-			stdout=PIPE, 
-			stderr=PIPE
-		)
-
-		out, err = proc.communicate()
 		print(out.decode().strip())
-		if proc.returncode > 0:
-			print(err.decode().strip())
-			fail()
+		if proc.returncode:
+			trying.fail(err.decode().strip())
 
-	with step('Creating configuration...'):
+	with trying('Creating configuration...'):
+		#	Copy out the configuration file.
 		shutil.copyfile(
 			os.path.join(__home__, 'etc', 'default_settings.json'), 
 			os.path.join(__home__, 'settings.json')
@@ -73,7 +60,7 @@ def launch_setup(args):
 
 @launcher('config',
 	argspec='<key=value, ...>',
-	description='Apply a set of key, value configuration pairs. Key levels are delimited with ".". List values are joined with ",".'
+	description='Apply a set of key, value configuration pairs. Key levels are delimited with ".". List values are joined with ","'
 )
 def launch_configuration(args):
 	with open(os.path.join(__home__, 'settings.json')) as config_file:

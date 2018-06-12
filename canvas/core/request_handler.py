@@ -76,7 +76,7 @@ def serve_controller(request):
 		RequestParameters(request.args), None
 	)
 	#	Read body if there is one.
-	if verb != 'get:
+	if verb != 'get':
 		#	Retrieve body properties.
 		body_size, content_type = (
 			int(request.headers.get('Content-Length', 0)), 
@@ -156,7 +156,8 @@ def serve_controller(request):
 		http_ex = ex
 		if not isinstance(ex, HTTPException):
 			http_ex = InternalServerError(ex)
-		raise http_ex from None
+		http_ex.context = context
+		raise http_ex from ex
 	
 	#	Clean up and return parsed response.
 	response = parse_response_tuple(response)
@@ -207,6 +208,11 @@ def handle_request(environ, start_response):
 			ex.maybe_report(log)
 			#	Return a barebones error response.
 			response = parse_response_tuple(ex.simple_response())
+		except BaseException as ex:
+			log.critical(format_exception(ex))
+			response = parse_response_tuple((
+				'Internal Server Error', 500
+			))
 	else:
 		#	Serve a controller.
 		try:
@@ -221,7 +227,7 @@ def handle_request(environ, start_response):
 			
 			#	Create the appropriate error response.
 			response = parse_response_tuple(
-				get_error_response(ex, source_ex, context)
+				get_error_response(ex, source_ex, route, request.method.lower(), ex.context)
 			)
 	
 	#	Identify self.

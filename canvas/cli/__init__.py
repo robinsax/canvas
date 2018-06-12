@@ -12,7 +12,7 @@ from .. import __home__, __version__
 from .api import launcher, launch_cli
 
 #	The following imports are not exposed; they are just being initialized.
-from . import doc_builder, plugin_creation, setup
+from . import plugin_creation, setup
 
 @launcher('version',
 	description='Show the current version'

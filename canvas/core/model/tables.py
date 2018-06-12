@@ -71,7 +71,7 @@ class Table(ObjectReference, IJoinable):
 		SQL.
 		'''
 		#	Input and output.
-		result, remaining = list(), list(_tables)
+		result, remaining = list(), list(Table.reference_map.values())
 		#	State tracking.
 		marked, tmp_marked = dict(), dict()
 

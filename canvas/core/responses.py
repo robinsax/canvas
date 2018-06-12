@@ -41,5 +41,5 @@ def create_page(view, code=200, headers=None):
 	'''
 	Render `view` and return an HTML response tuple.
 	'''
-	html = ''.join(('<!DOCTYPE html>\n', view.render()))
+	html = ''.join(('<!DOCTYPE html>\n', str(view.render())))
 	return html, code, headers, 'text/html'

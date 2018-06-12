@@ -12,7 +12,7 @@ from .responses import create_json, create_page
 
 on_error = create_callback_registrar()
 
-def get_error_response(http_ex, source_ex, context):
+def get_error_response(http_ex, source_ex, route, verb, context=None):
 	'''
 	Return an error response tuple given an `HTTPException`, the exception that
 	caused the latter if applicable, and a request context if applicable. 
@@ -54,6 +54,8 @@ def get_error_response(http_ex, source_ex, context):
 				http_ex.headers)
 	else:
 		#	Serve a webpage response.
-		page = PageView.resolved(' '.join((http_ex.code, http_ex.title)))
-		page.page_views.append(ErrorView(http_ex))
-		return create_page(page)
+		page = PageView.resolved(' '.join((
+			str(http_ex.status_code), http_ex.title
+		)))
+		page.page_views.append(ErrorView(error_dict))
+		return create_page(page, http_ex.status_code, http_ex.headers)

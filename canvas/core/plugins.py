@@ -11,7 +11,7 @@ import traceback
 
 from ..exceptions import DependencyError
 from ..utils import logger
-from ..configuration import config, add_importer_config
+from ..configuration import config, add_importer_override
 from ..json_io import deserialize_json
 from .. import __home__
 
@@ -53,7 +53,7 @@ def load_plugins():
 			for dependency in dependencies:
 				if isinstance(dependency, (tuple, list)):
 					dependency, importer_config = dependency
-					add_importer_config(dependency, importer_config)
+					add_importer_override(dependency, importer_config)
 				load_plugin(dependency, name)
 
 		#	Make the plugin importable.
@@ -111,5 +111,6 @@ def get_path(*path_parts, include_base=True, is_dir=False):
 	'''
 	Return the first instance returned by `get_path_occurances` or `None`.
 	'''
-	occurrences = get_path_occurrences(*path_parts, include_base=include_base, dir=is_dir)
+	occurrences = get_path_occurrences(*path_parts, include_base=include_base, 
+			is_dir=is_dir)
 	return occurrences[0] if occurrences else None

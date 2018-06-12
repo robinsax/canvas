@@ -13,7 +13,7 @@ import re
 from ..exceptions import NotFound
 from ..utils import create_callback_registrar
 
-#	Define a variable sentinel that keyed Variables can use to recognize each
+#	Define a variable sentinel that keyed RouteVariables can use to recognize each
 #	other.
 _variable_sentinel = object()
 #	Define the root of the route map, a dictionary tree with controller leaves.
@@ -22,7 +22,7 @@ _route_map = dict()
 #	Define the route map modification callback.
 on_routing = create_callback_registrar()
 
-class Variable:
+class RouteVariable:
 	'''Used to store named variable route parts.'''
 
 	def __init__(self, name):
@@ -63,7 +63,7 @@ def create_routing(controller_list):
 			#	to a variable if it is.
 			variable_definition = re.match(r'^<(\w+)>$', route_part)
 			if variable_definition:
-				route_part = Variable(variable_definition.group(1))
+				route_part = RouteVariable(variable_definition.group(1))
 			
 			if route_part not in current_node:
 				#	Expand the tree.
@@ -94,7 +94,7 @@ def resolve_route(route):
 			#	Traverse deeper.
 			current_node = current_node[route_part]
 		elif _variable_sentinel in current_node:
-			#	Retreive the encountered Variable and store a value for it.
+			#	Retreive the encountered RouteVariable and store a value for it.
 			#	Optimized for the non-variable case.
 			key_list = list(cur.keys())
 			variable_name = key_list[key_list.index(_variable_sentinel)].name

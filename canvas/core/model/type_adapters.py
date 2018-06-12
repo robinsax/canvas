@@ -9,7 +9,7 @@ from datetime import datetime
 from psycopg2.extensions import adapt, register_adapter, new_type, \
 		register_type
 
-from ..json_io import serialize_json, deserialize_json
+from ...json_io import serialize_json, deserialize_json
 
 #	Declare the list of adapted known types.
 _adapted_types = [int, float, str, bytes, datetime]

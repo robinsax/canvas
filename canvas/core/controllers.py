@@ -8,11 +8,10 @@ not be specified when defining controller classes.
 from ..exceptions import IllegalEndpointRoute
 from ..configuration import config
 from ..utils import logger
+from .. import __verbs__
 from .views import PageView
 from .request_context import RequestContext
 from .responses import create_page
-from .forms import serialize_form_models
-from . import __verbs__
 
 #	Create a log.
 log = logger(__name__)

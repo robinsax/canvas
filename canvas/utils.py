@@ -3,9 +3,37 @@
 Miscellaneous utilities.
 '''
 
+import sys
 import logging
 
 from traceback import format_tb
+
+from .exceptions import Failed
+
+class trying:
+	'''
+	A context for operations that are prone to failure (i.e. tests and setup 
+	operations).
+	'''
+
+	def __init__(self, label):
+		self.label = label
+
+	def __enter__(self):
+		print(self.label)
+
+	def __exit__(self, type, value, traceback):
+		if traceback and not isinstance(value, SystemExit):
+			print(format_exception(value))
+			print('Failed')
+			sys.exit(1)
+		else:
+			print('Done')
+
+	@classmethod
+	def fail(cls, message=None):
+		'''Fail the attempt.'''
+		raise Failed(message)
 
 def create_callback_registrar(loop_arg=False):
 	'''
@@ -22,15 +50,16 @@ def create_callback_registrar(loop_arg=False):
 
 	#	Define an invocation function and attach it to the registrar.
 	if loop_arg:
-		def invoker(*args, **kwargs):
-			for callback in registered:
-				callback(args, kwargs)
-	else:
 		def invoker(arg):
 			for callback in registered:
 				arg = callback(arg)
 			return arg
-	registerar.invoke = invoker
+	else:
+		def invoker(*args, **kwargs):
+			for callback in registered:
+				callback(args, kwargs)
+		
+	registrar.invoke = invoker
 
 	return registrar
 
@@ -59,9 +88,8 @@ def cached_property(meth):
 	#	Define the cache-checking retrieval.
 	def retrieval(self):
 		if not cache:
-			return getattr(self, cache[0])
-		else:
-			return cache[0] = meth(self)
+			cache[0].append(meth(self))
+		return cache[0]
 	
 	#	Return as a property.
 	return property(retrieval)

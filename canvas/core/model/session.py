@@ -11,8 +11,8 @@ from ...utils import logger
 from .ast import Aggregation
 from .constraints import Constraint
 from .columns import Column
-from .statements import InsertStatement, CreateStatement, UpdateStatement \
-		DeleteStatement
+from .statements import InsertStatement, CreateStatement, UpdateStatement, \
+	DeleteStatement
 from . import _sentinel
 
 log = logger(__name__)

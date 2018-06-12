@@ -21,7 +21,7 @@ from . import __home__
 #	of other plugins.
 _importer_overrides = dict()
 
-def add_importer_config(target_plugin_name, override):
+def add_importer_override(target_plugin_name, override):
 	'''Add an importer override.'''
 	_importer_overrides[target_plugin_name] = override
 
@@ -35,7 +35,7 @@ def plugin_config(plugin_name):
 	overrides by other plugins, then the default plugin configuration itself.
 	'''
 	#	This import would is circular since the plugin manager needs access to
-	#	the global configuration and add_importer_config.
+	#	the global configuration and add_importer_override.
 	from .core.plugins import plugin_base_path
 
 	#	Since plugins are imported into the `canvas.plugins` package, the
@@ -56,8 +56,8 @@ def plugin_config(plugin_name):
 				dest[key] = value
 
 	#	Apply overrides.
-	if plugin_name in _importer_configs:
-		update_section(_importer_configs[plugin_name], plugin_config)
+	if plugin_name in _importer_overrides:
+		update_section(_importer_overrides[plugin_name], plugin_config)
 	if plugin_name in config.plugins:
 		update_section(config.plugins[plugin_name], plugin_config)
 	
@@ -74,7 +74,7 @@ def load_config():
 		local_config = deserialize_json(config_file.read())
 	for key, value in local_config.items():
 		config[key] = value
-
+	
 	#	Apply logging configuration.
 	log_levels = ['debug', 'info', 'warning', 'error', 'critical']
 	logging.basicConfig(

@@ -20,7 +20,7 @@ class AttributedDict(dict):
 		'''
 		for key, value in content.items():
 			self[key] = value
-		for key, value in kwargs:
+		for key, value in kwargs.items():
 			self[key] = value
 	
 	def __getattr__(self, attr):

@@ -30,14 +30,15 @@ def get_palette(name):
 		return loaded
 	
 	#	Retrieve the highest priority path to the palette.
-	path = get_path('assets', 'palettes', '%s.palette'%name)
+	path = get_path('palettes', '%s.palette'%name)
 	if not path:
 		#	No path exists; return the default Palette.
 		log.debug('No such palette %s; fallback to default', name)
 		return get_palette('default')
 	
 	#	Load, save, and return a new Palette instance.
-	return _palettes[name] = Palette(path)
+	palette = _palettes[name] = Palette(path)
+	return palette
 
 class Palette:
 	'''A representation of a parsed `.palette` file.'''

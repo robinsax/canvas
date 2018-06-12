@@ -3,6 +3,10 @@
 All of canvas's exceptions are packaged here.
 '''
 
+class Failed(Exception):
+	'''Raised when a test or launch fails.'''
+	pass
+
 class Immutable(Exception):
 	'''Raised when an immutable container is modified.'''
 	pass
@@ -55,6 +59,7 @@ class HTTPException(Exception):
 		self.status_code = status_code
 		self.title, self.description = title, description
 		self.headers = headers
+		self.context = None
 
 	def simple_response(self):
 		'''Return a plaintext response tuple of this exeception.'''

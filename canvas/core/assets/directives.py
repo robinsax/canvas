@@ -45,7 +45,7 @@ def directive(name, allow=('jsx', 'less'), priority=0):
 		return func
 	return directive_inner
 
-@directive('style', allow=('jsx',), 3)
+@directive('style', allow=('jsx',), priority=3)
 def apply_style_load(asset, *args):
 	'''The stylesheet inclusion directive.'''
 	stylesheets = ', '.join(["'%s'"%i for i in args])
@@ -91,7 +91,7 @@ def apply_include(asset, *args):
 		asset.paths.append(inclusion_path)
 		asset.source = '\n'.join((included_source, asset.source))
 
-@directive('load_model', priority=-1)
+@directive('load_model', allow=('jsx',), priority=-1)
 def apply_model_load(asset, *model_cls_list):
 	'''The model schema load directive.'''
 	models_dict = dict()

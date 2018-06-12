@@ -47,7 +47,7 @@ def request_body_parser(*mimetypes):
 		return func
 	return inner_request_body_parser
 
-@request_parser('application/json', 'text/json')
+@request_body_parser('application/json', 'text/json')
 def parse_json_request(body_data):
 	'''
 	Parse an incoming JSON body, storing JSON objects as `RequestParameters`.

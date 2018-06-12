@@ -9,7 +9,7 @@ accessed at any time with `RequestContext.get`.
 
 from threading import Lock, get_ident
 
-from .dictionaries import AttributedDict
+from ..dictionaries import AttributedDict
 
 class RequestContext(AttributedDict):
 	'''

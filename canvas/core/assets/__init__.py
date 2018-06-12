@@ -97,7 +97,7 @@ class ProcessedAsset(Asset):
 	def load(self):
 		'''Load and process this asset.'''
 		#	Load the primary module.
-		root_full_path = get_path('assets', self.paths[0])
+		root_full_path = get_path(self.paths[0])
 		with open(root_full_path, 'r') as root_source_file:
 			self.source = root_full_path
 		
@@ -107,7 +107,7 @@ class ProcessedAsset(Asset):
 		#	Process appropiately.
 		if self.ext == 'js':
 			self.data = transpile_jsx(self.source)
-		else if self.ext == 'css':
+		elif self.ext == 'css':
 			self.data = compile_less(self.source)
 		else:
 			raise AssetError('Invalid target extension for a processed asset:'
@@ -121,7 +121,7 @@ def new_asset(path):
 	Create a new asset given `path` exposed within the `/assets` realm, or
 	return `None`.
 	'''
-	asset = None
+	path, asset = os.path.join('assets', path), None
 
 	full_path = get_path(path)
 	if full_path:
@@ -141,21 +141,23 @@ def new_asset(path):
 		asset.load()
 	return asset
 
-def get_asset(path):
+def get_asset(route):
 	'''
-	Retrieve an asset given `path` as exposed within the `/assets` realm, or
+	Retrieve an asset given `route` as exposed within the configured asset realm, or
 	return `None`.
 	'''
+	route = route[1:]
+
 	start_time = time()
 	if route in _asset_cache:
-		asset = _asset_cache[path]
+		asset = _asset_cache[route]
 		if asset:
 			#	Ensure the asset is filesystem-synced, if it exists.
 			asset.update()
 	else:
 		#	Create and cache a new asset.
-		asset = _asset_cache[path] = new_asset(path)
+		asset = _asset_cache[route] = new_asset(route)
 	
 	if asset:
-		log.debug('Retrieved %s in %.3f', path, time() - start_time)
+		log.debug('Retrieved %s in %.3f', route, time() - start_time)
 	return asset
