@@ -10,6 +10,8 @@ _sentinel = object()
 
 from .type_adapters import TypeAdapter, type_adapter
 from .model import Model, model
+from .tables import Table
 from .columns import Column
 from .constraints import CheckConstraint, PrimaryKeyConstraint, \
 		ForeignKeyConstraint, NotNullConstraint
+from .session import Session, create_session

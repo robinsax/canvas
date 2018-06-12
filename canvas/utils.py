@@ -7,7 +7,7 @@ import logging
 
 from traceback import format_tb
 
-def create_callback_registrar():
+def create_callback_registrar(loop_arg=False):
 	'''
 	Create and return a callback registration decorator. Registred callbacks
 	are invoked with the `invoke` callable attribute of the decorator.
@@ -21,9 +21,15 @@ def create_callback_registrar():
 		return func
 
 	#	Define an invocation function and attach it to the registrar.
-	def invoker(*args, **kwargs):
-		for callback in registered:
-			callback(args, kwargs)
+	if loop_arg:
+		def invoker(*args, **kwargs):
+			for callback in registered:
+				callback(args, kwargs)
+	else:
+		def invoker(arg):
+			for callback in registered:
+				arg = callback(arg)
+			return arg
 	registerar.invoke = invoker
 
 	return registrar

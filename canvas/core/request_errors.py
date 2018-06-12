@@ -1,55 +1,59 @@
 # coding: utf-8
 '''
-Graceful controller service error handling.
+Error handling and response dispatch logic.
 '''
 
 from ..configuration import config
-from ..utils import format_exception
-from ..callbacks import define_callback_type, invoke_callbacks
-from .dictionaries import LazyAttributedDict
-from .json_io import serialize_json
+from ..utils import format_exception, create_callback_registrar
+from ..dictionaries import AttributedDict
+from ..json_io import serialize_json
+from .views import PageView, ErrorView
 from .responses import create_json, create_page
 
-define_callback_type('error', (LazyAttributedDict,), ext=True)
+on_error = create_callback_registrar()
 
-def get_error_response(http_ex, source_ex, route, verb, context):
-	error_dict = {
-		'code': http_ex.status_code,
-		'title': http_ex.title,
-	}
-	description = str(http_ex)
-	if description:
-		error_dict['description'] = description
-
+def get_error_response(http_ex, source_ex, context):
+	'''
+	Return an error response tuple given an `HTTPException`, the exception that
+	caused the latter if applicable, and a request context if applicable. 
+	'''
+	#	Collect error info.
+	error_dict = http_ex.get_info()
 	if config.development.debug:
+		context_repr = 'No request context'
+		if context:
+			context_repr = serialize_json(context, fallback=repr)
 		error_dict['debug_info'] = {
-			'traceback': format_exception(source_ex).strip(),
-			'context': None if context is None else serialize_json(context, fallback=repr)
+			'traceback': format_exception(source_ex),
+			'context': context_repr
 		}
 	
-	in_api_realm = route.startswith('/%s'%config.customization.api_route_prefix)
+	#	Check whether this request occurred at an endpoint.
+	in_api_realm = route.startswith('/%s'%(
+		config.customization.api_route_prefix
+	))
 
-	error_data = LazyAttributedDict({
-		'response': None,
-		'in_api_realm': in_api_realm,
-		'http_ex': http_ex,
-		'source_ex': source_ex,
-		'route': route,
-		'error_dict': error_dict,
-		'context': context
-	})
-	
-	invoke_callbacks('error', error_data)
+	#	Create an error diagnostic to pass to callbacks.
+	error_data = AttributedDict(
+		response=None,
+		in_api_realm=in_api_realm,
+		http_ex=http_ex,
+		source_ex=source_ex,
+		error_dict=error_dict,
+		context=context
+	)
+	#	Invoke callbacks.
+	on_error.invoke(error_data)
 	if error_data.response:
+		#	A callback supplied a response.
 		return error_data.response
 	
 	if in_api_realm or verb != 'get':
-		return create_json('error', error_dict, **{
-			'code': http_ex.status_code,
-			'headers': http_ex.headers
-		})
+		#	Serve a JSON response.
+		return create_json('error', error_dict, http_ex.status_code, 
+				http_ex.headers)
 	else:
-		return create_page('error.html', {
-			'__route__': route,
-			'error': error_dict
-		}, code=http_ex.status_code, headers=http_ex.headers)
+		#	Serve a webpage response.
+		page = PageView.resolved(' '.join((http_ex.code, http_ex.title)))
+		page.page_views.append(ErrorView(http_ex))
+		return create_page(page)

@@ -50,6 +50,13 @@ class Constraint(ObjectReference):
 		is attempted. If it is, return `True`. Implementation is optional.
 		'''
 		raise NotImplementedError()
+
+	def validator_info(self):
+		'''
+		Return a dictionary containing a representation of this constraint that
+		is understandable by a front-end validator.
+		'''
+		raise NotImplementedError()
 	
 	def describe(self):
 		'''

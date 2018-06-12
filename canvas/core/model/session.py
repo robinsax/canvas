@@ -24,7 +24,7 @@ class Session:
 	'''
 
 	def __init__(self):
-		'''Create a new session.'''
+		'''Create a new session. Use `create_session` instead.'''
 		self._connection = self._cursor = None
 		#	A dictionary for storing all actively loaded models. Keys are
 		#	of the format <host table name>=><primary key value>.
@@ -297,3 +297,7 @@ class Session:
 
 	def __del__(self):
 		self.close()
+
+def create_session():
+	'''A stable session creation interface.'''
+	return Session()

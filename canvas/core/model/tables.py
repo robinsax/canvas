@@ -16,6 +16,7 @@ class Table(ObjectReference, IJoinable):
 	in most use-cases.
 	'''
 	instances = list()
+	reference_map = dict()
 	
 	def __init__(self, name, contents):
 		'''
@@ -59,6 +60,11 @@ class Table(ObjectReference, IJoinable):
 		Table.instances.append(self)
 	
 	@classmethod
+	def get(cls, reference_key):
+		'''Return the table attached to the class named `reference_key`.'''
+		return Table.reference_map.get(reference_key)
+
+	@classmethod
 	def topo_order(cls):
 		'''
 		Return a topological sort of all tables, suitable for issuing creation
@@ -100,6 +106,9 @@ class Table(ObjectReference, IJoinable):
 		#	Link bidirectionally for de/re-proxying.
 		model_cls.__table__ = self
 		self.model_cls = model_cls
+
+		#	Store the referenceable name of this table.
+		Table.reference_map[model_cls.__name__] = self
 
 		#	Attach columns.
 		for name, column in self.columns.items():

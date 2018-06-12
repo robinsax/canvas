@@ -21,15 +21,15 @@ import os
 import re
 
 from ...exceptions import AssetError
-from ...namespace import export_ext
+from ...json_io import serialize_json
 from ..plugins import get_path
+from ..model import Table
 
 #	The global name to directive function mapping.
 _directives = dict()
 #	The regular expression used to match directives.
 _directive_re = re.compile(r'\/\/\s*::(\w+)\s+(.*)')
 
-@export_ext
 def directive(name, allow=('jsx', 'less'), priority=0):
 	'''
 	Declare the decorated function as being a directive.
@@ -46,21 +46,21 @@ def directive(name, allow=('jsx', 'less'), priority=0):
 	return directive_inner
 
 @directive('style', allow=('jsx',), 3)
-def apply_style_load(self, asset, *args):
+def apply_style_load(asset, *args):
 	'''The stylesheet inclusion directive.'''
 	stylesheets = ', '.join(["'%s'"%i for i in args])
 
 	asset.source = 'cv.loadStyle(%s);\n%s'%(stylesheets, asset.source)
 
 @directive('import', allow=('jsx',), priority=2)
-def apply_import(self, asset, *args):
+def apply_import(asset, *args):
 	'''The depenency declaration directive.'''
 	to_import = ', '.join(["'%s'"%i for i in args])
 
 	asset.source = 'cv.import([%s], () => {\n%s\n});'%(to_import, asset.source)
 
 @directive('export', allow=('jsx',), priority=1)
-def apply_export(self, asset, *args):
+def apply_export(asset, *args):
 	'''
 	The module exposure directive. The `--hard` option specifies that the
 	referenced object *is* the object to expose rather than a property of it.
@@ -78,9 +78,10 @@ def apply_export(self, asset, *args):
 	)
 
 @directive('include', priority=-1)
-def apply_include(self, asset, *args):
+def apply_include(asset, *args):
 	'''The literal file inclusion directive.'''
 	for inclusion in args:
+		#	Convert from package reference to path.
 		inclusion_path = '.'.join((
 			inclusion.replace('.', os.pathsep), asset.ext
 		))
@@ -89,6 +90,30 @@ def apply_include(self, asset, *args):
 
 		asset.paths.append(inclusion_path)
 		asset.source = '\n'.join((included_source, asset.source))
+
+@directive('load_model', priority=-1)
+def apply_model_load(asset, *model_cls_list):
+	'''The model schema load directive.'''
+	models_dict = dict()
+	for model_cls_ref in model_cls_list:
+		#	Retrieve input and create output container.
+		table, schema_dict = Table.get(model_cls_ref), dict()
+		for column in model_cls.columns:
+			validators = list()
+			#	Try to get the representation of each constraint as a validator.
+			for constraint in column.constraints:
+				try:
+					validators.append((constraint.validator_info(), constraint.error_message))
+				except NotImplementedError: pass
+			
+			schema_dict[column.name] = {
+				'type': column.input_type,
+				'validators': validators
+			}
+		
+		#	Save the output on the to-be-generated object.
+		models_dict[table.model_cls.__name__] = schema_dict
+	asset.source = '\n'.join(('='.join(('const model', serialize_json(models_dict)), asset.source))
 
 def apply_directives(asset):
 	'''

@@ -6,59 +6,98 @@ Routing management.
 import re
 
 from ..exceptions import NotFound
-from ..callbacks import define_callback_type, invoke_callbacks
+from ..utils import create_callback_registrar
 
-define_callback_type('routing', arguments=[dict])
-
-#	TODO: get controller and get controllers
-
+#	Define a variable sentinel that keyed Variables can use to recognize each
+#	other.
+_variable_sentinel = object()
+#	Define the root of the route map, a dictionary tree with controller leaves.
 _route_map = dict()
 
-def create_routing(route_map):
-	global _route_map
+#	Define the route map modification callback.
+on_route_mapping = create_callback_registrar(loop_arg=True)
 
-	invoke_callbacks('routing', route_map)
+class Variable:
+	'''Used to store named variable route parts.'''
 
-	_route_map = route_map
+	def __init__(self, name):
+		'''::name The name of the variable for the eventual `RouteString`.'''
+		self.name = name
 
-def resolve_route(real_route):
-	controller, real_variables = None, None
+	def __hash__(self):
+		return hash(_variable_sentinel)
 	
-	real_parts = real_route.split('/')
-	for route in _route_map:
-		parts = route.split('/')
-		if len(real_parts) != len(parts):
-			continue
+	def __eq__(self, other):
+		return other is _variable_sentinel
 
-		matches, variables = True, dict()
-		for part, real_part in zip(parts, real_parts):
-			if part == real_part:
-				continue
+class RouteString(str):
+	'''
+	The string used to contain the current route within the request context.
+	If a route has variables, their values are accessible as attributes of
+	this string.
+	'''
+
+	def with_variables(self, variables):
+		'''Assign all resolved route variables.'''
+		for key, value in variables.items():
+			setattr(self, key, value)
+		return self
+
+def create_routing(controller_list):
+	'''
+	Populate the global route map with the `Controller`s in `controller_list`.
+	'''
+	
+	#	Define a route map updater.
+	def update_route_map(route, controller):
+		#	Follow this route into the route map, generating branches and
+		#	placing the controller as a leaf.
+		current_node, route_parts = _route_map, route[1:].split('/')
+		for i, route_part in enumerate(route_parts):
+			#	Check if this is a variable definition, updating the key
+			#	to a variable if it is.
+			variable_definition = re.match(r'^<(\w+)>$', route_part)
+			if variable_definition:
+				route_part = Variable(variable_definition.group(1))
 			
-			variable_defn = re.match(r'<(.*?:)?(.*?)>', part)
-			if variable_defn:
-				typing = variable_defn.group(1)
-				if typing:
-					try:
-						conversion = {
-							'int': lambda x: int(x)
-						}[typing[:-1]]
+			if route_part not in current_node:
+				#	Expand the tree.
+				if i == len(parts) - 1:
+					current_node[part] = controller
+				else:
+					current_node[part] = dict()
+					
+			current_node = current_node[route_part]
 
-						real_part = conversion(real_part)
-					except:
-						matches = False
-						break
-				variables[variable_defn.group(2)] = real_part
-			else:
-				matches = False
-				break
+	#	Update the route map for all routes for all controllers.
+	for controller in controller_list:
+		for route in controller.__routes__:
+			update_route_map(route, controller)
 
-		if matches:
-			controller = _route_map[route]
-			real_variables = variables
-			break
+def resolve_route(route):
+	current_node, variables = _route_map, dict()
 
-	if controller is None:
-		raise NotFound(real_route)
-
-	return controller, variables
+	#	Follow this route into the map to a controller leaf, raising `NotFound`
+	#	if any traversal error occurs and collecting encountered variables.
+	for route_part in route[1:].split('/'):
+		if not isinstance(current_node, dict):
+			#	Went too far.
+			raise NotFound(route)
+		if route_part in current_node:
+			#	Traverse deeper.
+			current_node = current_node[route_part]
+		elif _variable_sentinel in current_node:
+			#	Retreive the encountered Variable and store a value for it.
+			#	Optimized for the non-variable case.
+			key_list = list(cur.keys())
+			variable_name = key_list[key_list.index(_variable_sentinel)].name
+			variables[variable_name] = route_part
+			#	Traverse deeper.
+			current_node = current_node[_variable_sentinel]
+		else:
+			#	No further branch.
+			raise NotFound(route)
+	if isinstance(current_node, dict):
+		#	Didn't reach a controller.
+		raise NotFound(route)
+	return current_node, variables

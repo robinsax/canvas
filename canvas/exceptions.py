@@ -52,6 +52,10 @@ class HTTPException(Exception):
 		self.title, self.description = title, description
 		self.headers = headers
 
+	def simple_response(self):
+		'''Return a plaintext response tuple of this exeception.'''
+		return self.title, self.status_code, None, 'text/plain'
+
 	def get_info(self):
 		'''
 		Return a dictionary containing the information about this error that
@@ -65,6 +69,14 @@ class HTTPException(Exception):
 			info['description'] = self.description
 		return info
 
+	def maybe_report(self, log):
+		'''Report this error in the log if configuration warrants.'''
+		from .configuration import config
+		from .utils import format_exception
+
+		if self.status_code > 499 or config.development.log_client_errors:
+			log.error(format_exception(ex))
+	
 	def __str__(self):
 		return self.description
 
@@ -174,9 +186,9 @@ class InternalServerError(HTTPException):
 	request.
 	'''
 
-	def __init__(self, is_reraise=False):
+	def __init__(self, reraised_from=None):
 		'''
 		::is_reraise Whether or not this is a reraise of another exception.
 		'''
 		super().__init__(500, 'Internal Server Error')
-		self.is_reraise = is_reraise
+		self.reraised_from = reraised_from
