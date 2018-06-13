@@ -73,6 +73,7 @@ def deserialize_json(json_str):
 @json_serializer(datetime)
 def serialize_datetime(datetime_obj):
 	'''A datetime serializer that honours the configured output format.'''
-	from ..configuration import config
-
+	#	This module is used to load the configuration.
+	from .configuration import config
+	
 	return datetime_obj.strftime(config.datetime.output_format)

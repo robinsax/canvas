@@ -108,8 +108,6 @@ class ProcessedAsset(Asset):
 
 		#	Process appropiately.
 		if self.ext == 'js':
-			with open('c:/users/rsaxifrage/desktop/a.out', 'w') as f:
-				f.write(self.source)
 			self.data = transpile_jsx(self.source)
 		elif self.ext == 'css':
 			self.data = compile_less(self.source)

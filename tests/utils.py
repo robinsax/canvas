@@ -3,10 +3,14 @@
 Tests on the `utils` and `dictionaries` packages.
 '''
 
+from datetime import datetime
+
 import canvas.tests as cvt
 
+from canvas.exceptions import Immutable, BadRequest
 from canvas.utils import create_callback_registrar, cached_property
 from canvas.dictionaries import RequestParameters
+from canvas.json_io import serialize_datetime
 
 @cvt.test('Utilities')
 def test_utilities():
@@ -37,6 +41,7 @@ def test_utilities():
 
 @cvt.test('RequestParameters dictionary')
 def test_dictionaries():
+	#	Prepare an instance.
 	input_dict = {
 		'x': [
 			{
@@ -46,9 +51,17 @@ def test_dictionaries():
 			}
 		]
 	}
-	
-	with cvt.assertion('2 stage creation', True):
-		rp = RequestParameters(input_dict)
-		rp.propagate_and_lock()
-	
-	
+	rp = RequestParameters(input_dict)
+	rp.allowed_key = 1
+	rp.datetime = serialize_datetime(datetime.now())
+	rp.propagate_and_lock()
+
+	#	Perform assertions.
+	with cvt.assertion('Lock applies', Immutable):
+		rp.new_key = 2
+	with cvt.assertion('Missing parameter applies', BadRequest):
+		rp.fake_key
+	with cvt.assertion('Type check applies', BadRequest):
+		rp[('allowed_key', datetime)]
+	with cvt.assertion('Datetime type check applies'):
+		rp[('datetime', datetime)]

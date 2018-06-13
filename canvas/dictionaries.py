@@ -5,30 +5,36 @@ A set of special dictionaries used throughout canvas.
 
 from datetime import datetime
 
-from .exceptions import Immutable, UnprocessableEntity, BadRequest
+from .exceptions import Immutable, BadRequest
 
-class AttributedDict(dict):
+class AttributedDict(dict, object):
 	'''
 	A dictionary that allows item access and assignment through attributes.
 	'''
 
-	def __init__(self, content=dict(), **kwargs):
+	def __init__(self, content=dict(), ignored=tuple(), **kwargs):
 		'''
 		Create a new attribute-bound dictionary.
 		::contents A source dictionary.
 		::kwargs Additional dictionary items.
 		'''
+		self.__ignored__ = ignored
 		for key, value in content.items():
 			self[key] = value
 		for key, value in kwargs.items():
 			self[key] = value
 	
 	def __getattr__(self, attr):
+		if attr == '__ignored__' or attr in self.__ignored__:
+			return super().__getattribute__(attr)
 		return self[attr]
 	
 	def __setattr__(self, attr, value):
+		if attr == '__ignored__' or attr in self.__ignored__:
+			return super().__setattr__(attr, value)
 		self[attr] = value
 
+#	TODO: Review the need for immutability.
 class RequestParameters(AttributedDict):
 	'''
 	The dictionary used to contain supplied request parameters which allows
@@ -44,11 +50,11 @@ class RequestParameters(AttributedDict):
 	'''
 
 	def __init__(self, content, locked=False):
-		super().__init__(content)
+		super().__init__(content, ignored=('_locked', 'propagate_and_locked'))
 		self._locked = locked
 
 	@classmethod
-	def _propagate_onto(cls, current_object):
+	def propagate_onto(cls, current_object):
 		'''
 		Replace all dictionaries within `current_object` with 
 		`RequestParameters`.
@@ -56,23 +62,25 @@ class RequestParameters(AttributedDict):
 		if isinstance(current_object, dict):
 			for key, value in current_object.items():
 				if isinstance(value, dict):
-					current_object[key] = cls(value, True)
-					cls.propagate_onto(visit_one(current_object[key]))
-				else:
-					visit_one(value)
+					current_object[key] = cls(value)
+				cls.propagate_onto(current_object[key])
 		elif isinstance(current_object, (list, tuple)):
 			for i, item in enumerate(current_object):
 				if isinstance(item, dict):
-					current_object[i] = cls(item, True)
+					current_object[i] = cls(item)
 					cls.propagate_onto(current_object[i])
 
-	def _propagate_and_lock(self):
+	def propagate_and_lock(self):
 		'''Propagate this dictionary type onto all constituent dictionaries.'''
 		RequestParameters.propagate_onto(self)
-		self.locked = True
+		self._locked = True
 
 	def __setitem__(self, key, value):
-		if self.locked:
+		try:
+			locked = self._locked
+		except AttributeError:
+			locked = False
+		if locked:
 			raise Immutable()
 		return super().__setitem__(key, value)
 		
@@ -84,7 +92,7 @@ class RequestParameters(AttributedDict):
 		
 		if key not in self:
 			#	This required parameter was not supplied.
-			raise UnprocessableEntity('Missing request parameter "%s"'%key)
+			raise BadRequest('Missing request parameter "%s"'%key)
 		
 		value = super().__getitem__(key)
 		if not expected_typ:

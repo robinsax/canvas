@@ -20,7 +20,7 @@ alter_root_page_view = create_callback_registrar(loop_arg=True)
 
 class View:
     '''
-    The root view class. Overriding in redundant as the `view` decorator causes
+    The root view class. Overriding is redundant as the `view` decorator causes
     it to occur implicitly.
     '''
 

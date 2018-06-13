@@ -190,7 +190,7 @@ class ValidationErrors(UnprocessableEntity):
 		info = super().get_info()
 		info['errors'] = self.errors
 		if self.summary:
-			info['error_summary'] = self.error_summary
+			info['error_summary'] = self.summary
 		return info
 
 class InternalServerError(HTTPException):

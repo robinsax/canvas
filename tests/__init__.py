@@ -3,4 +3,4 @@
 Unit tests on the canvas framework.
 '''
 
-from . import utils
+from . import exceptions, utils, json

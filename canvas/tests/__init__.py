@@ -26,23 +26,32 @@ class assertion:
 	'''A context within which assertions can be safely performed.'''
 	this_test = 0
 
-	def __init__(self, name, crash_test=False):
+	def __init__(self, name, ex_cls=None):
 		self.name = name
-		self.crash_test = crash_test
+		self.ex_cls = ex_cls
 
 	def __enter__(self):
 		log.info('\t%s', self.name)
 
-	def __exit__(self, ex_type, ex_value, traceback):
-		if traceback and self.crash_test or isinstance(ex_value, AssertionError):
-			log.warning('\t\tFailed')
-			
-			log.warning(format_exception(ex_value))
-			
-			raise Failed()
-		
+	def do_passed(self):
 		log.info('\t\tPassed')
 		assertion.this_test += 1
+
+	def __exit__(self, ex_type, ex_value, traceback):
+		if self.ex_cls:
+			if not traceback or not isinstance(ex_value, self.ex_cls):
+				log.warning('\t\tFailed')
+				raise Failed()
+			else:
+				self.do_passed()
+				return True
+		else:
+			if traceback and isinstance(ex_value, AssertionError):
+				log.warning('\t\tFailed')
+				log.warning(format_exception(ex_value))
+				raise Failed()
+			else:
+				self.do_passed()
 
 def run_tests():
 	passed, failed = 0, 0

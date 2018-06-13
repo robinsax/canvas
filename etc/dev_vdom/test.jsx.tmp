@@ -1,0 +1,16 @@
+(() => {
+cv.loadStyle('someStyle');
+cv.import(['ui', 'api'], () => {
+
+
+
+
+const doThing = () => {
+	ui.createAlert(api.get('/current_alert'));
+}
+
+cv.export('test', {
+doThing: doThing
+});
+});
+})();
