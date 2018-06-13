@@ -3,11 +3,11 @@
 *	JSX and LESS asset processor invocation. Invoked with either 'jsx' or 
 *	'less' in the command line; reads processing target from stdin.
 */
-const babel = require('babel-core'), less = require('less');
+const getStdIn = require('get-stdin'), babel = require('babel-core'), less = require('less');
 
 //	Define JSX transpilation.
-const transpileJSX = source =>
-	babel.transform(source, {
+const transpileJSX = source => {
+	return babel.transform(source, {
 		presets: [
 			['es2015', {
 				modules: false
@@ -20,34 +20,37 @@ const transpileJSX = source =>
 			}]
 		]
 	}).code;
+}
 
 //	Define less compilation.
 const compileLESS = source => {
-	const parser = new less.Parser({processImports: false});
 	let result = null;
-
-	lessParser.parse(source, (err, res) => {
+	
+	less.render(source, {processImports: false}, (err, res) => {
 		if (err) throw err;
-		result = res;
+		result = res.css;
 	});
 
 	return result;
 }
 
 //	Read stdin.
-let input = [];
-process.stdin.on('data', chunk => { input.push(chunk) });
-
-//	Invoke the approprate processor once input is ready.
-process.stdin.on('end', ((which, input) => {
-	switch (which) {
-		case 'jsx':
-			console.log(transpileJSX(input));
-			return;
-		case 'less':
-			console.log(compileLESS(input));
-			return;
-		default:
-			throw which;
+getStdIn().then(input => {
+	try {
+		const which = process.argv[2];
+		switch (which) {
+			case 'jsx':
+				console.log(transpileJSX(input));
+				return;
+			case 'less':
+				console.log(compileLESS(input));
+				return;
+			default:
+				throw which;
+		}
 	}
-})(process.argv[2], input.join('')));
+	catch (ex) {
+		console.error(ex);
+		process.exit(1);
+	}
+});

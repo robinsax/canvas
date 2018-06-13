@@ -1,11 +1,10 @@
-#ECF0F1 	-> background
-black 		-> text
-grey 		-> subtext, input
-light-grey 	-> focused-input
-#2C3E50 	-> theme1
-#3498DB 	-> theme2, link
-#2980B9 	-> theme3, visited-link
-#E74C3C 	-> highlight, title
+#fefefe 	-> background
+#000000 	-> text
+#dedede 	-> subtext, input, focused-input
+#cccccc 	-> theme1, theme3, visited-link
+#bbbbbb 	-> theme2, link
+#aaaaaa 	-> highlight, title
+
 red 		-> error
 orange		-> warning
 green 		-> success

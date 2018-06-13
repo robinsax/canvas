@@ -43,7 +43,8 @@ def launch_serve(args):
 	init=True
 )
 def launch_tests(args):
-	from ..core.plugins import plugin_base_path
+	from ..core import plugin_base_path
+	from ..tests import run_tests
 
 	if len(args) > 0:
 		import_from = plugin_base_path(args[0])

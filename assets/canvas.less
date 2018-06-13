@@ -7,39 +7,22 @@
 	box-sizing: border-box;
 }
 
-.container(){
+//	Containers.
+html, body {
+	position: relative;
 	width: 100%;
 	height: 100%;
 	background-color: @background;
-}
-
-html {
-	.container();
 	
-	body {
-		.container();
-		//position: relative;
-		color: @text;
-
-		font-family: @text-font;
-		font-size: 12pt;
-
-		& > .meta {
-			display: none;
-		}
-	}
+	font-family: @text-font;
+	font-size: 12pt;
+	color: @text;
 }
 
-[cv-event] {
-	cursor: pointer;
-}
-
+//	Links.
 a {
 	color: @link;
-
-	&:not(.button):visited {
-		color: @visited-link;
-	}
+	&:visited {	color: @visited-link; }
 
 	&.clear {
 		text-decoration: none;
@@ -47,43 +30,100 @@ a {
 	}
 }
 
-//	Paragraph styles.
+//	Paragraphs.
 p {
-	margin: 1em 0px;
+	margin: 0.5em 0px;
 	font-size: 12pt;
 	line-height: 1.4;
 	color: @text;
 }
 
-ul, ol {
-	margin-left: 1.5em;
-}
-
-p, li {
-	line-height: 1.5;
-}
-
-.subtext {
-	color: @subtext;
-	font-size: 11pt;
-}
-
-.large-text {
-	font-size: 20pt;
-}
+//	Lists.
+ul, ol { margin-left: 1.5em; }
+li { line-height: 1.5; }
 
 //	Heading styles.
 h1, h2, h3, h4 {
 	margin: 0px;
-	padding: 0.25em 0em 0.5em 0em;
-	font-size: 40pt; 
+	padding: 0.25em 0em;
 	font-weight: normal;
 	font-family: @title-font;
 	color: @title;
 }
+h2 { font-size: 28pt; }
 h2 { font-size: 25pt; }
 h3 { font-size: 18pt; }
 h4 { font-size: 16pt; }
+
+//	Palette applications.
+.theme1 { color: @theme1; }
+.theme2 { color: @theme2; }
+.theme3 { color: @theme3; }
+.highlight { color: @highlight; }
+
+//	Visiblity modifiers.
+.invisible { visibility: hidden !important; }
+.hidden { display: none !important; }
+
+//	Common layout, marked important if they are single-effect.
+.full-height { height: 100% !important; }
+.full-width { width: 100% !important; }
+
+.vertical-center {
+	position: relative;
+	top: 50%;
+	transform: translateY(-50%);
+}
+.fill-parent {
+	position: absolute;
+	top: 0px; left: 0px;
+	right: 0px; bottom: 0px;
+}
+
+.align-right { text-align: right !important; }
+.align-left { text-align: left !important; }
+.align-center { text-align: center !important; }
+
+.padding { padding: 8px; }
+.margin { margin: 8px; }
+.indent-left { margin-left: 15px; }
+.indent-right { margin-right: 15px; }
+
+//	Components.
+.col-1, .col-2, .col-3, .col-4, .col-5, .col-6,
+.col-7, .col-8, .col-9, .col-10, .col-11, .col-12 {
+	display: inline-block;
+	vertical-align: top;
+	padding: 15px;
+	margin: 15px;
+	overflow-wrap: break-word;
+}
+
+.col-12 { width: e('calc(100% - 30px)'); }
+.col-9 { width: e('calc(75% - 30px)'); }
+.col-8 { width: e('calc(66.6666666666% - 30px)'); }
+.col-6 { width: e('calc(50% - 30px)'); }
+.col-5 { width: e('calc(41.6666666666% - 30px)'); }
+.col-4 { width: e('calc(33.333333333333% - 30px)'); }
+.col-3 { width: e('calc(25% - 30px)'); }
+
+@media screen and (max-width: @breakpoint1){
+	.col-12, .col-9 { width: e('calc(100% - 30px)'); }
+	.col-6 { width: e('calc(66.66666666% - 30px)'); }
+	.col-4 { width: e('calc(50% - 30px)'); }
+	.col-3 { width: e('calc(33.333333% - 30px)'); }
+}
+
+@media screen and (max-width: @breakpoint2) {
+	.col-6, .col-8 { width: e('calc(100% - 30px)'); }
+	.col-3 { width: e('calc(50% - 30px)'); }
+}
+
+@media screen and (max-width: @breakpoint3) {
+	.col-4, .col-3 { width: e('calc(100% - 30px)'); }
+}
+
+/*
 
 //	Form styles.
 .error-summary {
@@ -221,14 +261,6 @@ h4 { font-size: 16pt; }
 
 .highlight { color: @highlight; }
 
-//	Visiblity modifiers.
-.invisible {
-	visibility: hidden !important
-}
-.hidden {
-	display: none !important;
-}
-
 .full-height {
 	height: 100%;
 }
@@ -324,60 +356,60 @@ input[type="submit"] {
 		background-color: inherit;
 	}
 
-	&.col-12 {
+	.col-12 {
 		width: e('calc(100% - 30px)');
 	}
-	&.col-9 {
+	.col-9 {
 		width: e('calc(75% - 30px)');
 	}
-	&.col-8 {
+	.col-8 {
 		width: e('calc(66.6666666666% - 30px)');
 	}
-	&.col-6 {
+	.col-6 {
 		width: e('calc(50% - 30px)');
 	}
-	&.col-5 {
+	.col-5 {
 		width: e('calc(41.6666666666% - 30px)');
 	}
-	&.col-4 {
+	.col-4 {
 		width: e('calc(33.333333333333% - 30px)');
 	}
-	&.col-3 {
+	.col-3 {
 		width: e('calc(25% - 30px)');
 	}
 
 	@media screen and (max-width: @breakpoint1){
-		&.col-12,
-		&.col-9 {
+		.col-12,
+		.col-9 {
 			width: e('calc(100% - 30px)');
 		}
 		
-		&.col-6 {
+		.col-6 {
 			width: e('calc(66.66666666% - 30px)');
 		}
 
-		&.col-4 {
+		.col-4 {
 			width: e('calc(50% - 30px)');
 		}
 		
-		&.col-3 {
+		.col-3 {
 			width: e('calc(33.333333% - 30px)');
 		}
 	}
 
 	@media screen and (max-width: @breakpoint2) {
-		&.col-6, &.col-8 {
+		.col-6, .col-8 {
 			width: e('calc(100% - 30px)');
 		}
 		
-		&.col-3 {
+		.col-3 {
 			width: e('calc(50% - 30px)');
 		}
 	}
 
 	@media screen and (max-width: @breakpoint3) {
-		&.col-4,
-		&.col-3 {
+		.col-4,
+		.col-3 {
 			width: e('calc(100% - 30px)');
 		}
 	}
@@ -455,3 +487,4 @@ code {
 		opacity: 0.5;
 	}
 }
+*/

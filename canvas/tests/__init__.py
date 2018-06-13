@@ -1,72 +1,62 @@
 # coding: utf-8
 '''
-Testing interface definition.
+The testing API defined in this package is for authoring unit test suites
+against either canvas itself of plugins. It's corresponding CLI launch
+argument is `--test`.
 '''
 
+from ..exceptions import Failed
 from ..utils import logger, format_exception
 
+#	Create a log.
 log = logger(__name__)
 
-_tests = []
-_assertions = [0]
-
-class Failure(Exception): pass
-
-def fail(message):
-	raise Failure(message)
+#	Define the global test function list.
+_tests = list()
 
 def test(name):
-	def test_wrap(func):
+	'''The test function registrar.'''
+	def inner_test(func):
 		func.__test__ = name
 		_tests.append(func)
 		return func
-	return test_wrap
+	return inner_test
 
-def assertion(name, condition):
-	log.info('\t%s', name)
-	if not condition:
-		raise Failure('Failed assertion %s'%name)
+class assertion:
+	'''A context within which assertions can be safely performed.'''
+	this_test = 0
 
-	_assertions[0] += 1
+	def __init__(self, name, crash_test=False):
+		self.name = name
+		self.crash_test = crash_test
 
-def raise_assertion(name, cls, trigger):
-	log.info('\t%s', name)
-	try:
-		trigger()
-	except cls:
-		_assertions[0] += 1
-		return
-	
-	raise Failure('Failed raise assertion: %s'%name)
+	def __enter__(self):
+		log.info('\t%s', self.name)
 
-def create_client():	
-	from .client import CanvasTestClient
-	
-	return CanvasTestClient()
-
-def reset_controllers():
-	from ..core import initialize_controllers
-
-	initialize_controllers()
-
-def reset_model():
-	from ..core.model import initialize_model
-
-	initialize_model()
+	def __exit__(self, ex_type, ex_value, traceback):
+		if traceback and self.crash_test or isinstance(ex_value, AssertionError):
+			log.warning('\t\tFailed')
+			
+			log.warning(format_exception(ex_value))
+			
+			raise Failed()
+		
+		log.info('\t\tPassed')
+		assertion.this_test += 1
 
 def run_tests():
 	passed, failed = 0, 0
 	log.info('Running %d tests', len(_tests))
 
 	for test in _tests:
-		_assertions[0] = 0
+		assertion.this_test = 0
 		log.info('Running test: %s', test.__test__)
 
 		try:
 			test()
-			log.info('\tPassed! (%d assertions)'%_assertions[0])
+			log.info('\tPassed! (%d assertions)', assertion.this_test)
 			passed += 1
-		except Failure as ex:
+		except Failed as ex:
 			log.warning('\tFailed!\n%s', format_exception(ex))
 			failed += 1
 		except BaseException as ex:

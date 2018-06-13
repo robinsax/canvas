@@ -2,19 +2,11 @@
 '''
 Asset preprocessor directives are used to make JavaScript dependency and 
 stylesheet management easier. They have the following format:
-
 ```
 //	::<directive> <argument 1>, ..., <argument n>
 ```
 
 The `directive` decorator can be used to define custom directives.
-
-The default directives are:
-* `import x`: A JavaScript dependency declaration.
-* `export y`: A declaration of exposed object and functions (by default, a 
-	JavaScript asset exposes nothing as it is executed in a closure).
-* `style x`: A stylesheet inclusion.
-* `include x`: A literal file insertion.
 '''
 
 import os
@@ -27,6 +19,8 @@ from ..model import Table
 
 #	The global name to directive function mapping.
 _directives = dict()
+#	The output to input file extension mapping.
+_output_to_input = dict(js='jsx', css='less')
 #	The regular expression used to match directives.
 _directive_re = re.compile(r'\/\/\s*::(\w+)\s+(.*)')
 
@@ -41,6 +35,7 @@ def directive(name, allow=('jsx', 'less'), priority=0):
 	def directive_inner(func):
 		func.__priority__ = priority
 		func.__allow_in__ = allow
+		func.__directive__ = name
 		_directives[name] = func
 		return func
 	return directive_inner
@@ -65,16 +60,21 @@ def apply_export(asset, *args):
 	The module exposure directive. The `--hard` option specifies that the
 	referenced object *is* the object to expose rather than a property of it.
 	'''
-	if args[-1] == '--hard':
+	if args[-1].endswith(' --hard'):
 		#	Export the specified object directly.
+		args = args[0].split(' ')
 		if len(args) != 2:
 			raise AssetError('You can only export a single object with --hard')
 		to_export = args[0]
 	else:
-		to_export = ',\n'.join(["%s: %s"%(a, a) for a in args])
+		to_export = ''.join((
+			'\n{',
+			',\n'.join([': '.join((a, a)) for a in args]),
+			'}\n'
+		))
 	
-	asset.source = "%s\ncv.export('%s', {\n%s\n});"%(
-		asset.source, asset.package_name, to_export
+	asset.source = "%s\ncv.export('%s', %s);"%(
+		asset.source, asset.module, to_export
 	)
 
 @directive('include', priority=-1)
@@ -130,6 +130,7 @@ def apply_directives(asset):
 		#	Assert the use is valid.
 		if not directive:
 			raise AssetError('No such directive: %s'%key)
+		ext = _output_to_input[asset.ext]
 		if ext not in directive.__allow_in__:
 			raise AssetError('Directive %s cannot be used in .%s files'\
 					%(key, ext))
@@ -146,8 +147,9 @@ def apply_directives(asset):
 		try:
 			directive(asset, *args)
 		except TypeError as ex:
-			#	TODO: Better safety
-			raise AssetError('Invalid directive usage') from ex
+			raise AssetError(
+				'Invalid usage of directive %s'%directive.__directive__
+			) from ex
 
 	if asset.ext == 'js':
 		#	Closurize JavaScript.

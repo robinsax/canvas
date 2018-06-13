@@ -45,10 +45,10 @@ class RequestParameters(AttributedDict):
 
 	def __init__(self, content, locked=False):
 		super().__init__(content)
-		self.locked = locked
+		self._locked = locked
 
 	@classmethod
-	def propagate_onto(cls, current_object):
+	def _propagate_onto(cls, current_object):
 		'''
 		Replace all dictionaries within `current_object` with 
 		`RequestParameters`.
@@ -66,7 +66,7 @@ class RequestParameters(AttributedDict):
 					current_object[i] = cls(item, True)
 					cls.propagate_onto(current_object[i])
 
-	def propagate_and_lock(self):
+	def _propagate_and_lock(self):
 		'''Propagate this dictionary type onto all constituent dictionaries.'''
 		RequestParameters.propagate_onto(self)
 		self.locked = True

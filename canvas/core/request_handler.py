@@ -178,8 +178,8 @@ def serve_asset(request):
 	#	Run cache check.
 	if 'If-Modified-Since' in request.headers:
 		cache_time = datetime.strptime(request.headers['If-Modified-Since'], 
-				'%a, %d %b %Y %H:%m:%m')
-		if asset.valid_time <= cache_time:
+				'%a, %d %b %Y %H:%m:%S GMT')
+		if asset.mtime <= cache_time:
 			return BaseResponse(status=304)
 	
 	#	Return the asset.
@@ -189,7 +189,7 @@ def serve_asset(request):
 		mimetype=asset.mimetype,
 		headers={
 			'Cache-Control': 'must-revalidate',
-			'Last-Modified': latest_mtime.strftime('%a, %d %b %Y %H:%m:%m GMT')
+			'Last-Modified': asset.mtime.strftime('%a, %d %b %Y %H:%m:%S GMT')
 		}
 	)
 

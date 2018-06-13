@@ -57,7 +57,7 @@ def create_callback_registrar(loop_arg=False):
 	else:
 		def invoker(*args, **kwargs):
 			for callback in registered:
-				callback(args, kwargs)
+				callback(*args, **kwargs)
 		
 	registrar.invoke = invoker
 
@@ -88,7 +88,7 @@ def cached_property(meth):
 	#	Define the cache-checking retrieval.
 	def retrieval(self):
 		if not cache:
-			cache[0].append(meth(self))
+			cache.append(meth(self))
 		return cache[0]
 	
 	#	Return as a property.

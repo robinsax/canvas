@@ -127,8 +127,8 @@ class ErrorView:
         self.error = error
 
     def render(self):
-        return <div class="align-center vertical-center">
-            <div>
+        return <div class="align-center fill-parent">
+            <div class="col-6 vertical-center">
                 <h2 class="align-left">
                     { ' '.join((str(self.error['code']), self.error['title'])) }
                 </h2>

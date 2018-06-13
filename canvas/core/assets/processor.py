@@ -32,15 +32,15 @@ def process(source, which):
 	
 	#	Synchronously run the processor script.
 	proc_proc = Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE)
-	stdout, stderr = proc_proc.communicate()
+	stdout, stderr = proc_proc.communicate(input=source.encode('utf-8'))
 
 	#	Assert the processing was successful.
 	if proc_proc.returncode != 0:
 		raise AssetError('Asset processing failed with code %s:\n%s\n'%(
 			proc_proc.returncode, stderr.decode('utf-8')
 		))
-
-	return stdout
+	
+	return stdout.decode('utf-8')
 
 def transpile_jsx(source):
 	'''Transpile JSX into ES5 JavaScript.'''
@@ -51,5 +51,5 @@ def compile_less(source, palette='default'):
 	Compile LESS into CSS.
 	::palette The name of the palette to use.
 	'''
-	source = '\n'.join((source, get_palette(palette).as_less()))
+	source = '\n'.join((get_palette(palette).as_less(), source))
 	return process(source, 'less')

@@ -1,8 +1,6 @@
 # coding: utf-8
 '''
-Unit tests on the canvas backend.
+Unit tests on the canvas framework.
 '''
 
-import canvas.tests as cvt
-
-from . import dictionaries, model, service
+from . import utils

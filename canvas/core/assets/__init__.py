@@ -12,6 +12,7 @@ from datetime import datetime
 from mimetypes import guess_type
 
 from ...utils import logger
+from ...configuration import config
 from ..plugins import get_path
 from .directives import directive, apply_directives
 from .processor import transpile_jsx, compile_less
@@ -79,9 +80,10 @@ class ProcessedAsset(Asset):
 		'''
 		super().__init__()
 		self.paths, self.ext = [root_path], ext
-		self.mimetype = guess_type(ext)
+		self.mimetype = guess_type('.'.join(('a', ext)))[0]
 		#	Define the referenced name of this asset as a module.
-		self.module = root_path[:-(len(ext) + 1)].replace('/', '.')
+		realm_end_i = len(config.customization.asset_route_prefix) + 1
+		self.module = root_path[realm_end_i:-(len(ext) + 2)].replace('/', '.')
 		self.source = None
 
 	@property
@@ -90,22 +92,24 @@ class ProcessedAsset(Asset):
 		Return the lastest modified time on the filesystem of one of this
 		assets component files.
 		'''
-		return datetime.fromtimestamp(max(*[
-			os.path.getmtime(path) for path in self.paths
-		]))
+		return datetime.fromtimestamp(
+			max(os.path.getmtime(path) for path in self.paths)
+		)
 
 	def load(self):
 		'''Load and process this asset.'''
 		#	Load the primary module.
 		root_full_path = get_path(self.paths[0])
 		with open(root_full_path, 'r') as root_source_file:
-			self.source = root_full_path
+			self.source = root_source_file.read()
 		
 		#	Apply directives.
 		apply_directives(self)
 
 		#	Process appropiately.
 		if self.ext == 'js':
+			with open('c:/users/rsaxifrage/desktop/a.out', 'w') as f:
+				f.write(self.source)
 			self.data = transpile_jsx(self.source)
 		elif self.ext == 'css':
 			self.data = compile_less(self.source)

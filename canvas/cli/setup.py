@@ -43,11 +43,11 @@ def launch_setup(args):
 		npm_process = Popen(' '.join((
 			'npm', 'install', *(p.strip() for p in packages
 		))), shell=True, stdout=PIPE,  stderr=PIPE)
-		out, err = npm_process.communicate()
+		stdout, stderr = npm_process.communicate()
 
-		print(out.decode().strip())
-		if proc.returncode:
-			trying.fail(err.decode().strip())
+		print(stdout.decode().strip())
+		if npm_process.returncode:
+			trying.fail(stderr.decode().strip())
 
 	with trying('Creating configuration...'):
 		#	Copy out the configuration file.
