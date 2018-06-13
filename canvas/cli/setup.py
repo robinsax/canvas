@@ -7,6 +7,7 @@ import os
 import pip
 import json
 import shutil
+import tempfile
 
 from subprocess import Popen, PIPE
 
@@ -22,7 +23,7 @@ def launch_setup(args):
 	The installation launcher which installs canvas's Python and Node 
 	dependencies.
 	'''
-	with trying('Installing Python requirements...'):
+	with trying('Installing standard Python requirements...'):
 		#	Read the list of required packages.
 		with open(os.path.join(__home__, 'requirements.txt'), 'r') as req_file:
 			requirements = req_file.readlines()
@@ -34,19 +35,40 @@ def launch_setup(args):
 		if exit_code:
 			trying.fail()
 
+	with trying('Installing PYXL...'):
+		#	Create a temp. directory.
+		temp_dir = tempfile.TemporaryDirectory().name
+		os.mkdir(temp_dir)
+
+		#	Run the appropriate pyxl install script.
+		which_script = 'install_pyxl.%s'%('bat' if os.name == 'nt' else 'sh') 
+		pyxl_install_proc = Popen(os.path.join(__home__, 'etc', which_script),
+				shell=True, stdout=PIPE, stderr=PIPE, cwd=temp_dir)
+		
+		#	Read the output.
+		stdout, stderr = pyxl_install_proc.communicate()
+		stderr = stderr.decode().strip()
+
+		print(stdout.decode().strip())
+		if pyxl_install_proc.returncode:
+			if 'PermissionError' in stderr:
+				#	Sometimes life is greasy Bubs.
+				trying.fail("Couldn't install; are you root?")
+			trying.fail(stderr)
+
 	with trying('Installing Node requirements...'):
 		#	Read the list of required packages.
 		with open(os.path.join(__home__, 'required_packages'), 'r') as pkg_file:
 			packages = pkg_file.readlines()
 		
 		#	Run npm.
-		npm_process = Popen(' '.join((
+		npm_proc = Popen(' '.join((
 			'npm', 'install', *(p.strip() for p in packages
-		))), shell=True, stdout=PIPE,  stderr=PIPE)
-		stdout, stderr = npm_process.communicate()
+		))), shell=True, stdout=PIPE, stderr=PIPE)
+		stdout, stderr = npm_proc.communicate()
 
-		print(stdout.decode().strip())
-		if npm_process.returncode:
+		print(stdout.decode().strip(), stderr.decode().strip())
+		if npm_proc.returncode:
 			trying.fail(stderr.decode().strip())
 
 	with trying('Creating configuration...'):

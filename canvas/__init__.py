@@ -23,7 +23,7 @@ __verbs__ = ('get', 'post', 'put', 'patch', 'delete', 'options')
 #	Check whether requirements have been installed.
 __installed__ = True
 try:
-	import werkzeug, psycopg2
+	import werkzeug, psycopg2, pyxl
 except ImportError:
 	__installed__ = False
 

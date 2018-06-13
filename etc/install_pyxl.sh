@@ -1,4 +1,4 @@
-#	An install script for pyxl.
+#	A Linux install script for pyxl.
 
 git clone https://github.com/gvanrossum/pyxl3.git
 cd pyxl3

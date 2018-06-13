@@ -5,6 +5,9 @@ The CLI API definition, available to both the core and plugins.
 
 import sys
 
+from ..exceptions import NotInstalled
+from .. import __installed__
+
 #	Define the global name to launcher function map.
 _launchers = dict()
 #	Define a single character to launcher function map.
@@ -63,11 +66,18 @@ def launch_cli(args):
 		
 		#	Exit.
 		sys.exit(1)
+
+	#	Define an asserted initializer.
+	def safe_initialize():
+		if not __installed__:
+			raise NotInstalled('Run python3 canvas --init')
+		
+		from ..core import initialize
+		initialize()
 	
 	if args and args[0] == '-!':
 		#	The -i switch causes eager initialization.
-		from ..core import initialize
-		initialize()
+		safe_initialize()
 
 		args = args[1:]
 	
@@ -86,8 +96,7 @@ def launch_cli(args):
 	
 	if launcher.__info__.get('init', False):
 		#	This launcher requires initialization.
-		from ..core import initialize
-		initialize()
+		safe_initialize()
 
 	if launcher(args[1:]) is False:
 		#	The launch function reported incorrect usage.

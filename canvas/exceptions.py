@@ -3,6 +3,10 @@
 All of canvas's exceptions are packaged here.
 '''
 
+class NotInstalled(Exception):
+	'''Raised when required dependencies haven't been installed.'''
+	pass
+
 class Failed(Exception):
 	'''Raised when a test or launch fails.'''
 	pass
