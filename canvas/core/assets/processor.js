@@ -17,7 +17,7 @@ const transpileJSX = source => {
 		plugins: [
 			'transform-decorators-legacy',
 			['transform-react-jsx', {
-				pragma: 'cv.element'
+				pragma: 'canvas.element'
 			}]
 		]
 	}).code;

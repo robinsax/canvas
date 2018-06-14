@@ -16,11 +16,20 @@ class Logger {
 	log(prefix, color, item) {
 		if (!this.enabled) return;
 
-		let time = (((new Date()).getTime() - this.initMS)/1000).toFixed(2) + 's';
-		while (time.length < 10) time += ' ';
-		while (prefix.length < 10) prefix += ' ';
+		let time = ((new Date()).getTime() - this.initMS)/1000;
+		time = (time > 99 ? time.toFixed(0) : time.toFixed(2)) + 's';
+		while (time.length < 6) time += ' ';
+		while (prefix.length < 6) prefix += ' ';
 
-		console.log('%c' + time + this.name + prefix + item, 'color: ' + color + ';')
+		let message = '%c' + time + this.name + prefix,
+			style = 'color: ' + color + '; background-color: #f0f0f0;';
+		if (typeof item == 'string') {
+			console.log(message + item, style);
+		}
+		else {
+			console.log(message + ':', style);
+			console.log(item);
+		}
 	}
 
 	debug(item) {
@@ -37,19 +46,19 @@ class Logger {
 
 	warning(item) {
 		/* Log an item at the WARNING level. */
-		this.log('WARNING', 'orange', item);
+		this.log('WARN', 'orange', item);
 		return item;
 	}
 
 	critical(item) {
 		/* Log an item at the CRITICAL level. */
-		this.log('CRITICAL', 'red', item);
+		this.log('CRIT', 'red', item);
 		return item;
 	}
 }
 
 @coreComponent
-class LogFactory {
+class LoggerFactory {
 	/* A core component for creating logs for a backend-consitant API. */
 	
 	@exposedMethod

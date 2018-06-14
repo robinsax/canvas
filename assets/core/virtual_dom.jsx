@@ -4,6 +4,11 @@
 
 @coreComponent
 class VirtualDOMRenderer {
+	constructor(core) {
+		this.core = core;
+		this.log = core.logger('vdr');
+	}
+
 	flatten(iterable) {
 		while (true) {
 			let verifiedFlat = true, pass = [];
@@ -26,7 +31,8 @@ class VirtualDOMRenderer {
 	diff(oldVirtual, newVirtual) {
 		return (
 			(typeof oldVirtual != typeof newVirtual) ||
-			(typeof oldVirtual == 'string' && oldNode != newVirtual) ||
+			(oldVirtual instanceof this.core.View) ||
+			(typeof oldVirtual == 'string' && oldVirtual != newVirtual) ||
 			oldVirtual.tag != newVirtual.tag ||
 			(newVirtual.attributes && newVirtual.attributes.forceRender)
 		)
@@ -34,10 +40,8 @@ class VirtualDOMRenderer {
 
 	devirtualize(virtual) {
 		if (!virtual) return document.createTextNode('');
-		let sourceView = null;
-		if (virtual instanceof viewhost.View) {
-			sourceView = virtual;
-			virtual = typeof virtual.template == 'function' ? virtual.template(...virtual.getRenderContext()) : virtual.template;
+		if (virtual instanceof this.core.View) {
+			virtual = virtual.template(...virtual.getRenderContext());
 		}
 
 		let el = null;
@@ -53,6 +57,9 @@ class VirtualDOMRenderer {
 				devirtualized.push(this.devirtualize(virtual[i]));
 			}
 			el = devirtualized;
+		}
+		else if (virtual.tag == 'frag') {
+			return this.devirtualize(virtual.children);
 		}
 		else {
 			el = document.createElement(virtual.tag);
@@ -85,7 +92,6 @@ class VirtualDOMRenderer {
 			}
 		}
 
-		if (sourceView) sourceView.onRender(el);
 		return el;
 	}
 
@@ -113,17 +119,18 @@ class VirtualDOMRenderer {
 			}
 		}
 		else if (this.diff(newVirtual, oldVirtual)) {
-			parentEl.replaceChild(this.devirtualize(newVirtual), parent.childNodes[index]);
-
+			parentEl.replaceChild(
+				this.devirtualize(newVirtual), parentEl.childNodes[index]
+			);
 		}
-		else if (newNode.tag) {
-			this.updateAttributes(parent.childNodes[index], newVirtual.attributes, oldVirtual.attributes);
+		else if (newVirtual.tag) {
+			this.updateAttributes(parentEl.childNodes[index], newVirtual.attributes, oldVirtual.attributes);
 			
 			let maxI = Math.max(newVirtual.children.length, oldVirtual.children.length);
 
 			for (let i = 0; i < maxI; i++) {
 				try {
-					this.update(parent.childNodes[index], newVirtual.children[i], oldVirtual.children[i], i);
+					this.update(parentEl.childNodes[index], newVirtual.children[i], oldVirtual.children[i], i);
 				}
 				catch (ex) {
 					if (ex !== 'x') throw ex;
@@ -143,9 +150,28 @@ class VirtualDOMRenderer {
 	}
 
 	@exposedMethod
-	render(renderable) {
-		let parentEl = document.createDocumentFragment();
-		this.update(parentEl, renderable, null);
-		return parentEl.children[0];
+	render(view) {
+		let parentEl, index = 0;
+		if (view.element) {
+			parentEl = view.element.parentNode;
+			for (var i = 0; i < parentEl.children.length; i++) {
+				if (parentEl.children[i] == view.element) {
+					index = i;
+					break;
+				}
+			} 
+		}
+		else {
+			parentEl = document.createDocumentFragment();
+		}
+		
+		let newDOM = view.template(...view.getRenderContext());
+		this.update(parentEl, newDOM, view.referenceDOM, index);
+		view.referenceDOM = newDOM;
+		
+		
+		this.core.observeState(view);
+
+		return view.element = parentEl.children[index];
 	}
 }

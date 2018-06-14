@@ -169,9 +169,9 @@ class ErrorView:
                 <if cond={ 'debug_info' in self.error }>
                     <div class="align-left">
                         <h4>Traceback</h4>
-                        <code><pre>{ self.error['debug_info']['traceback'] }</pre></code>
+                        <pre><code>{ self.error['debug_info']['traceback'] }</code></pre>
                         <h4>Context</h4>
-                        <code><pre>{ self.error['debug_info']['context'] }</pre></code>
+                        <pre><code>{ self.error['debug_info']['context'] }</code></pre>
                     </div>
                 </if>
             </div>
