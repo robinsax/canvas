@@ -1,6 +1,4 @@
-#	Core.
 werkzeug
 psycopg2
-#   Testing.
 coverage
 python-coveralls
