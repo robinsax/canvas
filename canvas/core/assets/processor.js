@@ -3,11 +3,12 @@
 *	JSX and LESS asset processor invocation. Invoked with either 'jsx' or 
 *	'less' in the command line; reads processing target from stdin.
 */
-const getStdIn = require('get-stdin'), babel = require('babel-core'), less = require('less');
+const getStdIn = require('get-stdin'), debugMode = process.argv[3] == '1';
 
 //	Define JSX transpilation.
 const transpileJSX = source => {
-	return babel.transform(source, {
+	const babel = require('babel-core');
+	let code = babel.transform(source, {
 		presets: [
 			['es2015', {
 				modules: false
@@ -20,16 +21,27 @@ const transpileJSX = source => {
 			}]
 		]
 	}).code;
+
+	if (!debugMode) {
+		const uglifyJS = require('uglify-js');
+		return uglifyJS.minify(code).code;
+	}
+	return code;
 }
 
 //	Define less compilation.
 const compileLESS = source => {
-	let result = null;
-	
-	less.render(source, {processImports: false}, (err, res) => {
-		if (err) throw err;
-		result = res.css;
-	});
+	const less = require('less');
+	let result = null, plugins = [];
+
+	if (!debugMode) {
+		const LPlCleanCSS = require('less-plugin-clean-css');
+		plugins.push(new LPlCleanCSS());
+	}
+
+	less.render(source, {processImports: false, plugins: plugins}, 
+		(err, res) => { if (err) throw err; result = res.css; }
+	);
 
 	return result;
 }

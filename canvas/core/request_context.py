@@ -36,7 +36,7 @@ class RequestContext(AttributedDict):
 	def put(cls, context):
 		'''Associated `context` with the current thread.'''
 		with cls.instance_map_lock:
-			cls.instance_map[get_ident()] = cls
+			cls.instance_map[get_ident()] = context
 
 	@classmethod
 	def pop(cls):
@@ -46,7 +46,7 @@ class RequestContext(AttributedDict):
 		'''
 		ident = get_ident()
 		with cls.instance_map_lock:
-			current = cls.instance_map[get_ident()].pop(get_ident())
+			current = cls.instance_map.pop(get_ident())
 		return current
 
 	def __init__(self, **kwargs):

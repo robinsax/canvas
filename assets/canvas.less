@@ -28,7 +28,7 @@ a {
 		text-decoration: none;
 		color: @text;
 	}
-}
+} 
 
 //	Paragraphs.
 p {
@@ -59,7 +59,18 @@ h4 { font-size: 16pt; }
 .theme1 { color: @theme1; }
 .theme2 { color: @theme2; }
 .theme3 { color: @theme3; }
+.error { color: @error; }
+.warning { color: @warning; }
+.success { color: @success; }
 .highlight { color: @highlight; }
+
+.theme1-bg { background-color: @theme1; }
+.theme2-bg { background-color: @theme2; }
+.theme3-bg { background-color: @theme3; }
+.error-bg { background-color: @error; }
+.warning-bg { background-color: @warning; }
+.success-bg { background-color: @success; }
+.highlight-bg { background-color: @highlight; }
 
 //	Visiblity modifiers.
 .invisible { visibility: hidden !important; }
@@ -69,6 +80,10 @@ h4 { font-size: 16pt; }
 .full-height { height: 100% !important; }
 .full-width { width: 100% !important; }
 
+.inline-block {
+	display: inline-block;
+	vertical-align: top;
+}
 .vertical-center {
 	position: relative;
 	top: 50%;
@@ -89,7 +104,7 @@ h4 { font-size: 16pt; }
 .indent-left { margin-left: 15px; }
 .indent-right { margin-right: 15px; }
 
-//	Components.
+//	12-column components.
 .col-1, .col-2, .col-3, .col-4, .col-5, .col-6,
 .col-7, .col-8, .col-9, .col-10, .col-11, .col-12 {
 	display: inline-block;
@@ -123,52 +138,28 @@ h4 { font-size: 16pt; }
 	.col-4, .col-3 { width: e('calc(100% - 30px)'); }
 }
 
-/*
-
-//	Form styles.
-.error-summary {
-	color: @error;
-}
-
+//	Forms.
 .form {
-	display: inline-block;
-	vertical-align: top;
-
+	.inline-block();
 	padding: 1em;
 	width: 30em;
 }
 
-.pointer {
-	cursor: pointer;
-}
-
-.fields {
-	margin-bottom: 1em;
-}
-
 .field {
-	display: inline-block;
-	vertical-align: top;
-
-	&:not(:last-child) {
-		margin-bottom: 1.5em;
-	}
-
+	.inline-block();
 	width: 28em;
 
+	&:not(::last-child) { margin-bottom: 1.5em; }
+
 	label {
-		vertical-align: top;
-		display: inline-block;
+		.inline-block();
 		width: 8em;
 		margin-right: 1em;
 		text-align: right;
 	}
-
-	&.required {
-		label:after {
-			content: '*';
-			color: @highlight;
-		}
+	&.required label:after {
+		.highlight();	
+		content: '*';
 	}
 
 	.error-message {
@@ -177,128 +168,64 @@ h4 { font-size: 16pt; }
 		width: 10em;
 		text-align: left;
 	}
-
 	&.error {
 		margin-bottom: 1em;
-
-		.input {
-			border: 2px solid @error;
-		}
+		.input { border: 2px solid @error; }
 	}
 
 	.input {
+		vertical-align: top;
 		height: 2em;
 		width: 18em;
 		padding: 0px 10px;
 		outline: none;
 		border: none;
-		font-size: 12pt;
-		vertical-align: top;
 		color: @text;
 		background-color: @input;
-		transition: color .5s, background-color .5s;
-
+		font-size: 12pt;
 		font-family: @text-font;
 
-		&[type="checkbox"] {
-			width: 1em;
-			height: 1em;
+		&textarea {
+			padding: 10px;
+			height: 15em;
+			resize: none;
 		}
-
-		&:hover {
-			background-color: @focused-input;
-		}
-	}
-
-	textarea.input {
-		padding: 10px;
-		height: 15em;
-		resize: none;
-	}
-
-	input[type="file"].input {
-		line-height: 2em;
+		&[type="file"] { line-height: 2em; }
+		&[type="checkbox"] { width: 1em; height: 1em; }
+		&:hover { background-color: @focused-input; }
 	}
 }
 
-//	Modal styles.
 .modal {
+	display: none;
 	position: fixed;
-	text-align: left;
 	top: 0px;
-	width: 100%;
-	height: 100%;
+	left: 0px;
+	.full-width();
+	.full-height();
+	text-align: left;
 	z-index: 101;
 	background-color: rgba(0, 0, 0, 0.5);
-	display: none;
 
-	&.open {
-		display: block;
-	}
+	&.open { display: block; }
 
 	.panel {
-		z-index: 100;
 		display: inline-block;
 		position: relative;
+		z-index: 100;
+		top: 50%; left: 50%;
 		padding: 10px;
-		top: 50%;
-		left: 50%;
-		background-color: @background;
 		transform: translate(-50%, -50%);
+		background-color: @background;
 
 		.close {
 			position: absolute;
-			top: 10px;
-			right: 10px;
+			top: 10px; right: 10px;
 			cursor: pointer;
 
-			&:hover {
-				color: @title;
-			}
+			&:hover { color: @highlight; }
 		}
 	}
-}
-
-.highlight { color: @highlight; }
-
-.full-height {
-	height: 100%;
-}
-
-.full-width {
-	width: 100%;
-}
-
-//	Text-alignment modifier.
-.align-right {
-	text-align: right !important;
-}
-.align-left {
-	text-align: left !important;
-}
-.align-center {
-	text-align: center !important;
-}
-
-//	Default mixin classes.
-.inline-block {
-	display: inline-block;
-}
-
-//	Spacing.
-.padding {
-	padding: 8px;
-}
-.margin {
-	margin: 8px;
-}
-
-.indent, 
-.indent-left {
-	margin-left: 15px;
-}
-.indent-right {
-	margin-right: 15px;
 }
 
 button,
@@ -310,26 +237,18 @@ input[type="submit"] {
 	
 	height: 1.5em;
 	line-height: 1.5em;
-
 	margin: 3px 10px;
 	padding: 0px 12px;
-	font-size: 13pt;
-	font-family: @text-font;
-	color: @background;
-	background-color: @theme1;
-	transition: .1s color;
+	
+	transition: .2s color;
 	text-align: center;
 	text-decoration: none;
 	
-	&.good {
-		background-color: @success;
-	}
-	&.bad {
-		background-color: @error;
-	}
-	&.open {
-		background-color: @theme2;
-	}
+	font-size: 13pt;
+	font-family: @text-font;
+	
+	color: @background;
+	background-color: @theme1;
 	
 	&:hover {
 		cursor: pointer;
@@ -337,85 +256,6 @@ input[type="submit"] {
 	}
 }
 
-//	Root page contents.
-.row {
-	width: 100%;
-	position: relative;
-
-	text-align: center;
-}
-
-.component {
-	display: inline-block;
-	vertical-align: top;
-	padding: 15px;
-	margin: 15px;
-	overflow-wrap: break-word;
-
-	&.flat {
-		background-color: inherit;
-	}
-
-	.col-12 {
-		width: e('calc(100% - 30px)');
-	}
-	.col-9 {
-		width: e('calc(75% - 30px)');
-	}
-	.col-8 {
-		width: e('calc(66.6666666666% - 30px)');
-	}
-	.col-6 {
-		width: e('calc(50% - 30px)');
-	}
-	.col-5 {
-		width: e('calc(41.6666666666% - 30px)');
-	}
-	.col-4 {
-		width: e('calc(33.333333333333% - 30px)');
-	}
-	.col-3 {
-		width: e('calc(25% - 30px)');
-	}
-
-	@media screen and (max-width: @breakpoint1){
-		.col-12,
-		.col-9 {
-			width: e('calc(100% - 30px)');
-		}
-		
-		.col-6 {
-			width: e('calc(66.66666666% - 30px)');
-		}
-
-		.col-4 {
-			width: e('calc(50% - 30px)');
-		}
-		
-		.col-3 {
-			width: e('calc(33.333333% - 30px)');
-		}
-	}
-
-	@media screen and (max-width: @breakpoint2) {
-		.col-6, .col-8 {
-			width: e('calc(100% - 30px)');
-		}
-		
-		.col-3 {
-			width: e('calc(50% - 30px)');
-		}
-	}
-
-	@media screen and (max-width: @breakpoint3) {
-		.col-4,
-		.col-3 {
-			width: e('calc(100% - 30px)');
-		}
-	}
-}
-
-//	Preformatted.
 pre {
 	padding: 10px;
 	text-align: left;
@@ -429,10 +269,7 @@ pre {
 		width: 100%;
 	}
 }
-
-code {
-	background-color: @input;
-}
+code { background-color: @input; }
 
 //	Tooltip area.
 .tooltip {
@@ -453,8 +290,7 @@ code {
 		display: inherit;
 		position: relative;
 		bottom: -5px;
-		width: 0px; 
-		height: 0px; 
+		width: 0px; height: 0px; 
 		line-height: 0px;
 		border-left: 5px solid transparent;
 		border-right: 5px solid transparent;
@@ -466,20 +302,16 @@ code {
 .flash-message {
 	display: inline-block;
 	position: fixed;
-	bottom: 0px;
-	left: 0px;
-	margin: 20px;
-	padding: 10px;
+	z-index: 200;
+	bottom: 0px; left: 0px;
+	margin: 20px; padding: 10px;
+
 	background-color: @highlight;
 	color: @background;
-	z-index: 1000;
 }
 
 .dnd {
-	&.target {
-		cursor: -webkit-grab;
-		cursor: grab;
-	}
+	&.target { cursor: -webkit-grab; cursor: grab; }
 
 	&.drag {
 		pointer-events: none;
@@ -487,4 +319,3 @@ code {
 		opacity: 0.5;
 	}
 }
-*/

@@ -45,14 +45,14 @@ def apply_style_load(asset, *args):
 	'''The stylesheet inclusion directive.'''
 	stylesheets = ', '.join(["'%s'"%i for i in args])
 
-	asset.source = 'cv.loadStyle(%s);\n%s'%(stylesheets, asset.source)
+	asset.source = 'resources.loadStyle(%s);\n%s'%(stylesheets, asset.source)
 
 @directive('import', allow=('jsx',), priority=2)
 def apply_import(asset, *args):
 	'''The depenency declaration directive.'''
 	to_import = ', '.join(["'%s'"%i for i in args])
 
-	asset.source = 'cv.import([%s], () => {\n%s\n});'%(to_import, asset.source)
+	asset.source = 'resources.import([%s], () => {\n%s\n});'%(to_import, asset.source)
 
 @directive('export', allow=('jsx',), priority=1)
 def apply_export(asset, *args):
@@ -73,18 +73,20 @@ def apply_export(asset, *args):
 			'}\n'
 		))
 	
-	asset.source = "%s\ncv.export('%s', %s);"%(
+	asset.source = "%s\nresources.export('%s', %s);"%(
 		asset.source, asset.module, to_export
 	)
 
-@directive('include', priority=-1)
+@directive('include', priority=10)
 def apply_include(asset, *args):
 	'''The literal file inclusion directive.'''
-	for inclusion in args:
+	for inclusion in reversed(args):
 		#	Convert from package reference to path.
 		inclusion_path = '.'.join((
-			inclusion.replace('.', os.pathsep), asset.ext
+			os.path.join('assets', inclusion.replace('.', os.path.sep)), 
+			_output_to_input[asset.ext]
 		))
+		
 		with open(get_path(inclusion_path), 'r') as included_file:
 			included_source = included_file.read()
 
@@ -113,7 +115,9 @@ def apply_model_load(asset, *model_cls_list):
 		
 		#	Save the output on the to-be-generated object.
 		models_dict[table.model_cls.__name__] = schema_dict
-	asset.source = '\n'.join(('='.join(('const model', serialize_json(models_dict)), asset.source)))
+	asset.source = '\n'.join((
+		'='.join(('const model', serialize_json(models_dict)), asset.source)
+	))
 
 def apply_directives(asset):
 	'''
@@ -132,8 +136,9 @@ def apply_directives(asset):
 			raise AssetError('No such directive: %s'%key)
 		ext = _output_to_input[asset.ext]
 		if ext not in directive.__allow_in__:
-			raise AssetError('Directive %s cannot be used in .%s files'\
-					%(key, ext))
+			raise AssetError('Directive %s cannot be used in .%s files'%(
+				key, ext
+			))
 
 		#	Push the directive, argument iterable pair.
 		to_apply.append((directive, [a.strip() for a in arg_str.split(',')]))
@@ -147,9 +152,9 @@ def apply_directives(asset):
 		try:
 			directive(asset, *args)
 		except TypeError as ex:
-			raise AssetError(
-				'Invalid usage of directive %s'%directive.__directive__
-			) from ex
+			raise AssetError('Invalid usage of directive %s (%s)'%(
+				directive.__directive__, str(ex)
+			)) from ex
 
 	if asset.ext == 'js':
 		#	Closurize JavaScript.

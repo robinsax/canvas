@@ -27,7 +27,10 @@ def process(source, which):
 	'less').
 	'''
 	#	Create the command line.
-	cmdline = ' '.join(('node', _script_path, which))
+	cmdline = ' '.join((
+		'node', _script_path, which, 
+		'1' if config.development.debug else '0'
+	))
 	log.debug('Compiling asset: %s', cmdline)
 	
 	#	Synchronously run the processor script.

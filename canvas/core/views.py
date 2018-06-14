@@ -13,6 +13,7 @@ from ..exceptions import InvalidAsset
 from ..utils import create_callback_registrar
 from ..configuration import config
 from ..dictionaries import AttributedDict
+from .request_context import RequestContext
 
 #    Define the page view alteration callback, used to override the root page 
 #    view.
@@ -53,7 +54,7 @@ class PageView:
         the same argument specification.
         '''
         self.title, self.description = title, description
-        self.assets = ('canvas.css', *assets)
+        self.assets = ('canvas.css', 'canvas.js', *assets)
         self.header_views, self.page_views, self.footer_views = list(), \
                 list(), list()
         
@@ -95,25 +96,57 @@ class PageView:
         asset_tags = (self.tagify_asset(asset) for asset in self.assets)
         return <frag>{ *asset_tags }</frag>
 
+    def html_attributes(self, route):
+        '''Return a dictionary of attributes for the root HTML tag.'''
+        return dict()
+
+    def head_attributes(self, route):
+        '''Return a dictionary of attributes for the head tag.'''
+        return {
+            'data-debug': 'true' if config.development.debug else 'false',
+            'data-route': route
+        }
+    
+    def body_attributes(self, route):
+        '''Return a dictionary of attributes for the body tag.'''
+        return {
+            'data-route': route
+        }
+
     def render(self):
         '''
-        Return the HTML document itself. The `DOCTYPE` declaration is handled by the `Page`.
+        Return the HTML document itself. The `DOCTYPE` declaration is handled 
+        by the `Page`.
         '''
+        request_context = RequestContext.get()
+        route = request_context.route if request_context else None
         def render_views(views):
             return (html.rawhtml(view.render()) for view in views)
 
-        return <html>
-            <head>
-                { self.meta_fragment() }
-                <title>{ self.title }</title>
-                { self.asset_fragement() }
-            </head>
-            <body>
-                <header class="header">{ *render_views(self.header_views) }</header>
-                <div class="page">{ *render_views(self.page_views) }</div>
-                <footer class="footer">{ *render_views(self.footer_views) }</footer>
-            </body>
+        head = <head>
+            { self.meta_fragment() }
+            <title>{ self.title }</title>
+            { self.asset_fragement() }
+        </head>
+        for key, value in self.head_attributes(route).items():
+            head.set_attr(key, value)
+        
+        body = <body>
+            <header class="header">{ *render_views(self.header_views) }</header>
+            <div class="page">{ *render_views(self.page_views) }</div>
+            <footer class="footer">{ *render_views(self.footer_views) }</footer>
+        </body>
+        for key, value in self.body_attributes(route).items():
+            body.set_attr(key, value)
+
+        html_ = <html>
+            { head }
+            { body }
         </html>
+        for key, value in self.html_attributes(route).items():
+            html_.set_attr(key, value)
+
+        return html_
 
 @view()
 class ErrorView:

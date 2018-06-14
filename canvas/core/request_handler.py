@@ -188,7 +188,7 @@ def serve_asset(request):
 		status=200,
 		mimetype=asset.mimetype,
 		headers={
-			'Cache-Control': 'must-revalidate',
+			'Cache-Control': 'max-age=0, must-revalidate',
 			'Last-Modified': asset.mtime.strftime('%a, %d %b %Y %H:%m:%S GMT')
 		}
 	)

@@ -1,7 +1,9 @@
 get-stdin
 babel-core
-babel-preset-es2015 
+babel-preset-es2015
 babel-plugin-transform-decorators-legacy 
 babel-plugin-transform-react-jsx 
 babel-plugin-transform-class-properties
+uglify-js
 less
+less-plugin-clean-css
