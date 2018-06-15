@@ -113,6 +113,10 @@ class PageView:
             'data-route': route
         }
 
+    def get_title(self):
+        '''Return the title of this page.'''
+        return self.title
+
     def render(self):
         '''
         Return the HTML document itself. The `DOCTYPE` declaration is handled 
@@ -125,7 +129,7 @@ class PageView:
 
         head = <head>
             { self.meta_fragment() }
-            <title>{ self.title }</title>
+            <title>{ self.get_title() }</title>
             { self.asset_fragement() }
         </head>
         for key, value in self.head_attributes(route).items():

@@ -6,13 +6,16 @@ argument is `--test`.
 '''
 
 from ..exceptions import Failed
-from ..utils import logger, format_exception
+from ..utils import logger, format_exception, create_callback_registrar
 
 #	Create a log.
 log = logger(__name__)
 
 #	Define the global test function list.
 _tests = list()
+
+#	Define a cleanup function registrar.
+on_cleanup = create_callback_registrar()
 
 def test(name):
 	'''The test function registrar.'''
@@ -66,12 +69,15 @@ def run_tests():
 			log.info('\tPassed! (%d assertions)', assertion.this_test)
 			passed += 1
 		except Failed as ex:
-			log.warning('\tFailed!\n%s', format_exception(ex))
+			log.warning('\tFailed!')
 			failed += 1
 		except BaseException as ex:
 			log.critical('\tCrashed!\n%s', format_exception(ex))
 			failed += 1
-		
+
+	log.info('Running cleanup')
+	on_cleanup.invoke()
+
 	log.info('Passed %s / Failed %s', passed, failed)
 	if failed == 0:
 		log.info('---- Passing ----')

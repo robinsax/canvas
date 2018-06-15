@@ -5,14 +5,14 @@ The `Session` class definition.
 
 from psycopg2 import IntegrityError, connect
 
-from ...exceptions import ValidationErrors
+from ...exceptions import ValidationErrors, Frozen
 from ...configuration import config
 from ...utils import logger
-from .ast import Aggregation
+from .ast import Literal, Aggregation, deproxy
 from .constraints import Constraint
 from .columns import Column
 from .statements import InsertStatement, CreateStatement, UpdateStatement, \
-	DeleteStatement
+	DeleteStatement, SelectStatement
 from . import _sentinel
 
 log = logger(__name__)
@@ -29,6 +29,9 @@ class Session:
 		#	A dictionary for storing all actively loaded models. Keys are
 		#	of the format <host table name>=><primary key value>.
 		self.loaded_models = dict()
+		#	A flag for freezing database interaction (causing SQL emission) to
+		#	raise an exception. Used primarily for grey-box testing.
+		self.frozen = False
 
 	@property
 	def connection(self):
@@ -64,7 +67,7 @@ class Session:
 
 		#	Track this model.
 		row_reference = '=>'.join((
-			table.__name__, table.primary_key.value_on(model)
+			table.name, table.primary_key.value_on(model)
 		))
 		self.loaded_models[row_reference] = model
 
@@ -110,7 +113,9 @@ class Session:
 		'''Load an instance of `model_cls` from `row_segment`.'''
 		#	Create a row reference for this row and check if a model is 
 		#	already loaded for that row.
-		row_reference = '=>'.join((model_cls.__table__.name, row[0]))
+		row_reference = '=>'.join((
+			model_cls.__table__.name, row_segment[0]
+		))
 		is_remap = row_reference in self.loaded_models
 
 		if is_remap:
@@ -119,6 +124,7 @@ class Session:
 		else:
 			#	Backdoor a new instance.
 			model = model_cls.__new__(model_cls)
+			model.__dirty__ = dict()
 		
 		#	Assign the values and return.
 		self.assign_row_to_model(model, row_segment)
@@ -128,6 +134,9 @@ class Session:
 		'''
 		Execute a prepared statement with constraint violation identification.
 		'''
+		if self.frozen:
+			raise Frozen()
+
 		if config.development.log_emitted_sql:
 			#	Log the prepared statement.
 			log.debug(sql)
@@ -140,22 +149,23 @@ class Session:
 			#	Retrieve the violated constraint.
 			constraint = Constraint.get(ex.diag.constraint_name)
 			if not constraint:
-				#	Some cases are not yet handled.
+				#	TODO: Some cases are not yet handled.
 				raise NotImplementedError() from ex
 			
-			if isinstance(constraint, Column):
+			if isinstance(constraint.host, Column):
 				#	The violation occured against a given column.
 				raise ValidationErrors({
 					constraint.host.name: constraint.error_message
-				})
+				}) from None
 			else:
 				#	Table-level violation.
-				raise ValidationErrors(constraint.errors_message)
+				raise ValidationErrors(summary=constraint.error_message) \
+					from None
 		
 		#	Chain.
 		return self
 
-	def execute_statement(statement):
+	def execute_statement(self, statement):
 		'''Execute a `Statement` object.'''
 		sql, values = statement.write()
 		self.execute(sql + ';', values)
@@ -171,15 +181,21 @@ class Session:
 			#	Collect values, ignoring sentinels which may be in-database
 			#	defaults.
 			to_insert = list()
-			for column in table.columns:
+			for column in table.columns.values():
 				value = getattr(model, column.name)
 				if value is not _sentinel:
-					values.append((value, column))
+					to_insert.append((value, column))
 			
 			#	Create and execute an insert statement.
-			self.execute_statement(InsertStatement(model.__class__, values))
-			#	Re-load the result onto the model.
-			self.assign_row_to_model(model, self.cursor.fetchone())
+			self.execute_statement(
+				InsertStatement(model.__class__, to_insert)
+			)
+			#	Re-load the result ID onto the model.
+			#	TODO: Handle other in-database defaults.
+			resultant_id = self.cursor.fetchone()[0]
+			table.primary_key.set_value_on(model, resultant_id)
+			self.loaded_models['=>'.join((table.name, resultant_id))] = model
+			model.__loaded__(self)
 		return self
 
 	def detach(self, model):
@@ -236,9 +252,10 @@ class Session:
 			modifiers.append(Literal('COUNT', count))
 		if offset:
 			modifiers.append(Literal('OFFSET', offset))
-		if not isinstance(order, (list, tuple)):
-			order = (order,)
-		modifiers.append(Literal('ORDER BY', Literal(*order, joiner=', ')))
+		if order:
+			if not isinstance(order, (list, tuple)):
+				order = (order,)
+			modifiers.append(Literal('ORDER BY', Literal(*order, joiner=', ')))
 		if for_share or for_update:
 			which = 'SHARE' if for_share else 'UPDATE'
 			modifiers.append(Literal('FOR', which))
@@ -248,12 +265,12 @@ class Session:
 		)
 
 		#	Retrieve a loader and return it's output.
-		loader = target.get_loader()
+		loader = deproxy(target).get_loader()
 		if one:
 			return loader.load_next(self.cursor.fetchone(), self)
 		else:
 			return [
-				loader.load_next(row) for row in self.cursor.fetchall()
+				loader.load_next(row, self) for row in self.cursor.fetchall()
 			]
 
 	def update(self, model):
@@ -290,10 +307,10 @@ class Session:
 		if model is None:
 			#	Update all models.
 			for model in list(self.loaded_models.values()):
-				self.update_one(model)
+				self.update(model)
 		else:
 			#	Update the specified model.
-			self.update_one(model)
+			self.update(model)
 		
 		#	Commit the transaction.
 		self.connection.commit()
@@ -333,6 +350,14 @@ class Session:
 		if self._connection:
 			self._connection.close()
 
+		return self
+
+	def freeze(self):
+		self.frozen = True
+		return self
+
+	def unfreeze(self):
+		self.frozen = False
 		return self
 
 	def __del__(self):

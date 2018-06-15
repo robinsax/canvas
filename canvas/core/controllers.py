@@ -71,8 +71,8 @@ def controller(*routes, _destiny=Controller, **attrs):
 	def controller_inner(cls):
 		#	Create a patched type of the controller and its destiny.
 		patched = type(cls.__name__, (cls, _destiny), dict())
-		#	Create and register this definition.
-		_ControllerDefinition.create(patched, routes, attrs)
+		#	Create this registration.
+		_ControllerRegistration.create(patched, routes, attrs)
 
 		return patched
 	return controller_inner
@@ -93,8 +93,7 @@ def endpoint(*routes, expects='json', **attrs):
 	attrs['expects'] = expects
 	return controller(*routes, _destiny=Endpoint, **attrs)
 
-def page(*routes, title=None, description=None, assets=None, view=PageView, 
-		**attrs):
+def page(*routes, title=None, description=None, assets=tuple(), **attrs):
 	'''
 	The page controller registration decorator.
 	::routes A list for routes for this controller to service.

@@ -31,7 +31,7 @@ def deproxy(target):
 	'''Deproxy an AST node.'''
 	from .model import Model
 
-	if issubclass(type(target), Model):
+	if isinstance(target, type) and issubclass(target, Model):
 		return target.__table__
 	return target
 
@@ -91,8 +91,11 @@ class IJoinable:
 
 	def join(self, other, condition=None, attr=None):
 		'''Create a join of `other` onto this joinable.'''
+		from .joins import Join
+		
 		return Join(self, other, condition, attr)
 
+	#	TODO: Should live on ISelectable?
 	def get_loader(self):
 		'''
 		Create or return a `Loader` for with which rows can be loaded from the
@@ -121,6 +124,15 @@ class ILoader:
 	def load_next(self, row_segment, session):
 		'''Return a `row_segment` loaded onto its valid target.'''
 		raise NotImplementedError()
+
+class ScalarLoader(ILoader):
+	'''A loader which simply returns the first value of the selection.'''
+
+	def get_loader(self):
+		return self
+
+	def load_next(self, row_segment, session):
+		return row_segment[0]
 
 class MFlag:
 	'''
@@ -219,7 +231,8 @@ class Literal(Node):
 		::parts The parts of this SQL string to join.
 		::joiner The string with which to join `parts`.
 		'''
-		self.sql = joiner.join([nodify(p, True).serialize() for p in parts])
+		parts = [nodeify(p, True) for p in parts]
+		self.sql = joiner.join([p if isinstance(p, str) else p.serialize() for p in parts ])
 	
 	def serialize(self, values=None):
 		'''Return the SQL represented by this literal node.'''
@@ -308,7 +321,7 @@ class Comparison(Node, MFlag):
 		self.is_grouped = True
 		return self
 
-class Aggregation(Node, ISelectable, ILiteral, MNumerical):
+class Aggregation(Node, ScalarLoader, ISelectable, ILiteral, MNumerical):
 	'''A call to an in-database aggregator.'''
 
 	def __init__(self, producer, source):
@@ -332,3 +345,16 @@ class Aggregation(Node, ISelectable, ILiteral, MNumerical):
 	def serialize_source(self, values=list()):
 		'''Serialize the source of this aggregation (the column's table).'''
 		return self.source.table.serialize(values)
+
+class Unique(Node, MFlag):
+	'''A call to the unique operator on a set of columns.'''
+
+	def __init__(self, *columns):
+		self.columns = columns
+	
+	def serialize(self, values=None):
+		return ' '.join((
+			'UNIQUE (',
+			', '.join(column.name for column in self.columns),
+			')'
+		))

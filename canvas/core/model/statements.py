@@ -40,7 +40,7 @@ class SelectStatement(Statement):
 			'SELECT', self.target.serialize_selection(),
 			'FROM', self.target.serialize_source(values),
 			'WHERE', nodeify(self.condition).serialize(values),
-			*(modifier.serialize(values) for modifier in modifiers)
+			*(modifier.serialize(values) for modifier in self.modifiers)
 		))
 		return sql, values
 
@@ -58,11 +58,11 @@ class InsertStatement(Statement):
 	def write(self):
 		values = list()
 		sql = ' '.join((
-			'INSERT INTO', target.serialize(values), '(', 
-				*(value[1].serialize(values) for value in self.values), 
+			'INSERT INTO', self.target.serialize(values), '(', 
+				', '.join(value[1].name for value in self.values), 
 			') VALUES (', 
-				*(value[0].serialize(values) for value in self.values), 
-			')'
+				', '.join(value[0].serialize(values) for value in self.values), 
+			') RETURNING ', self.target.primary_key.serialize()
 		))
 		return sql, values
 

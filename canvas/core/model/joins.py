@@ -3,7 +3,8 @@
 The `Join` AST node and API definition.
 '''
 
-from .ast import ISelectable, IJoinable, ILoader, deproxy
+from ...exceptions import InvalidQuery
+from .ast import Node, ISelectable, IJoinable, ILoader, deproxy
 from .columns import Column, ForeignKeyColumnType
 
 class Join(Node, ISelectable, IJoinable, ILoader):
@@ -69,14 +70,27 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 		return self
 	
 	def load_next(self, row_segment, session):
+		raise NotImplementedError()
 		#	Get children and loaders.
 		children = (self.source, *self.dests)
 		child_loaders = tuple(child.get_loader() for child in children)
 
 		#	Iterate the parts of the row segment.
+		load_host = None
 		k = 0
 		for child, loader in zip(children, child_loaders):
-			loader.load_next(row_segment[k:], session)
+			sub_segment = row_segment[k:]
+			all_none = True
+			for item in sub_segment:
+				if item is not None:
+					all_none = False
+					break
+			
+			if not all_none:
+				if not load_host:
+					load_host = 
+				loader.load_next(sub_segment, session)
+			
 			k += len(child.get_columns())
 
 	def serialize(self, values=None):
@@ -167,6 +181,7 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 			if not isinstance(typ, ForeignKeyColumnType):
 				continue
 			for check_column in source_columns:
+				print(column, check_column)
 				if check_column is typ.target:
 					return column, True
 

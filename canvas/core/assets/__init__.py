@@ -50,7 +50,7 @@ class Asset:
 
 	def load(self):
 		'''Load this asset from the filesystem.'''
-		full_path = get_path('assets', self.path)
+		full_path = get_path(self.path)
 		if full_path:
 			#	Load from the filesystem.
 			self.mimetype, enc = guess_type(self.path)

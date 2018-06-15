@@ -3,4 +3,5 @@
 Unit tests on the canvas framework.
 '''
 
-from . import exceptions, utils, json
+from . import exceptions, utils, json, views, controller_service, assets, \
+	model

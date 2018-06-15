@@ -67,10 +67,10 @@ def create_routing(controller_list):
 			
 			if route_part not in current_node:
 				#	Expand the tree.
-				if i == len(parts) - 1:
-					current_node[part] = controller
+				if i == len(route_parts) - 1:
+					current_node[route_part] = controller
 				else:
-					current_node[part] = dict()
+					current_node[route_part] = dict()
 					
 			current_node = current_node[route_part]
 
@@ -96,7 +96,7 @@ def resolve_route(route):
 		elif _variable_sentinel in current_node:
 			#	Retreive the encountered RouteVariable and store a value for it.
 			#	Optimized for the non-variable case.
-			key_list = list(cur.keys())
+			key_list = list(current_node.keys())
 			variable_name = key_list[key_list.index(_variable_sentinel)].name
 			variables[variable_name] = route_part
 			#	Traverse deeper.

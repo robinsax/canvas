@@ -4,7 +4,7 @@ Column and table constraint definitions.
 '''
 
 from ...exceptions import InvalidSchema
-from .ast import ObjectReference, MFlag, nodeify, reproxy
+from .ast import ObjectReference, Unique, MFlag, nodeify, reproxy
 
 class Constraint(ObjectReference):
 	'''
@@ -95,16 +95,18 @@ class CheckConstraint(Constraint):
 	def describe_rule(self):
 		'''Serialize the policy-specified check for this constraint.'''
 		#	Resolve the policy and assert it's result is valid.
-		condition = nodeify(self.condition_policy(self.host))
+		condition = nodeify(self.condition_policy(self.host.model_cls))
 		if not issubclass(type(condition), MFlag):
-			raise InvalidSchema('Check constraint %s has non flag-like '
-					+ 'condition')
+			raise InvalidSchema(('Check constraint %s has non flag-like '
+					+ 'condition')%self.name)
 		
 		#	Create and return the serialization. This is vulnerable to
 		#	injection, but only from the caller itself.
 		values = list()
 		sql = condition.serialize(values)
-		return ' '.join(('CHECK', sql%(*values,)))
+		if not isinstance(condition, Unique):
+			sql = ' '.join(('CHECK', sql))
+		return sql%(*values,)
 
 class PrimaryKeyConstraint(Constraint):
 	'''A primary key constraint on a column.'''
@@ -123,7 +125,7 @@ class ForeignKeyConstraint(Constraint):
 		self.target = target
 
 	def describe_rule(self):
-		return 'FOREIGN KEY REFERENCES %s (%s)'%(
+		return 'REFERENCES %s (%s)'%(
 			self.target.table.name,
 			self.target.name
 		)
@@ -131,7 +133,7 @@ class ForeignKeyConstraint(Constraint):
 class NotNullConstraint(Constraint):
 	'''A `NOT NULL` constraint on a column.'''
 
-	def __init__(self, error_message='Required.'):
+	def __init__(self, error_message='Required'):
 		super().__init__('existance', error_message)
 
 	def precheck_violation(self, model, value):
@@ -139,3 +141,12 @@ class NotNullConstraint(Constraint):
 	
 	def describe_rule(self):
 		return 'NOT NULL'
+
+class UniquenessConstraint(Constraint):
+	'''A `UNIQUE` constraint on a column.'''
+
+	def __init__(self, error_message='Must be unique'):
+		super().__init__('uniqueness', error_message)
+	
+	def describe_rule(self):
+		return 'UNIQUE'

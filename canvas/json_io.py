@@ -6,6 +6,7 @@ improved extensibility and security.
 
 import json
 
+from uuid import UUID
 from datetime import datetime
 
 from .exceptions import Unrecognized
@@ -77,3 +78,8 @@ def serialize_datetime(datetime_obj):
 	from .configuration import config
 	
 	return datetime_obj.strftime(config.datetime.output_format)
+
+@json_serializer(UUID)
+def serialize_uuid(uuid_obj):
+	'''A UUID serializer.'''
+	return uuid_obj.hex

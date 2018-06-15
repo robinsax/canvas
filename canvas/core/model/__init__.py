@@ -8,17 +8,21 @@ Note: Within this package's documentation, 'serialize' is equivalent to
 'serialize into SQL'. 
 '''
 
+#	Define a sentinel value for determining when model attributes have been
+#	populated.
 _sentinel = object()
 
 #	TODO: Review this import practice.
 from .statements import CreateStatement
+from .ast import Unique
 from .type_adapters import TypeAdapter, type_adapter
 from .model import Model, model
 from .tables import Table
 from .columns import Column
 from .constraints import CheckConstraint, PrimaryKeyConstraint, \
-		ForeignKeyConstraint, NotNullConstraint
+	ForeignKeyConstraint, NotNullConstraint, UniquenessConstraint
 from .session import Session, create_session
+from .dictizations import dictized_property, dictize
 
 def initialize_model():
 	'''
@@ -28,10 +32,12 @@ def initialize_model():
 	#	Create a database session.
 	session = create_session()
 	
-	for table in Table.topo_order():
+	for table in Table.instances:
 		#	Bind columns.
 		for column in table.columns.values():
-			column.bind(table)
+			column.post_bind()
+	
+	for table in Table.topo_order():
 		#	Create table.
 		session.execute_statement(CreateStatement(table))
 	

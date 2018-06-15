@@ -14,10 +14,16 @@ import re
 import uuid
 
 from ...exceptions import InvalidSchema
-from .ast import Literal, ObjectReference, ILiteral, MAllTypes
-from .constraints import ForeignKeyConstraint
+from ...utils import logger
+from .ast import Literal, ObjectReference, ILiteral, MAllTypes, Aggregation, \
+	ScalarLoader
+from .constraints import ForeignKeyConstraint, PrimaryKeyConstraint, \
+	NotNullConstraint, UniquenessConstraint
 from .tables import Table
 from . import _sentinel
+
+#	Create a log.
+log = logger(__name__)
 
 #	Define a meta-null for identifying whether a column default has been 
 #	specified.
@@ -38,15 +44,8 @@ class ColumnType:
 			if re.match(regex, specifier):
 				return checked_typ
 		raise InvalidSchema('Invalid column type specifier %s'%specifier)
-
-	def pre_bind(self, column):
-		'''
-		Perform an initial binding onto a host `Column`. Since this occurs at
-		column create time the relationship to the table is not established.
-		'''
-		pass
 	
-	def finalize_bind(self, column):
+	def bind(self, column):
 		'''
 		Finalize the binding onto a host column, once all relevant relationships
 		are established.
@@ -98,14 +97,14 @@ class ForeignKeyColumnType(ColumnType):
 		self.target_ref = target_ref
 		self.target = None
 
-	def finalize_bind(self, column):
+	def bind(self, column):
 		'''
 		Once relationships are established, resolve the foreign key reference.
 		'''
 		#	Parse the reference specifier.
 		target_table, target_column = self.target_ref.split('.')
 		#	Locate the target column.
-		for table in Table.all():
+		for table in Table.instances:
 			if table.name != target_table:
 				continue
 			for check in table.columns.values():
@@ -143,14 +142,16 @@ _type_map = {
 	'json':				BasicColumnType('JSON', lazy=True)
 }
 
-class Column(ObjectReference, ILiteral, MAllTypes):
+#	TODO: Disable lazy loading argument.
+class Column(ObjectReference, ScalarLoader, ILiteral, MAllTypes):
 	'''
 	`Column`s are comparable SQL `Node`s that maintain a type and a set of 
 	`Constraint`s. In addition to all comparisions, they support the generation
 	of `Aggregation`s.
 	'''
 
-	def __init__(self, typ, *constraints, default=_meta_null):
+	def __init__(self, typ, *constraints, default=_meta_null, 
+			nullable=True, unique=False, primary_key=False, dictized=True):
 		'''
 		Create a new column. This should generally be done while defining the
 		attribute map of a model within it's decorator.
@@ -158,29 +159,52 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 		::constraints The set of `Constraint`s on this column.
 		'''
 		super().__init__('COLUMN')
-		self.name, self.type = None, resolve_type(typ)
-		self.constraints = list(constraints)
+		self.name, self.type = None, ColumnType.resolve(typ)
 		self.default = default
+		self.dictized = dictized
 		self.table = None
+
+		self.constraints = list(constraints)
+		#	Define a by-class constraint search
+		def contains_instance(cls):
+			for constraint in self.constraints:
+				if isinstance(constraint, cls):
+					log.warning('Duplication of %s constraint; ignoring'%(
+						cls.__name__
+					))
+					return True
+			return False
+	
+		#	Add constraints from keyword arguments
+		if primary_key and not contains_instance(PrimaryKeyConstraint):
+			self.constraints.append(PrimaryKeyConstraint())
+		if not nullable and not contains_instance(NotNullConstraint):
+			self.constraints.append(NotNullConstraint())
+		if unique and not contains_instance(UniquenessConstraint):
+			self.constraints.append(UniquenessConstraint())
 
 	def value_on(self, model):
 		'''Return the value on this column on `model`.'''
 		return getattr(model, self.name)
 
+	def set_value_on(self, model, value):
+		'''Assign `value` to `model` on this column.'''
+		setattr(model, self.name, value)
+
 	def bind(self, table):
 		'''Perform binding for this column given it's `Table`.'''
 		self.table = table
+		self.type.bind(self)
 
-		#	Bind the type and constraints.
-		self.type.pre_bind(self)
+	def post_bind(self):
 		for constraint in self.constraints:
 			constraint.bind(self)
 
-	@classmethod
+	@property
 	def asc(self):
 		return Literal(self.serialize(), 'ASC')
 
-	@classmethod
+	@property
 	def desc(self):
 		return Literal(self.serialize(), 'DESC')
 

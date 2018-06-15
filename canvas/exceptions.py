@@ -3,6 +3,10 @@
 All of canvas's exceptions are packaged here.
 '''
 
+class Frozen(Exception):
+	'''Raised when database I/O is frozen and SQL is emitted.'''
+	pass
+
 class NotInstalled(Exception):
 	'''Raised when required dependencies haven't been installed.'''
 	pass
@@ -178,7 +182,7 @@ class ValidationErrors(UnprocessableEntity):
 	validation. Raised when model constraints are violated.
 	'''
 	
-	def __init__(self, errors, summary=None):
+	def __init__(self, errors=None, summary=None):
 		'''
 		::errors A parameter key, error description map.
 		::summary A summary string.
@@ -186,9 +190,16 @@ class ValidationErrors(UnprocessableEntity):
 		super().__init__()
 		self.errors, self.summary = errors, summary
 
+	def __str__(self):
+		if self.errors:
+			return str(self.errors)
+		else:
+			return self.summary
+
 	def	get_info(self):
 		info = super().get_info()
-		info['errors'] = self.errors
+		if self.errors:
+			info['errors'] = self.errors
 		if self.summary:
 			info['error_summary'] = self.summary
 		return info

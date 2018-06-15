@@ -5,6 +5,8 @@ The base `Model` class and `model` decorator definitions. Inheritance over
 '''
 
 from .tables import Table
+from .columns import Column
+from .dictizations import resolve_dictized_properties
 
 class Model:
 	'''
@@ -15,8 +17,12 @@ class Model:
 	__table__ = __session__ = __dirty__ = None
 
 	@classmethod
-	def join(cls, other, condition=None):
-		return cls.__table__.join(other, condition)
+	def join(cls, other, condition=None, attr=None):
+		return cls.__table__.join(other, condition, attr=None)
+
+	@classmethod
+	def get(cls, pk_val, session):
+		return session.query(cls, cls.__table__.primary_key == pk_val, one=True)
 
 	def __loaded__(self, session):
 		'''A callback invoked immediatly after a model is loaded.'''
@@ -25,13 +31,22 @@ class Model:
 
 	def __getattribute__(self, key):
 		'''Retrieve lazy-loaded attributes from the database when accessed.'''
+		#	TODO: Clean this up its a shitshow.
 		table = super().__getattribute__('__class__').__table__
-		if super().__getattribute__('__session__') and key in table.columns:
+		must_load = (
+			super().__getattribute__('__session__') and 
+			key in table.columns and 
+			isinstance(super().__getattribute__(key), Column)
+		)
+		if must_load:
 			row_access = super().__getattribute__(table.primary_key.name)
-			exec_statement(
-				SelectStatement(table.columns[key], table.primary_key == row_access)
+			value = self.__session__.query(
+				table.columns[key], 
+				table.primary_key == row_access, 
+				one=True
 			)
-			return 'TODO'
+			setattr(self, key,  value)
+			return value
 
 		return super().__getattribute__(key)
 
@@ -42,7 +57,7 @@ class Model:
 				self.__dirty__[key] = value
 
 		return super().__setattr__(key, value)
-	
+
 def model(table_name, contents):
 	'''
 	The `model` class decorator is used to define properties of a model class.
@@ -54,12 +69,15 @@ def model(table_name, contents):
 	def model_inner(cls):
 		#	Patch the type to extend Model.
 		_Model = type(cls.__name__, (cls, Model), dict())
+		_Model.__dictized__ = list()
+		resolve_dictized_properties(_Model)
 		#	Create the table.
 		table = Table(table_name, contents)
 
 		#	Override __init__ to assign default or sentinel values.
 		inner_init = _Model.__init__
 		def init_wrap(self, *args, **kwargs):
+			self.__dirty__ = dict()
 			for column in table.columns.values():
 				column.apply_to_model(self)
 			inner_init(self, *args, **kwargs)

@@ -7,7 +7,7 @@ from collections import OrderedDict
 
 from ...exceptions import InvalidSchema
 from .ast import ObjectReference, ILoader, IJoinable
-from .constraints import PrimaryKeyConstraint
+from .constraints import Constraint, PrimaryKeyConstraint
 
 class Table(ObjectReference, IJoinable):
 	'''
@@ -33,10 +33,11 @@ class Table(ObjectReference, IJoinable):
 		#	Unpack the schema dictionary and locate the primary key.
 		self.primary_key = None
 		for name, item in contents.items():
-			item.name = name
 			if isinstance(item, Constraint):
+				item.name = '_'.join((self.name, name))
 				self.constraints.append(item)
 			else:
+				item.name = name
 				for constraint in item.constraints:
 					if isinstance(constraint, PrimaryKeyConstraint):
 						if self.primary_key:
@@ -70,6 +71,8 @@ class Table(ObjectReference, IJoinable):
 		Return a topological sort of all tables, suitable for issuing creation
 		SQL.
 		'''
+		from .columns import ForeignKeyColumnType
+		
 		#	Input and output.
 		result, remaining = list(), list(Table.reference_map.values())
 		#	State tracking.
@@ -120,9 +123,9 @@ class Table(ObjectReference, IJoinable):
 
 	def get_columns(self):
 		'''Return all non-lazy constituent columns.'''
-		return (
+		return [
 			column for column in self.columns.values() if not column.type.lazy
-		)
+		]
 
 	def name_column(self, column):
 		'''Trivially name a column.'''
@@ -144,9 +147,8 @@ class Table(ObjectReference, IJoinable):
 		#	Lol.
 		return ', '.join(
 			((''.join((
-				column.serialize(), ' AS %s'%(
-					name_policy(column) if name_policy else str()
-				)
+				column.serialize(),
+				' AS %s'%name_policy(column) if name_policy else str()
 			))) for column in self.get_columns())
 		)
 
