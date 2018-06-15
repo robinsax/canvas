@@ -34,7 +34,7 @@ def process(source, which):
 	log.debug('Compiling asset: %s', cmdline)
 	
 	#	Synchronously run the processor script.
-	proc_proc = Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE)
+	proc_proc = Popen(cmdline, stdin=PIPE, stdout=PIPE, stderr=PIPE, shell=True)
 	stdout, stderr = proc_proc.communicate(input=source.encode('utf-8'))
 
 	#	Assert the processing was successful.
