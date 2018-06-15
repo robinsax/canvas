@@ -4,10 +4,11 @@ The `Join` AST node and API definition.
 '''
 
 from ...exceptions import InvalidQuery
-from .ast import Node, ISelectable, IJoinable, ILoader, deproxy
+from .ast import Node, ISelectable, IJoinable, deproxy, nodeify
 from .columns import Column, ForeignKeyColumnType
+from .tables import Table
 
-class Join(Node, ISelectable, IJoinable, ILoader):
+class Join(Node, ISelectable, IJoinable):
 	'''
 	`Join`s are selectable, joinable AST nodes. They represent the join of one
 	or more destination joinables (tables or subsequent joins) onto a source
@@ -30,7 +31,13 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 		self.attrs = [attr]
 		self.condition = condition
 
+		self.reset()
 		self.set_name('_t')
+
+	def reset(self):
+		'''Reset this join's load state.'''
+		#	Define some loading state attributes.
+		self.source_obj = self.current_source_id = None
 
 	def set_name(self, name):
 		'''
@@ -60,38 +67,73 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 
 		#	Update the condition if nessesary.
 		if condition:
-			self.condition &= nodeify(condition)
+			if not self.condition:
+				self.condition = nodeify(condition)
+			else:
+				self.condition &= nodeify(condition)
 		
 		#	Chain.
 		return self
-
-	def get_loader(self):
-		'''Since joins can be stateful, they are their own loader.'''
-		return self
 	
+	#	TODO: Golf this method.
 	def load_next(self, row_segment, session):
-		raise NotImplementedError()
-		#	Get children and loaders.
-		children = (self.source, *self.dests)
-		child_loaders = tuple(child.get_loader() for child in children)
-
-		#	Iterate the parts of the row segment.
-		load_host = None
-		k = 0
-		for child, loader in zip(children, child_loaders):
+		'''
+		Return the constituents of this join loaded onto `row_segment` or 
+		return `None`.
+		'''
+		#	Check if the source model instance has changed.
+		if row_segment[0] != self.current_source_id:
+			if row_segment[0] is None:
+				return None
+			#	Create a new source model instance and store it's ID.
+			self.source_obj = self.source.load_next(row_segment, session)
+			self.current_source_id = row_segment[0]
+		
+		#	k tracks the current offset into the row segment.
+		k = len(self.source.get_columns())
+		#	Iterate destination constituents.
+		for dest, attach_attr in zip(self.dests, self.attrs[1:]):
+			#	Create the sub segment and check relation direction.
 			sub_segment = row_segment[k:]
-			all_none = True
-			for item in sub_segment:
-				if item is not None:
-					all_none = False
-					break
+			link_column, is_many_attachment = self.find_link_column(dest)
+
+			#	Allow the destination constituent to load the segment or 
+			#	don't if
+			if sub_segment[0] is not None:
+				next_instance = dest.load_next(sub_segment, session)
+			else:
+				next_instance = None
 			
-			if not all_none:
-				if not load_host:
-					load_host = 
-				loader.load_next(sub_segment, session)
+			if not attach_attr:
+				#	TODO: What do we want to do here?
+				raise InvalidQuery(
+					'No attachment attribute specified in join'
+				)
+
+			if is_many_attachment:
+				#	Assert the attachment array exists.
+				if not hasattr(self.source_obj, attach_attr):
+					setattr(self.source_obj, attach_attr, list())
+
+				if next_instance:
+					#	Check whether this is a reload and add to the 
+					#	attaching array if not.
+					attaching = getattr(self.source_obj, attach_attr)
+					contains = False
+					for item in attaching:
+						if item is next_instance:
+							contains = True
+							break
+					if not contains:
+						attaching.append(next_instance)
+			else:
+				#	Directly attach the result.
+				setattr(self.source_obj, attach_attr, next_instance)
+
+			#	Increment k into the row segement.
+			k += len(dest.get_columns())
 			
-			k += len(child.get_columns())
+		return self.source_obj
 
 	def serialize(self, values=None):
 		return self.name
@@ -142,6 +184,12 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 			else:
 				return target.serialize(values)
 
+		def query_name_policy(target, values=None):
+			if isinstance(target, Column):
+				return self.name_column(target, True)
+			else:
+				return target.serialize(values)
+
 		#	Serialize and return.
 		return ' '.join((
 			'(',
@@ -154,7 +202,7 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 					self.source.serialize_source(values), 
 					*(one_join(dest) for dest in self.dests),
 				'WHERE', (
-					self.condition.serialize(values, name_policy=name_policy) if self.condition else 'TRUE'
+					self.condition.serialize(values, name_policy=query_name_policy) if self.condition else 'TRUE'
 				),
 			') AS', self.name
 		))
@@ -181,7 +229,6 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 			if not isinstance(typ, ForeignKeyColumnType):
 				continue
 			for check_column in source_columns:
-				print(column, check_column)
 				if check_column is typ.target:
 					return column, True
 
@@ -190,8 +237,17 @@ class Join(Node, ISelectable, IJoinable, ILoader):
 			self.source.name, dest.name
 		))
 
-	def name_column(self, column):
+	#	TODO: Golf.
+	def name_column(self, column, for_query=False):
 		'''Return the name of the constituent `column`.'''
+		if for_query:
+			if isinstance(self.source, Table) and self.source.contains_column(column):
+				return '.'.join((self.source.name, self.source.name_column(column)))
+			for dest in self.dests:
+				if dest.contains_column(column):
+					if isinstance(dest, Table):
+						return '.'.join((dest.name, dest.name_column(column)))
+					break
 		return '_%s_%s'%(column.table.name, column.name)
 
 	def get_columns(self):

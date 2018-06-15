@@ -9,6 +9,10 @@ from canvas.core.controllers import controller, page, endpoint, \
 	create_controllers
 from canvas.core.routing import create_routing, resolve_route
 
+def reload_controllers():
+	'''Reload the routing map and controllers.'''
+	create_routing(create_controllers())
+
 @cvt.test('Controllers and routing')
 def test_controllers_and_routing():
 	#	Create some test controllers.
@@ -19,8 +23,7 @@ def test_controllers_and_routing():
 	@page('/p', title='Test Page')
 	class PageController: pass
 
-	#	Reinitialize the routing module.
-	create_routing(create_controllers())
+	reload_controllers()
 
 	with cvt.assertion('Route variables resolve correctly'):
 		instance, route_vars = resolve_route('/a/1')

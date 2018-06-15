@@ -57,7 +57,7 @@ class HTTPException(Exception):
 	an associated status code, header map, and diagonostic dictionary.
 	'''
 
-	def __init__(self, status_code, title, description=None, headers=None):
+	def __init__(self, status_code, title, description='', headers=None):
 		'''
 		Configure an overriding exception.
 		::status_code The status code associated with the error.
@@ -92,7 +92,7 @@ class HTTPException(Exception):
 		from .utils import format_exception
 
 		if self.status_code > 499 or config.development.log_client_errors:
-			log.error(format_exception(ex))
+			log.error(format_exception(self))
 	
 	def __str__(self):
 		return self.description

@@ -5,8 +5,12 @@ against either canvas itself of plugins. It's corresponding CLI launch
 argument is `--test`.
 '''
 
+from werkzeug.test import Client
+from werkzeug.wrappers import BaseResponse
+
 from ..exceptions import Failed
 from ..utils import logger, format_exception, create_callback_registrar
+from .. import application
 
 #	Create a log.
 log = logger(__name__)
@@ -24,6 +28,10 @@ def test(name):
 		_tests.append(func)
 		return func
 	return inner_test
+
+def create_client():
+	'''Return a test client on canvas.'''
+	return Client(application, BaseResponse)
 
 class assertion:
 	'''A context within which assertions can be safely performed.'''

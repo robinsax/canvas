@@ -45,5 +45,6 @@ if __installed__:
 		view, controller, endpoint, page, get_path, on_error, \
 		on_request_received, parse_datetime, create_json, create_redirect, \
 		create_page, on_routing, type_adapter, model, create_session, \
-		resolve_route, dictized_property, dictize
+		resolve_route, dictized_property, dictize, \
+		handle_request as application
 	from . import ext, plugins

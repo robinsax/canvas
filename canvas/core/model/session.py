@@ -3,6 +3,7 @@
 The `Session` class definition.
 '''
 
+from collections import OrderedDict
 from psycopg2 import IntegrityError, connect
 
 from ...exceptions import ValidationErrors, Frozen
@@ -222,6 +223,7 @@ class Session:
 
 		return self
 
+	#	TODO: Modifiers need to honour name policy.
 	def query(self, target, condition=True, one=False, count=None, 
 				offset=None, distinct=False, order=tuple(), for_update=False, 
 				for_share=False):
@@ -265,13 +267,17 @@ class Session:
 		)
 
 		#	Retrieve a loader and return it's output.
-		loader = deproxy(target).get_loader()
+		loader = deproxy(target)
 		if one:
 			return loader.load_next(self.cursor.fetchone(), self)
 		else:
-			return [
-				loader.load_next(row, self) for row in self.cursor.fetchall()
-			]
+			#	Load each model, adding to results a maximum of once.
+			loaded = OrderedDict()
+			for row in self.cursor.fetchall():
+				next_instance = loader.load_next(row, self)
+				if row[0] not in loaded:
+					loaded[row[0]] = next_instance
+			return list(loaded.values())
 
 	def update(self, model):
 		'''Update a single model.'''

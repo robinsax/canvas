@@ -55,23 +55,24 @@ def resolve_dictized_properties(model_cls):
 		model_cls.__dictized__.append(key)
 	_dictized_prop_cache.clear()
 
-def dictize(target):
+def dictize(target, include=tuple(), omit=tuple()):
 	'''Recursively return a dictization of `target`.''' 
 	from .model import Model
 
 	if isinstance(target, (list, tuple)):
-		return [dictize(item) for item in target]
+		return [dictize(item, include, omit) for item in target]
 	elif not issubclass(type(target), Model):
 		#	Only models and iterables thereof are dictized.
 		return target
 
 	#	Compute the set of attribute names to dictize.
 	column_set = target.__table__.columns.values()
-	target_attrs = [
+	target_attrs = (attr for attr in (
 		*(column.name for column in column_set if column.dictized),
-		*(target.__class__.__dictized__)
-	]
+		*(target.__class__.__dictized__),
+		*include
+	) if attr not in omit and hasattr(target, attr))
 	
 	return {
-		attr: getattr(target, attr) for attr in target_attrs
+		attr: dictize(getattr(target, attr), include, omit) for attr in target_attrs
 	}

@@ -6,7 +6,7 @@ The `Table` object definition.
 from collections import OrderedDict
 
 from ...exceptions import InvalidSchema
-from .ast import ObjectReference, ILoader, IJoinable
+from .ast import ObjectReference, IJoinable
 from .constraints import Constraint, PrimaryKeyConstraint
 
 class Table(ObjectReference, IJoinable):
@@ -117,9 +117,9 @@ class Table(ObjectReference, IJoinable):
 		for name, column in self.columns.items():
 			setattr(model_cls, name, column)
 
-	def get_loader(self):
-		'''Create and return a simple model loader.'''
-		return SimpleModelLoader(self)
+	def load_next(self, row_segment, session):
+		'''Return the direct result of the session load method.'''
+		return session.load_model_instance(self.model_cls, row_segment)
 
 	def get_columns(self):
 		'''Return all non-lazy constituent columns.'''
@@ -160,13 +160,3 @@ class Table(ObjectReference, IJoinable):
 			', '.join((item.describe() for item in contents)),
 			')'
 		))
-
-class SimpleModelLoader(ILoader):
-	'''The base model loader.'''
-
-	def __init__(self, table):
-		self.table = table
-
-	def load_next(self, row_segment, session):
-		'''Return the direct result of the session load method.'''
-		return session.load_model_instance(self.table.model_cls, row_segment)

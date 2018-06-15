@@ -18,7 +18,7 @@ class Model:
 
 	@classmethod
 	def join(cls, other, condition=None, attr=None):
-		return cls.__table__.join(other, condition, attr=None)
+		return cls.__table__.join(other, condition, attr)
 
 	@classmethod
 	def get(cls, pk_val, session):

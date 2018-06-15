@@ -82,7 +82,14 @@ class ISelectable:
 		table).
 		'''
 		raise NotImplementedError()
-		
+
+	def load_next(self, row_segment, session):
+		'''
+		Return a `row_segment` loaded onto its valid target. This default
+		behaviour should be overridden in most cases.
+		'''
+		return row_segment[0]
+
 class IJoinable:
 	'''
 	An interface to be implemented by objects which can be join onto or can
@@ -92,17 +99,8 @@ class IJoinable:
 	def join(self, other, condition=None, attr=None):
 		'''Create a join of `other` onto this joinable.'''
 		from .joins import Join
-		
 		return Join(self, other, condition, attr)
-
-	#	TODO: Should live on ISelectable?
-	def get_loader(self):
-		'''
-		Create or return a `Loader` for with which rows can be loaded from the
-		selection of this joinable.
-		'''
-		raise NotImplementedError()
-
+	
 	def name_column(self, column):
 		'''
 		Return the name of the constituent `column` given that this joinable 
@@ -114,25 +112,12 @@ class IJoinable:
 		'''Return a list containing all constituent columns.'''
 		raise NotImplementedError()
 
-class ILoader:
-	'''
-	`ILoader`s are stateful objects that load models from rows selected with 
-	`IJoinable`s. Packaged here despite being not strictly an abstract syntax 
-	tree node. TODO: Review previous.
-	'''
-
-	def load_next(self, row_segment, session):
-		'''Return a `row_segment` loaded onto its valid target.'''
-		raise NotImplementedError()
-
-class ScalarLoader(ILoader):
-	'''A loader which simply returns the first value of the selection.'''
-
-	def get_loader(self):
-		return self
-
-	def load_next(self, row_segment, session):
-		return row_segment[0]
+	def contains_column(self, column):
+		'''Return whether or not this joinable contains `column`.'''
+		for check_column in self.get_columns():
+			if check_column is column:
+				return True
+		return False
 
 class MFlag:
 	'''
@@ -321,7 +306,7 @@ class Comparison(Node, MFlag):
 		self.is_grouped = True
 		return self
 
-class Aggregation(Node, ScalarLoader, ISelectable, ILiteral, MNumerical):
+class Aggregation(Node, ISelectable, ILiteral, MNumerical):
 	'''A call to an in-database aggregator.'''
 
 	def __init__(self, producer, source):

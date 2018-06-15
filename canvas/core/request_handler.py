@@ -130,7 +130,7 @@ def serve_controller(request):
 		request=request_parameters,
 		query=query_parameters,
 		headers=request.headers,
-		route=RouteString(route, variables),
+		route=RouteString(route).populated(variables),
 		verb=verb,
 		url=request.url,
 		__controller__=controller
@@ -153,6 +153,7 @@ def serve_controller(request):
 		response = handler(context)
 	except BaseException as ex:
 		#	Ensure the exception is an HTTP exception and reraise
+		log.critical(format_exception(ex))
 		http_ex = ex
 		if not isinstance(ex, HTTPException):
 			http_ex = InternalServerError(ex)

@@ -1,4 +1,8 @@
-//	::include core.root, core.logging, core.resources, core.virtual_dom, core.views
+const coreComponents = [], coreComponent = (X) => { coreComponents.push(X); },
+	exposedMethod = (target, property) => { target[property].isExposed = true; };
+
+//	::include core.logging, core.resources, core.virtual_dom, core.views
+//	::include core.requests, core.data
 //	::export canvas --hard
 
 const log = new Logger('canvas');

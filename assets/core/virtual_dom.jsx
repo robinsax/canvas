@@ -7,6 +7,7 @@ class VirtualDOMRenderer {
 	constructor(core) {
 		this.core = core;
 		this.log = core.logger('vdr');
+		VirtualDOMRenderer.instance = this;
 	}
 
 	flatten(iterable) {

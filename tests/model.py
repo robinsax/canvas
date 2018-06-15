@@ -8,24 +8,38 @@ import canvas.tests as cvt
 
 from canvas.exceptions import ValidationErrors, Frozen
 from canvas.core.model import Column, CheckConstraint, Unique, model, \
-	initialize_model, dictize, dictized_property, create_session
+	initialize_model, dictized_property, create_session, dictize
 
 #	Define an accessible storage object for models.
 test_models = list()
+
+#	Test data.
+usa_name = 'United States of America'
+china_name = "People's Republic of China"
 
 #	TODO: Fix block when dropping tables on cleanup after error.
 
 @cvt.test('Table definition and creation')
 def test_creation():
 	#	Create some test models.
+	@model('cvt_flags', {
+		'id': Column('uuid', primary_key=True),
+		'name': Column('text', nullable=False)
+	})
+	class Flag:
+
+		def __init__(self, name):
+			self.name = name
+
 	@model('cvt_countries', {
 		'id': Column('uuid', primary_key=True),
+		'flag_id': Column('fk:cvt_flags.id'),
 		'name': Column('text', unique=True, nullable=False)
 	})
 	class Country:
 		
-		def __init__(self, name):
-			self.name = name
+		def __init__(self, name, flag=None):
+			self.name, self.flag_id = name, flag.id if flag else None
 
 		@dictized_property
 		def abbreviation(self):
@@ -57,12 +71,12 @@ def test_creation():
 	})
 	class Employee:
 
-		def __init__(self, name, company, garbage):
+		def __init__(self, name, company, garbage=None):
 			self.name = name
 			self.company_id, self.garbage = company.id, garbage
 	
 	session = create_session()
-	test_models.extend((Country, Company, Employee))
+	test_models.extend((Country, Company, Employee, Flag))
 	for model_cls in test_models:
 		session.execute('DROP TABLE IF EXISTS %s CASCADE;'%model_cls.__table__.name)
 	session.commit().close()
@@ -72,12 +86,11 @@ def test_creation():
 @cvt.test('Persistance and simple queries')
 def test_persistance_and_queries():
 	#	Import the models.
-	Country, Company, Employee = test_models
+	Country, Company, Employee, Flag = test_models
 	#	Create a database session.
 	session = create_session()
 
 	#	Create and persist a country.
-	china_name = "People's Republic of China"
 	china = Country(china_name)
 	session.save(china).commit()
 	#	Assert success with trivial query.
@@ -94,9 +107,10 @@ def test_persistance_and_queries():
 	session = create_session()
 	china_id = china.id
 	del china
-	#	Create and persist another country.
-	usa_name = 'United States of America'
-	usa = Country(usa_name)
+	#	Create and persist another country, with a flag.
+	flag = Flag('Star and Strips')
+	session.save(flag)
+	usa = Country(usa_name, flag)
 	session.save(usa).commit()
 	
 	with cvt.assertion('Conditional and ordered queries'):
@@ -155,14 +169,23 @@ def test_persistance_and_queries():
 	with cvt.assertion('Lazy loading functional'):
 		assert jack_ma.garbage['is_rich'] is True
 
-@cvt.test('Complex queries')
-def test_complex_queries():
-	return
+@cvt.test('Join queries')
+def test_join_queries():
 	#	Import the models.
-	Country, Company, Employee = test_models
+	Country, Company, Employee, Flag = test_models
 	#	Create a database session.
 	session = create_session()
 
-	print(dictize(
-		session.query(Country.join(Company, attr='companies'))
-	))
+	#	Create more test data.
+	china = session.query(Country, Country.name == china_name, one=True)
+	alibaba = session.query(Company, Company.name == 'Alibaba', one=True)
+	session.save(Company('Tencent', china)).save(Employee('Peng Lei', alibaba)).commit()
+
+	with cvt.assertion('Query execution'):
+		session.query(
+			Country.join(
+				Company.join(Employee, attr='employees')
+			).add(Flag, attr='flag')
+		)
+
+	#	TODO: Assert contents correct.

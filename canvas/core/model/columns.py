@@ -15,8 +15,7 @@ import uuid
 
 from ...exceptions import InvalidSchema
 from ...utils import logger
-from .ast import Literal, ObjectReference, ILiteral, MAllTypes, Aggregation, \
-	ScalarLoader
+from .ast import Literal, ObjectReference, ILiteral, MAllTypes, Aggregation
 from .constraints import ForeignKeyConstraint, PrimaryKeyConstraint, \
 	NotNullConstraint, UniquenessConstraint
 from .tables import Table
@@ -143,7 +142,7 @@ _type_map = {
 }
 
 #	TODO: Disable lazy loading argument.
-class Column(ObjectReference, ScalarLoader, ILiteral, MAllTypes):
+class Column(ObjectReference, ILiteral, MAllTypes):
 	'''
 	`Column`s are comparable SQL `Node`s that maintain a type and a set of 
 	`Constraint`s. In addition to all comparisions, they support the generation

@@ -2,6 +2,10 @@ class View {
 	getRenderContext() {
 		return [this.data, this.state]
 	}
+
+	render() {
+		VirtualDOMRenderer.instance.render(this);
+	}
 }
 
 @coreComponent
@@ -15,7 +19,7 @@ class ViewProvider {
 	observeState(view) {
 		const callback = () => { this.core.render(view); }
 		const observeProperty = (object, property) => {
-			Object.defineProperty(object, property, ((initialValue) => {
+			Object.defineProperty(object, property, (initialValue => {
 				let value = initialValue;
 				return {
 					set: newValue => {
@@ -30,7 +34,7 @@ class ViewProvider {
 			if (typeof item != 'object') return;
 
 			if (item instanceof Array) {
-
+				//	TODO: Watch array.
 			}
 			else {
 				let propertyNames = Object.getOwnPropertyNames(item);
@@ -50,7 +54,17 @@ class ViewProvider {
 				constructor(...args) {
 					super(...args);
 					this.element = this.referenceDOM = null;
-					this.data = this.data || options.data;
+					Object.defineProperty(this, 'data', (initialValue => {
+						let value = initialValue;
+						return {
+							set: newValue => {
+								value = newValue;
+								this.render();
+							},
+							get: () => value
+						};
+					})(this.data || options.data));
+
 					this.state = this.state || options.state;
 					this.template = this.template || options.template;
 				}

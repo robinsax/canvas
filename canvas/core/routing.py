@@ -42,8 +42,7 @@ class RouteString(str):
 	this string.
 	'''
 
-	def __init__(self, value, variables):
-		super().__init__(value)
+	def populated(self, variables):
 		for key, value in variables.items():
 			setattr(self, key, value)
 		return self
