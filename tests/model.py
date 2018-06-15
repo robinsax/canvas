@@ -110,7 +110,7 @@ def test_persistance_and_queries():
 	del china
 
 	#	Create and persist another country, with a flag.
-	flag = Flag('Star and Strips')
+	flag = Flag('Stars and Stripes')
 	session.save(flag)
 	usa = Country(usa_name, flag)
 	session.save(usa).commit()
@@ -123,7 +123,6 @@ def test_persistance_and_queries():
 	usa = Country.get(usa_id, session)
 	with cvt.assertion('Update occurs'):
 		assert usa.name == usa_name
-
 	
 	with cvt.assertion('Conditional and ordered queries'):
 		assert (
@@ -194,9 +193,10 @@ def test_join_queries():
 	session.save(Company('Tencent', china)).save(Employee('Peng Lei', alibaba)).commit()
 
 	with cvt.assertion('Query execution'):
-		session.query(
+		data = session.query(
 			Country.join(
-				Company.join(Employee, attr='employees')
+				Company.join(Employee, attr='employees'), 
+				attr='companies'
 			).add(Flag, attr='flag')
 		)
 

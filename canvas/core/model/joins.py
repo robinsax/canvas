@@ -92,11 +92,10 @@ class Join(Node, ISelectable, IJoinable):
 		#	k tracks the current offset into the row segment.
 		k = len(self.source.get_columns())
 		#	Iterate destination constituents.
-		for dest, attach_attr in zip(self.dests, self.attrs[1:]):
+		for dest, attach_attr in zip(self.dests, self.attrs):
 			#	Create the sub segment and check relation direction.
 			sub_segment = row_segment[k:]
-			link_column, is_one_attachment = self.find_link_column(dest)
-
+			link_column, is_many_attachment = self.find_link_column(dest)
 			#	Allow the destination constituent to load the segment or 
 			#	don't if
 			if sub_segment[0] is not None:
@@ -110,7 +109,7 @@ class Join(Node, ISelectable, IJoinable):
 					'No attachment attribute specified in join'
 				)
 
-			if not is_one_attachment:
+			if is_many_attachment:
 				#	Assert the attachment array exists.
 				if not hasattr(self.source_obj, attach_attr):
 					setattr(self.source_obj, attach_attr, list())
