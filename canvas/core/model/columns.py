@@ -223,7 +223,7 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 			default = self.default
 		setattr(model, self.name, default)
 
-	def serialize(self, values=None):
+	def serialize(self, values=None, name_policy=None):
 		'''Serialize a reference to this column.'''
 		return '.'.join((self.table.name, self.name))
 

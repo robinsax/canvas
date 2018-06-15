@@ -131,7 +131,7 @@ class Table(ObjectReference, IJoinable):
 		'''Trivially name a column.'''
 		return column.name
 	
-	def serialize(self, values=None):
+	def serialize(self, values=None, name_policy=None):
 		'''Return a reference to this table.'''
 		return self.name
 

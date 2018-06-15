@@ -22,21 +22,22 @@ def test_full_service():
 
 	#	Create some controllers.
 	should_crash = False
-	@endpoint('/api/countries')
+	@endpoint('/api/country_data')
 	class CountryEndpoint:
 
 		def on_get(self, context):
 			if should_crash:
 				raise Exception()
 			
-			context.query.some_parameter
-			countries = context.session.query(
+			country = context.query.country
+			data = context.session.query(
 				Country.join(
 					Company.join(Employee, attr='employees')
-				).add(Flag, attr='flag')
+				).add(Flag, attr='flag'),
+				Country.name == country
 			)
 
-			return create_json(dictize(countries, include=('employees', 'flag')))
+			return create_json('success', dictize(data, include=('employees', 'flag')))
 
 	reload_controllers()
 
@@ -44,5 +45,14 @@ def test_full_service():
 		empty_get = client.get('/fake-route')
 		assert empty_get.status_code == 404
 
-		missing_param_get = client.get('/api/countries')
+		missing_param_get = client.get('/api/country_data')
 		assert missing_param_get.status_code == 400
+
+	with cvt.assertion('Correct responses'):
+		correct_get = client.get('/api/country_data', 
+			content_type='application/json',
+			query_string='country=United States of Trump'
+		)
+		response_data = deserialize_json(correct_get.data)
+		print(response_data)
+		assert response_data['data'][0]['abbreviation'] == 'U.S.T.'

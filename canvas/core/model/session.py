@@ -293,12 +293,14 @@ class Session:
 		assignments = list()
 		for column_name in model.__dirty__:
 			column = table.columns[column_name]
-			assignments.append(column, column.value_on(model))
+			assignments.append((column, column.value_on(model)))
 		
 		#	Create condition.
-		condition = table.primary_key = table.primary_key.value_on(model)
+		condition = table.primary_key == table.primary_key.value_on(model)
 		#	Execute the update.
-		self.execute(*UpdateStatement(model, assignments, condition))
+		self.execute_statement(
+			UpdateStatement(table, assignments, condition)
+		)
 
 		#	Inform model.
 		model.__loaded__(self)

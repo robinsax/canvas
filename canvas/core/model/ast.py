@@ -46,7 +46,7 @@ def reproxy(target):
 class Node:
 	'''The root AST node type.'''
 
-	def serialize(self, values=None):
+	def serialize(self, values=None, name_policy=None):
 		'''
 		Return an SQL serialization of this AST node. `values` may be a list 
 		for inserting literals. Since statements are always evaluated in-order,
@@ -219,7 +219,7 @@ class Literal(Node):
 		parts = [nodeify(p, True) for p in parts]
 		self.sql = joiner.join([p if isinstance(p, str) else p.serialize() for p in parts ])
 	
-	def serialize(self, values=None):
+	def serialize(self, values=None, name_policy=None):
 		'''Return the SQL represented by this literal node.'''
 		return self.sql
 
@@ -230,7 +230,7 @@ class Value(Node, ILiteral, MAllTypes):
 		'''::value The value of any type.'''
 		self.value = value
 
-	def serialize(self, values=list()):
+	def serialize(self, values=list(), name_policy=None):
 		'''Return the sanitized representation of this value or a format.'''
 		#	Handle null or boolean values.
 		if self.value is None:
@@ -279,15 +279,17 @@ class Comparison(Node, MFlag):
 	
 	def serialize(self, values=list(), name_policy=None):
 		'''Return the SQL serialization of this comparison.'''
+		from .columns import Column
+		
 		#	Resolve column names, preferring supplied policy.
-		if name_policy:
-			left, right = (
-				name_policy(self.left, values), name_policy(self.right, values)
-			)
+		if name_policy and isinstance(self.left, Column):
+			left = name_policy(self.left)
 		else:
-			left, right = (
-				self.left.serialize(values), self.right.serialize(values)
-			)
+			left = self.left.serialize(values)
+		if name_policy and isinstance(self.right, Column):
+			right = name_policy(self.right)
+		else:
+			right = self.right.serialize(values)
 
 		#	Create SQL, applying inversion and grouping.
 		sql = ' '.join((left, self.comparator.value, right))
@@ -317,7 +319,7 @@ class Aggregation(Node, ISelectable, ILiteral, MNumerical):
 		'''
 		self.producer, self.source = producer, nodeify(source)
 	
-	def serialize(self, values=list()):
+	def serialize(self, values=list(), name_policy=None):
 		'''Serialize this aggregation as a call to an aggregator.'''
 		return '%s(%s)'%(
 			self.producer,
@@ -337,7 +339,7 @@ class Unique(Node, MFlag):
 	def __init__(self, *columns):
 		self.columns = columns
 	
-	def serialize(self, values=None):
+	def serialize(self, values=None, name_policy=None):
 		return ' '.join((
 			'UNIQUE (',
 			', '.join(column.name for column in self.columns),

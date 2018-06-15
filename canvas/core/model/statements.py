@@ -4,6 +4,7 @@ Top-level statement objects.
 '''
 
 from .ast import deproxy, nodeify
+from .joins import Join
 
 #	TODO: Constructor docs.
 
@@ -35,11 +36,12 @@ class SelectStatement(Statement):
 		self.distinct = distinct
 
 	def write(self):
+		name_policy = self.target.name_column if isinstance(self.target, Join) else None
 		values = list()
 		sql = ' '.join((
 			'SELECT', self.target.serialize_selection(),
 			'FROM', self.target.serialize_source(values),
-			'WHERE', nodeify(self.condition).serialize(values),
+			'WHERE', nodeify(self.condition).serialize(values, name_policy=name_policy),
 			*(modifier.serialize(values) for modifier in self.modifiers)
 		))
 		return sql, values
@@ -88,18 +90,18 @@ class UpdateStatement(Statement):
 	def __init__(self, target, assignments, condition):
 		self.target, self.condition = deproxy(target), nodeify(condition)
 		self.assignments = (
-			(target, nodeify(value)) for target, value in assignments
+			(deproxy(target), nodeify(value)) for target, value in assignments
 		)
 
 	def write(self):
 		values, assignment_expressions = list(), list()
 		for target, value in self.assignments:
 			assignment_expressions.append(
-				'='.join((target.serialize(), value.serialize(values)))
+				' = '.join((target.name, value.serialize(values)))
 			)
 		sql = ' '.join((
-			'UPDATE', target.serialize(),
+			'UPDATE', self.target.serialize(),
 			'SET', ', '.join(assignment_expressions),
-			'WHERE', condition.serialize(values)
+			'WHERE', self.condition.serialize(values)
 		))
 		return sql, values

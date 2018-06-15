@@ -85,6 +85,7 @@ def test_creation():
 
 @cvt.test('Persistance and simple queries')
 def test_persistance_and_queries():
+	global usa_name
 	#	Import the models.
 	Country, Company, Employee, Flag = test_models
 	#	Create a database session.
@@ -107,11 +108,22 @@ def test_persistance_and_queries():
 	session = create_session()
 	china_id = china.id
 	del china
+
 	#	Create and persist another country, with a flag.
 	flag = Flag('Star and Strips')
 	session.save(flag)
 	usa = Country(usa_name, flag)
 	session.save(usa).commit()
+	usa_id = usa.id
+	#	Ensure update occurs.
+	usa.name = usa_name = 'United States of Trump'
+	session.commit().detach(usa)
+	del usa
+
+	usa = Country.get(usa_id, session)
+	with cvt.assertion('Update occurs'):
+		assert usa.name == usa_name
+
 	
 	with cvt.assertion('Conditional and ordered queries'):
 		assert (

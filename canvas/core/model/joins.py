@@ -95,7 +95,7 @@ class Join(Node, ISelectable, IJoinable):
 		for dest, attach_attr in zip(self.dests, self.attrs[1:]):
 			#	Create the sub segment and check relation direction.
 			sub_segment = row_segment[k:]
-			link_column, is_many_attachment = self.find_link_column(dest)
+			link_column, is_one_attachment = self.find_link_column(dest)
 
 			#	Allow the destination constituent to load the segment or 
 			#	don't if
@@ -110,7 +110,7 @@ class Join(Node, ISelectable, IJoinable):
 					'No attachment attribute specified in join'
 				)
 
-			if is_many_attachment:
+			if not is_one_attachment:
 				#	Assert the attachment array exists.
 				if not hasattr(self.source_obj, attach_attr):
 					setattr(self.source_obj, attach_attr, list())
@@ -135,7 +135,7 @@ class Join(Node, ISelectable, IJoinable):
 			
 		return self.source_obj
 
-	def serialize(self, values=None):
+	def serialize(self, values=None, name_policy=None):
 		return self.name
 
 	def serialize_selection(self, name_policy=None):

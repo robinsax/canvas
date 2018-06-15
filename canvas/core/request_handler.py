@@ -152,6 +152,7 @@ def serve_controller(request):
 		#	Invoke the handler.
 		response = handler(context)
 	except BaseException as ex:
+		cleanup()
 		#	Ensure the exception is an HTTP exception and reraise
 		log.critical(format_exception(ex))
 		http_ex = ex

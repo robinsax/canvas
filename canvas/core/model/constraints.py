@@ -71,7 +71,7 @@ class Constraint(ObjectReference):
 		'''Return a serialized description of this consraint rule.'''
 		raise NotImplementedError()
 
-	def serialize(self, values=None):
+	def serialize(self, values=None, name_policy=None):
 		'''Serialize a reference to this constraint.'''
 		return self.name
 
