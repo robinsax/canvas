@@ -46,7 +46,7 @@ class Page(Controller):
 	'''
 	
 	def on_get(self, context):
-		return self.render(context)
+		return self.render()
 
 	def get_view(self):
 		'''Return the root view to be rendered.'''
@@ -93,7 +93,7 @@ def endpoint(*routes, expects='json', **attrs):
 	attrs['expects'] = expects
 	return controller(*routes, _destiny=Endpoint, **attrs)
 
-def page(*routes, title=None, description=None, assets=tuple(), **attrs):
+def page(*routes, title=str(), description=str(), assets=tuple(), **attrs):
 	'''
 	The page controller registration decorator.
 	::routes A list for routes for this controller to service.

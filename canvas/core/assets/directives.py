@@ -100,7 +100,7 @@ def apply_model_load(asset, *model_cls_list):
 	for model_cls_ref in model_cls_list:
 		#	Retrieve input and create output container.
 		table, schema_dict = Table.get(model_cls_ref), dict()
-		for column in model_cls.columns:
+		for column in table.columns.values():
 			validators = list()
 			#	Try to get the representation of each constraint as a validator.
 			for constraint in column.constraints:
@@ -109,14 +109,14 @@ def apply_model_load(asset, *model_cls_list):
 				except NotImplementedError: pass
 			
 			schema_dict[column.name] = {
-				'type': column.input_type,
+				'type': column.type.input_type,
 				'validators': validators
 			}
 		
 		#	Save the output on the to-be-generated object.
 		models_dict[table.model_cls.__name__] = schema_dict
 	asset.source = '\n'.join((
-		'='.join(('const model', serialize_json(models_dict)), asset.source)
+		'='.join(('const model', serialize_json(models_dict))), asset.source
 	))
 
 def apply_directives(asset):

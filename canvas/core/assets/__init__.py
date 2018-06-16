@@ -27,6 +27,8 @@ _processed_asset_sources = dict(js='jsx', css='less')
 #	Define the asset cache.
 _asset_cache = dict()
 
+#	TODO: Golf path lookup.
+
 class Asset:
 	'''
 	The class representing a in-memory file system asset used internally by 
@@ -46,7 +48,7 @@ class Asset:
 	@property
 	def mtime(self):
 		'''The modified time of this asset in the file system.'''
-		return datetime.fromtimestamp(os.path.getmtime(self.path))
+		return datetime.fromtimestamp(os.path.getmtime(get_path(self.path)))
 
 	def load(self):
 		'''Load this asset from the filesystem.'''
@@ -93,7 +95,7 @@ class ProcessedAsset(Asset):
 		assets component files.
 		'''
 		return datetime.fromtimestamp(
-			max(os.path.getmtime(path) for path in self.paths)
+			max(os.path.getmtime(get_path(path)) for path in self.paths)
 		)
 
 	def load(self):

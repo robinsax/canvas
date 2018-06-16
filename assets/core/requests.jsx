@@ -38,9 +38,9 @@ class Request {
 				pureData: this.xhrObject.responseText,
 			});
 			
-			requestLog.info('Received ' +  + method + ' ' + fullURL + ' ' + this.response.status);
+			requestLog.info('Received ' + method + ' ' + fullURL + ' ' + this.response.status);
 			requestLog.info(this.response.data);
-			if (this.response.status > 299) {
+			if (this.response.status < 400) {
 				//	Dispatch success callbacks.
 				if (this.successCallbacks.length == 0) {
 					requestLog.warning('Unhandled request success for ' + options.url);

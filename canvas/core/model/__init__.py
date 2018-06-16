@@ -20,7 +20,8 @@ from .model import Model, model
 from .tables import Table
 from .columns import Column
 from .constraints import CheckConstraint, PrimaryKeyConstraint, \
-	ForeignKeyConstraint, NotNullConstraint, UniquenessConstraint
+	ForeignKeyConstraint, NotNullConstraint, UniquenessConstraint, \
+	RegexConstraint
 from .session import Session, create_session
 from .dictizations import dictized_property, dictize
 

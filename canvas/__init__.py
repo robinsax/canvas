@@ -5,7 +5,7 @@ reactive web applications.
 '''
 
 #	Define the version.
-__version__ = '0.3'
+__version__ = '0.3a'
 
 import os
 import sys
@@ -41,10 +41,10 @@ from .cli import launcher, launch_cli
 if __installed__:
 	#	Initialize core.
 	from .core import View, Column, CheckConstraint, PrimaryKeyConstraint, \
-		NotNullConstraint, UniquenessConstraint, Unique, alter_root_page_view, \
-		view, controller, endpoint, page, get_path, on_error, \
-		on_request_received, parse_datetime, create_json, create_redirect, \
-		create_page, on_routing, type_adapter, model, create_session, \
-		resolve_route, dictized_property, dictize, \
+		NotNullConstraint, UniquenessConstraint, RegexConstraint, Unique, \
+		alter_root_page_view, view, controller, endpoint, page, get_path, \
+		on_error, on_request_received, parse_datetime, create_json, \
+		create_redirect, create_page, on_routing, type_adapter, model, \
+		create_session, resolve_route, dictized_property, dictize, \
 		handle_request as application
 	from . import ext, plugins

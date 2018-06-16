@@ -54,9 +54,11 @@ class PageView:
         the same argument specification.
         '''
         self.title, self.description = title, description
-        self.assets = ('canvas.css', 'canvas.js', *assets)
+        self.assets = ['canvas.css', 'canvas.js', *assets]
         self.header_views, self.page_views, self.footer_views = list(), \
                 list(), list()
+
+        self.setup()
         
     @classmethod
     def resolved(cls, *args, **kwargs):
@@ -73,6 +75,7 @@ class PageView:
         return <frag>
             <meta charset="utf-8"></meta>
             <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+            <link rel="icon" type="image/png" href="/assets/media/site_icon.png"/>
             <meta name="description" content={ description }></meta>
         </frag>
 

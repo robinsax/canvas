@@ -6,6 +6,44 @@ class View {
 	render() {
 		VirtualDOMRenderer.instance.render(this);
 	}
+
+	hasChanged(other) {
+		return true;
+	}
+}
+
+class PagePart {
+	constructor(selector) {
+		this.selector = selector;
+		this.element = null;
+		this.renderQueue = [];
+
+		if (document.readyState == 'ready') {
+			this.actualize();
+		}
+		else {
+			document.addEventListener('DOMContentLoaded', this.actualize.bind(this));
+		}
+	}
+
+	actualize() {
+		this.element = document.querySelector(this.selector);
+		for (var i = 0; i < this.renderQueue.length; i++) {
+			let el = VirtualDOMRenderer.instance.render(this.renderQueue[i]);
+			this.element.appendChild(el);
+		}
+	}
+
+	render(renderable) {
+		if (this.element) {
+			this.element.appendChild(
+				VirtualDOMRenderer.instance.render(renderable)
+			);
+		}
+		else {
+			this.renderQueue.push(renderable);
+		}
+	}
 }
 
 @coreComponent
@@ -13,6 +51,10 @@ class ViewProvider {
 	constructor(core) {
 		this.core = core;
 		core.View = View;
+
+		core.header = new PagePart('header.header');
+		core.page = new PagePart('div.page');
+		core.footer = new PagePart('footer.footer');
 	}
 
 	@exposedMethod
@@ -54,19 +96,28 @@ class ViewProvider {
 				constructor(...args) {
 					super(...args);
 					this.element = this.referenceDOM = null;
+					this.state = this.state || options.state;
+					this.template = this.template || options.template;
+
+					const self = this;
 					Object.defineProperty(this, 'data', (initialValue => {
-						let value = initialValue;
-						return {
-							set: newValue => {
+						let value = null;
+						const set = newValue => {
+							if (newValue instanceof DataCache) {
+								newValue.addView(self);
+								value = newValue.data;
+							}
+							else {
 								value = newValue;
-								this.render();
-							},
+							}
+							self.render();
+						}
+						set(initialValue);
+						return {
+							set: set,
 							get: () => value
 						};
 					})(this.data || options.data));
-
-					this.state = this.state || options.state;
-					this.template = this.template || options.template;
 				}
 			}
 

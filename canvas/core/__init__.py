@@ -24,8 +24,8 @@ from .routing import RouteVariable, RouteString, create_routing, resolve_route, 
 from .assets import Palette, Asset, directive, apply_directives, \
 	transpile_jsx, compile_less, get_palette, get_asset, new_asset
 from .model import TypeAdapter, Model, Table, Column, CheckConstraint, \
-	PrimaryKeyConstraint, NotNullConstraint, UniquenessConstraint, Session, \
-	Unique, type_adapter, model, create_session, initialize_model, \
+	PrimaryKeyConstraint, NotNullConstraint, UniquenessConstraint, RegexConstraint, \
+	Session, Unique, type_adapter, model, create_session, initialize_model, \
 	dictized_property, dictize
 
 #	Create a logger.

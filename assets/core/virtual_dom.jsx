@@ -7,7 +7,19 @@ class VirtualDOMRenderer {
 	constructor(core) {
 		this.core = core;
 		this.log = core.logger('vdr');
+		this.renderStack = [];
 		VirtualDOMRenderer.instance = this;
+	}
+
+	@exposedMethod
+	comp(data, callback) {
+		for (var i = 0; i < data.length; i++) {
+			let result = callback(data[i], i);
+			if (result.tag && result.attributes && result.children) {
+				result.data = data[i];
+				result.index = i;
+			}
+		}
 	}
 
 	flatten(iterable) {
@@ -32,7 +44,6 @@ class VirtualDOMRenderer {
 	diff(oldVirtual, newVirtual) {
 		return (
 			(typeof oldVirtual != typeof newVirtual) ||
-			(oldVirtual instanceof this.core.View) ||
 			(typeof oldVirtual == 'string' && oldVirtual != newVirtual) ||
 			oldVirtual.tag != newVirtual.tag ||
 			(newVirtual.attributes && newVirtual.attributes.forceRender)
@@ -59,9 +70,6 @@ class VirtualDOMRenderer {
 			}
 			el = devirtualized;
 		}
-		else if (virtual.tag == 'frag') {
-			return this.devirtualize(virtual.children);
-		}
 		else {
 			el = document.createElement(virtual.tag);
 
@@ -76,6 +84,11 @@ class VirtualDOMRenderer {
 				else {
 					el.setAttribute(attr, value);
 				}
+			}
+
+			if (virtual.data) {
+				el.__data__ = virtual.data;
+				el.__index__ = virtual.index;
 			}
 
 			if (virtual.children.length > 0) {
@@ -119,6 +132,9 @@ class VirtualDOMRenderer {
 				throw 'x';	//	TODO: What the fuck.
 			}
 		}
+		else if (oldVirtual instanceof View) {
+			this.render(oldVirtual);
+		}
 		else if (this.diff(newVirtual, oldVirtual)) {
 			parentEl.replaceChild(
 				this.devirtualize(newVirtual), parentEl.childNodes[index]
@@ -152,6 +168,12 @@ class VirtualDOMRenderer {
 
 	@exposedMethod
 	render(view) {
+		this.renderStack.push(view);
+		if (!(view instanceof View)) {
+			let parentEl = document.createDocumentFragment();
+			this.update(parentEl, view, null);
+			return parentEl.children[0];
+		}
 		let parentEl, index = 0;
 		if (view.element) {
 			parentEl = view.element.parentNode;
@@ -170,9 +192,9 @@ class VirtualDOMRenderer {
 		this.update(parentEl, newDOM, view.referenceDOM, index);
 		view.referenceDOM = newDOM;
 		
-		
 		this.core.observeState(view);
 
+		this.renderStack.pop();
 		return view.element = parentEl.children[index];
 	}
 }

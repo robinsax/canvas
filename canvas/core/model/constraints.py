@@ -3,6 +3,8 @@
 Column and table constraint definitions.
 '''
 
+import re
+
 from ...exceptions import InvalidSchema
 from .ast import ObjectReference, Unique, MFlag, nodeify, reproxy
 
@@ -138,6 +140,12 @@ class NotNullConstraint(Constraint):
 
 	def precheck_violation(self, model, value):
 		return value is None
+
+	def validator_info(self):
+		return {
+			'type': 'not_null',
+			'message': self.error_message
+		}
 	
 	def describe_rule(self):
 		return 'NOT NULL'
@@ -150,3 +158,35 @@ class UniquenessConstraint(Constraint):
 	
 	def describe_rule(self):
 		return 'UNIQUE'
+
+class RegexConstraint(Constraint):
+	'''A regular expression constraint.'''
+
+	def __init__(self, error_message, regex, ignore_case=False, invert=False):
+		super().__init__('format', error_message)
+		self.regex = regex
+		self.ignore_case, self.invert = ignore_case, invert
+
+	def precheck_violation(self, model, value):
+		return bool(re.match(value)) != self.invert
+	
+	def describe_rule(self):
+		opr = '~'
+		if self.ignore_case:
+			opr = ''.join((opr, '*'))
+		if self.invert:
+			opr = ''.join(('!', opr))
+		
+		return ' '.join((
+			'CHECK (', 
+				self.host.name, opr, 
+				''.join(("'", self.regex.replace("'", "\'"), "'")),
+			')'
+		))
+	
+	def validator_info(self):
+		return {
+			'type': 'regex',
+			'message': self.error_message,
+			'regex': self.regex
+		}
