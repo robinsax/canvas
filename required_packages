@@ -3,3 +3,4 @@ babel-preset-es2015
 babel-plugin-transform-decorators-legacy 
 babel-plugin-transform-react-jsx 
 babel-plugin-transform-class-properties
+babel-plugin-transform-es2015-function-name
