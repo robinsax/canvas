@@ -38,6 +38,8 @@ def view(_=None):
         return type(cls.__name__, (cls, View), dict())
     return inner_view
 
+#	TODO: Scripts at bottom of page.
+
 @view()
 class PageView:
     '''
@@ -60,7 +62,7 @@ class PageView:
 
         self.setup()
         
-    def setup():
+    def setup(self):
         pass
 
     @classmethod
@@ -78,6 +80,7 @@ class PageView:
         return <frag>
             <meta charset="utf-8"></meta>
             <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
+            <link rel="stylesheet" href="/assets/lib/font-awesome.min.css"/>
             <link rel="icon" type="image/png" href="/assets/media/site_icon.png"/>
             <meta name="description" content={ description }></meta>
         </frag>

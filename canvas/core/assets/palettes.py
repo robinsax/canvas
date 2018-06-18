@@ -31,6 +31,7 @@ def get_palette(name):
 	
 	#	Retrieve the highest priority path to the palette.
 	path = get_path('palettes', '%s.palette'%name)
+	from ..plugins import get_path_occurrences
 	if not path:
 		#	No path exists; return the default Palette.
 		log.debug('No such palette %s; fallback to default', name)

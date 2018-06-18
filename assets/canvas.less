@@ -261,20 +261,14 @@ input[type="submit"] {
 	color: @background;
 	background-color: @theme1;
 	
-	&:hover {
-		cursor: pointer;
-		background-color: @highlight;
-	}
+	&:hover { cursor: pointer; }
 }
 
 pre {
-	padding: 10px;
-	text-align: left;
-	overflow-x: auto;
-	color: @text;
-	background-color: @input;
+	line-height: 1.4;
 
 	code {
+		background-color: @input;
 		display: inline-block;
 		font-size: 10pt;
 		width: 100%;

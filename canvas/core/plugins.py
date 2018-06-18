@@ -113,4 +113,4 @@ def get_path(*path_parts, include_base=True, is_dir=False):
 	'''
 	occurrences = get_path_occurrences(*path_parts, include_base=include_base, 
 			is_dir=is_dir)
-	return occurrences[0] if occurrences else None
+	return occurrences[-1] if occurrences else None

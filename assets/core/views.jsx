@@ -141,7 +141,7 @@ class ViewProvider {
 
 		//	Create page parts.
 		core.header = new PagePart('header.header');
-		core.page = new PagePart('div.page');
+		core.mainPage = new PagePart('div.page');
 		core.footer = new PagePart('footer.footer');
 	}
 
@@ -150,6 +150,24 @@ class ViewProvider {
 		return (target, key, descriptor) => {
 			target.__events__ = target.__events__ || [];
 			target.__events__.push([selector, on, key]);
+		}
+	}
+
+	@exposedMethod
+	page(route, part='mainPage') {
+		return (ViewClass) => {
+			if (route != document.head.getAttribute('data-route')) return;
+
+			const create = () => {
+				cv[part].render(new ViewClass());
+			}
+
+			if (document.readyState == 'ready') {
+				create();
+			}
+			else {
+				document.addEventListener('DOMContentLoaded', create);
+			}
 		}
 	}
 
