@@ -105,7 +105,11 @@ def apply_model_load(asset, *model_cls_list):
 			#	Try to get the representation of each constraint as a validator.
 			for constraint in column.constraints:
 				try:
-					validators.append((constraint.validator_info(), constraint.error_message))
+					validators.append({
+						'type': constraint.postfix,
+						'info': constraint.validator_info(), 
+						'error_message': constraint.error_message
+					})
 				except NotImplementedError: pass
 			
 			schema_dict[column.name] = {

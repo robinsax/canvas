@@ -1,5 +1,5 @@
 /*
-*	Asynchronous requests dispatch.
+*	Asynchronous request dispatch, processing, and callback API.
 */
 
 const requestLog = new Logger('requests');
@@ -8,13 +8,27 @@ class Request {
 	/* An request context that manages retrieval and callbacks. */
 
 	constructor(options) {
+		/*
+		*	Create and send a new `Request`. Canonically this is done via the
+		*	exposed `request` method on the global `canvas`/`cv` object.
+		*	`options` can be either a string containing a URL to send a `GET`
+		*	request, or a map containing:
+		*		* `url` - The target URL (required)
+		*		* `method` - The request method (default `GET`)
+		*		* `query` - A map containing the query parameters (optional)
+		*		* `success` - A success callback (optional)
+		*		* `failure` - A failure callback (optional)
+		*		* `json` - A JSON-like object for the request body (optional)
+		*/
 		//	Handle trivial request definition.
 		if (typeof options == 'string') options = {url: options, method: 'get'};
 		this.options = options;
 		
-		//	Process options.
+		//	Store callback lists.
 		this.successCallbacks = options.success ? [options.success] : [];
 		this.failureCallbacks = options.failure ? [options.failure] : [];
+
+		//	Resolve full URL.
 		let fullURL = options.url;
 		if (options.query) {
 			queryParts = [];
@@ -29,61 +43,18 @@ class Request {
 		this.response = null;
 		//	Create and dispatch the request.
 		this.xhrObject = new XMLHttpRequest();
-		this.xhrObject.onreadystatechange = () => {
-			if (this.xhrObject.readyState != 4) return;
-
-			this.response = this.processResponse({
-				status: this.xhrObject.status,
-				mimetype: this.xhrObject.getResponseHeader('Content-Type'),
-				pureData: this.xhrObject.responseText,
-			});
-			
-			requestLog.info('Received ' + method + ' ' + fullURL + ' ' + this.response.status);
-			requestLog.info(this.response.data);
-			if (this.response.status < 400) {
-				//	Dispatch success callbacks.
-				if (this.successCallbacks.length == 0) {
-					requestLog.warning('Unhandled request success for ' + options.url);
-				}
-				for (var i = 0; i < this.successCallbacks.length; i++) {
-					this.invokeCallback(this.successCallbacks[i]);
-				}
-			}
-			else {
-				//	Dispatch failure callbacks.
-				if (this.failureCallbacks.length == 0) {
-					requestLog.warning('Unhandled request failure for ' + options.url);
-				}
-				for (var i = 0; i < this.failureCallbacks.length; i++) {
-					this.invokeCallback(this.failureCallbacks[i]);
-				}
-			}
-		}
+		this.xhrObject.onreadystatechange = this.checkRequestState.bind(this);
 		this.xhrObject.open(method.toUpperCase(), fullURL, true);
-		this.xhrObject.send(this.getSerializedBody(options));
-		requestLog.info('Sent ' + method + ' ' + fullURL);
-	}
 
-	getSerializedBody(options) {
-		//	TODO: Support more types or provide API.
-		if (options.json) {
-			return JSON.stringify(options.json);
-		}
-		
-		return '';
-	}
-
-	success(callback) {
-		if (this.response) this.invokeCallback(callback);
-		else this.successCallbacks.push(callback);
-	}
-
-	failure(callback) {
-		if (this.response) this.invokeCallback(callback);
-		else this.failureCallbacks.push(callback);
+		this.logRepr = method + ' ' + fullURL;
+		requestLog.info('Sent ' + this.logRepr);
+		let serializedBody = this.serializeBody(options);
+		this.xhrObject.setRequestHeader('Content-Type', serializedBody[1]);
+		this.xhrObject.send(serializedBody[0]);
 	}
 
 	invokeCallback(callback) {
+		/* Safely invoke `callback`. */
 		try {
 			callback(this.response.data, this.response.status);
 		}
@@ -92,7 +63,56 @@ class Request {
 		}
 	}
 
+	checkRequestState() {
+		/* Check the request state, handling a return if it occurred. */
+		if (this.xhrObject.readyState != 4) return;
+
+		//	Process the response body.
+		this.response = this.processResponse({
+			status: this.xhrObject.status,
+			mimetype: this.xhrObject.getResponseHeader('Content-Type'),
+			pureData: this.xhrObject.responseText,
+		});
+		
+		//	Log.
+		requestLog.info('Received ' + this.logRepr + ' ' + this.response.status);
+		requestLog.debug(this.response.data);
+
+		//	Invoke the appropriate callback set.
+		if (this.response.status < 400) {
+			//	Dispatch success callbacks.
+			if (this.successCallbacks.length == 0) {
+				requestLog.warning('Unhandled request success for ' + this.options.url);
+			}
+			for (var i = 0; i < this.successCallbacks.length; i++) {
+				this.invokeCallback(this.successCallbacks[i]);
+			}
+		}
+		else {
+			//	Dispatch failure callbacks.
+			if (this.failureCallbacks.length == 0) {
+				requestLog.warning('Unhandled request failure for ' + this.options.url);
+			}
+			for (var i = 0; i < this.failureCallbacks.length; i++) {
+				this.invokeCallback(this.failureCallbacks[i]);
+			}
+		}
+	}
+
+	serializeBody(options) {
+		/* Serialize and return a request body given `options`. */
+		//	TODO: Support more types or provide API.
+		if (options.json) {
+			requestLog.debug(options.json);
+			return [JSON.stringify(options.json), 'application/json']
+		}
+		
+		return '';
+	}
+
 	processResponse(response) {
+		/* Deserialize the response body. */
+		//	TODO: Support more types or provide API.
 		switch (response.mimetype) {
 			case 'application/json':
 			case 'text/json':
@@ -105,12 +125,44 @@ class Request {
 		}
 		return response;
 	}
+
+	success(callback) {
+		/* Add a success callback. */
+		if (this.response) this.invokeCallback(callback);
+		else this.successCallbacks.push(callback);
+
+		return this;
+	}
+
+	failure(callback) {
+		/* Add a failure callback. */
+		if (this.response) this.invokeCallback(callback);
+		else this.failureCallbacks.push(callback);
+
+		return this;
+	}
 }
 
 @coreComponent
 class RequestFactory {
+	/* The request API exposure. */
+
 	@exposedMethod
-	request(options) {
+	request(options, url=null, json=null) {
+		/*
+		*	Create, send, and return a new `Request`. See the `Request`
+		*	constructor for the `options` specification.
+		*/
+		if (typeof options == 'string') {
+			options = {url: options};
+		}
+		if (url) {
+			options.method = options.url;
+			options.url = url;
+		}
+		if (json) {
+			options.json = json;
+		}
 		return new Request(options);
 	}
 }

@@ -142,10 +142,7 @@ class NotNullConstraint(Constraint):
 		return value is None
 
 	def validator_info(self):
-		return {
-			'type': 'not_null',
-			'message': self.error_message
-		}
+		return None
 	
 	def describe_rule(self):
 		return 'NOT NULL'
@@ -168,7 +165,7 @@ class RegexConstraint(Constraint):
 		self.ignore_case, self.invert = ignore_case, invert
 
 	def precheck_violation(self, model, value):
-		return bool(re.match(value)) != self.invert
+		return bool(re.match(self.regex, value)) == self.invert
 	
 	def describe_rule(self):
 		opr = '~'
@@ -186,7 +183,7 @@ class RegexConstraint(Constraint):
 	
 	def validator_info(self):
 		return {
-			'type': 'regex',
-			'message': self.error_message,
-			'regex': self.regex
+			'regex': self.regex,
+			'ignore_case': self.ignore_case,
+			'invert': self.invert
 		}

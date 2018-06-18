@@ -66,7 +66,8 @@ def parse_json_request(body_data):
 	RequestParameters.propagate_onto(root_object)
 	return root_object
 
-def parse_request_body(body_data, mimetype):
+#	TODO: Handle charset.
+def parse_request_body(body_data, mimetype, charset):
 	'''Parse `body_data` as `mimetype` or raise `UnsupportedMediaType`.'''
 	if mimetype not in _parsers:
 		raise UnsupportedMediaType(mimetype)

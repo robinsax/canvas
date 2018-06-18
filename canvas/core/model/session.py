@@ -92,7 +92,7 @@ class Session:
 			for constraint in column.constraints:
 				try:
 					if constraint.precheck_violation(model, value):
-						error_dict[name] = constraint.error_message
+						error_dict[column.name] = constraint.error_message
 						break
 				except NotImplementedError:
 					pass

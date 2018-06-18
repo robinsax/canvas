@@ -147,14 +147,20 @@ h4 { font-size: 16pt; }
 	width: 30em;
 }
 
+.error-summary {
+	margin-bottom: 15px;
+	margin-top: 5px;
+	color: @error;
+}
+
 .field {
 	.inline-block();
 	width: 28em;
-
-	&:not(::last-child) { margin-bottom: 1.5em; }
+	margin-bottom: 2em;
 
 	label {
 		.inline-block();
+		color: @text;
 		width: 8em;
 		margin-right: 1em;
 		text-align: right;
@@ -166,19 +172,22 @@ h4 { font-size: 16pt; }
 
 	.error-message {
 		margin-top: 0.5em;
-		margin-left: 10em;
+		margin-left: 9em;
 		width: 10em;
 		text-align: left;
 	}
 	&.error {
 		margin-bottom: 1em;
-		.input { border: 2px solid @error; }
+
+		.input { 
+			outline: 2px solid @error; 
+		}
 	}
 
 	.input {
 		vertical-align: top;
 		height: 2em;
-		width: 18em;
+		width: 19em;
 		padding: 0px 10px;
 		outline: none;
 		border: none;

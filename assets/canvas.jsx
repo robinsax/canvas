@@ -1,11 +1,12 @@
 
-//	::include core.root, core.logging, core.resources, core.virtual_dom, core.views, core.requests, core.data
+//	::include core.root, core.logging, core.resources, core.state, core.virtual_dom, core.views, core.requests, core.data, core.forms
 //	::export canvas --hard
 
 const log = new Logger('canvas');
 
 class CanvasCore {
 	constructor() {
+		this.route = document.head.getAttribute('data-route');
 		for (var i = 0; i < coreComponents.length; i++) {
 			let ComponentClass = coreComponents[i],
 				instance = new ComponentClass(this),

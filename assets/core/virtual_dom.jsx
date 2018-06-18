@@ -1,33 +1,46 @@
 /*
-*	The virtual DOM and view API implementation.
+*	The virtual DOM implementation.
 */
 
 @coreComponent
 class VirtualDOMRenderer {
+	/* The virtual DOM renderer and exposure. */
+
 	constructor(core) {
-		this.core = core;
-		this.log = core.logger('vdr');
+		this.log = new Logger('vdr');
 		this.renderStack = [];
+		this.renderBatch = [];
+
+		//	The View faculties require a reference to this render.
 		VirtualDOMRenderer.instance = this;
 	}
 
 	@exposedMethod
 	comp(data, callback) {
+		/*
+		*	Perform a comprehension on `data` that allows data-DOM binding if
+		*	the result items are JSX snippets.
+		*/
+		let results = [];
 		for (var i = 0; i < data.length; i++) {
 			let result = callback(data[i], i);
 			if (result.tag && result.attributes && result.children) {
 				result.data = data[i];
 				result.index = i;
 			}
+			results.push(result);
 		}
+
+		return results;
 	}
 
 	flatten(iterable) {
+		/* Flatten an iterable with constituent iterables. */
+		let input = iterable;
 		while (true) {
 			let verifiedFlat = true, pass = [];
-
-			for (let i = 0; i < iterable.length; i++) {
-				let item = iterable[i];
+			for (let i = 0; i < input.length; i++) {
+				let item = input[i];
 				if (item instanceof Array) {
 					pass = pass.concat(item);
 					verifiedFlat = false;
@@ -38,22 +51,32 @@ class VirtualDOMRenderer {
 			}
 
 			if (verifiedFlat) return pass;
+			input = pass;
 		}
 	}
 
 	diff(oldVirtual, newVirtual) {
 		return (
 			(typeof oldVirtual != typeof newVirtual) ||
-			(typeof oldVirtual == 'string' && oldVirtual != newVirtual) ||
+			(
+				['string', 'number'].indexOf(typeof oldVirtual) > 0 && 
+				oldVirtual != newVirtual
+			) ||
 			oldVirtual.tag != newVirtual.tag ||
 			(newVirtual.attributes && newVirtual.attributes.forceRender)
 		)
 	}
 
 	devirtualize(virtual) {
-		if (!virtual) return document.createTextNode('');
-		if (virtual instanceof this.core.View) {
-			virtual = virtual.template(...virtual.getRenderContext());
+		if (virtual == undefined || virtual == null) return document.createTextNode('');
+		if (virtual instanceof View) {
+			let view = virtual;
+			let parentView = this.renderStack[this.renderStack.length - 1];
+			if (parentView) {
+				view.attachToParent(parentView);
+				view.parent = parentView;
+			}
+			return this.render(view);
 		}
 
 		let el = null;
@@ -72,7 +95,7 @@ class VirtualDOMRenderer {
 		}
 		else {
 			el = document.createElement(virtual.tag);
-
+			
 			for (let attr in virtual.attributes) {
 				let value = virtual.attributes[attr];
 				if (attr === 'safeHTML') {
@@ -104,29 +127,37 @@ class VirtualDOMRenderer {
 					}
 				}
 			}
+
+			let currentView = this.renderStack[this.renderStack.length - 1],
+				checkEvents = currentView.__events__ || [];
+			for (var i = 0; i < checkEvents.length; i++) {
+				let checkEvent = checkEvents[i];
+				if (el.matches(checkEvent[0])) {
+					el.addEventListener(checkEvent[1], currentView[checkEvent[2]].bind(currentView));
+				}
+			}
 		}
 
 		return el;
 	}
 
-	updateAttributes(targetEl, oldAttrs, newAttrs) {
-		for (let attr in oldAttrs) {
-			if (!oldAttrs[attr] || oldAttrs[attr] != newAttrs[attr]) return;
-
+	updateAttributes(targetEl, newAttrs, oldAttrs) {
+		for (let attr in newAttrs) {
 			targetEl.setAttribute(attr, newAttrs[attr]);
 		}
+
 		for (let attr in oldAttrs) {
-			if (!newAttrs[attr]) return;
+			if (newAttrs[attr]) return;
 			
 			targetEl.removeAttribute(attr);
 		}
 	}
 
 	update(parentEl, newVirtual, oldVirtual, index=0) {
-		if (!oldVirtual) {
+		if (oldVirtual === undefined || oldVirtual === null) {
 			parentEl.appendChild(this.devirtualize(newVirtual));
 		}
-		else if (!newVirtual) {
+		else if (newVirtual === undefined || newVirtual === null) {
 			if (parentEl.childNodes[index]) {
 				parentEl.removeChild(parentEl.childNodes[index]);
 				throw 'x';	//	TODO: What the fuck.
@@ -162,18 +193,19 @@ class VirtualDOMRenderer {
 		return {
 			tag: tag,
 			attributes: attributes,
-			children: children
+			children: this.flatten(children)
 		};
 	}
 
 	@exposedMethod
 	render(view) {
-		this.renderStack.push(view);
 		if (!(view instanceof View)) {
 			let parentEl = document.createDocumentFragment();
 			this.update(parentEl, view, null);
 			return parentEl.children[0];
 		}
+
+		this.renderStack.push(view);
 		let parentEl, index = 0;
 		if (view.element) {
 			parentEl = view.element.parentNode;
@@ -182,19 +214,34 @@ class VirtualDOMRenderer {
 					index = i;
 					break;
 				}
-			} 
+			}
 		}
 		else {
 			parentEl = document.createDocumentFragment();
 		}
-		
+
 		let newDOM = view.template(...view.getRenderContext());
 		this.update(parentEl, newDOM, view.referenceDOM, index);
 		view.referenceDOM = newDOM;
 		
-		this.core.observeState(view);
+		view.state.bind(view.render.bind(view));
 
+		this.renderBatch.push(view);
 		this.renderStack.pop();
-		return view.element = parentEl.children[index];
+		view.element = parentEl.children[index];
+		view.element.__view__ = view;
+		view.state.observe();
+
+		if (this.renderStack.length == 0) {
+			while (this.renderBatch.length > 0) {
+				let next = this.renderBatch.pop();
+				if (!next.created) {
+					next.created = true;
+					next.onceCreated();
+				}
+			}
+		}
+
+		return view.element;
 	}
 }

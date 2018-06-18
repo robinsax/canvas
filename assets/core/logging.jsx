@@ -18,7 +18,7 @@ class Logger {
 
 		let time = ((new Date()).getTime() - this.initMS)/1000;
 		time = (time > 99 ? time.toFixed(0) : time.toFixed(2)) + 's';
-		while (time.length < 6) time += ' ';
+		while (time.length < 7) time += ' ';
 		while (prefix.length < 6) prefix += ' ';
 
 		let message = '%c' + time + this.name + prefix,
