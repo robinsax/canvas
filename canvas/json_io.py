@@ -57,7 +57,7 @@ def serialize_json(obj, fallback=None, pretty=False):
 def deserialize_json(json_str):
 	'''Deserialize `json_str` into native data structures.'''
 	if isinstance(json_str, bytes):
-		json_str.decode()
+		json_str = json_str.decode()
 	#	Define the object deserializer hook.
 	def deserialize_hook(dct):
 		for key, value in dct.items():
