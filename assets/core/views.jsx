@@ -156,7 +156,7 @@ class ViewProvider {
 	@exposedMethod
 	page(route, part='mainPage') {
 		return (ViewClass) => {
-			if (route != document.head.getAttribute('data-route')) return;
+			if (route != '*' && route != document.head.getAttribute('data-route')) return;
 
 			const create = () => {
 				cv[part].render(new ViewClass());
