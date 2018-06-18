@@ -60,6 +60,9 @@ class PageView:
 
         self.setup()
         
+    def setup():
+        pass
+
     @classmethod
     def resolved(cls, *args, **kwargs):
         '''Return the plugin-modified version of this class.'''
