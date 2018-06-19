@@ -58,7 +58,7 @@ class Model:
 
 		return super().__setattr__(key, value)
 
-def model(table_name, contents):
+def model(table_name, contents, dictized=tuple()):
 	'''
 	The `model` class decorator is used to define properties of a model class.
 	::table_name The name of the table in which to store instances of this 
@@ -69,7 +69,7 @@ def model(table_name, contents):
 	def model_inner(cls):
 		#	Patch the type to extend Model.
 		_Model = type(cls.__name__, (cls, Model), dict())
-		_Model.__dictized__ = list()
+		_Model.__dictized__ = list(dictized)
 		resolve_dictized_properties(_Model)
 		#	Create the table.
 		table = Table(table_name, contents)
