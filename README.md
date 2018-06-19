@@ -2,6 +2,7 @@
 
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
+http://canvas-framework.com
 
 A full-stack web application framework for building modern web products simply.
 
@@ -142,4 +143,4 @@ python3 canvas --config "plugins.activated=<plugin_name>,"
 ```
 
 For more in depth documentation about developing web applications with canvas, 
-see the `./docs` directory of this repository.
+see the `./docs` directory of this repository or its [website](http://canvas-framework.com).
