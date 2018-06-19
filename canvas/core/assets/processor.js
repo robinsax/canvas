@@ -1,13 +1,12 @@
-'use strict';
 /*
 *	JSX and LESS asset processor invocation. Invoked with either 'jsx' or 
 *	'less' in the command line; reads processing target from stdin.
 */
-let getStdIn = require('get-stdin'), debugMode = process.argv[3] == '1';
+const getStdIn = require('get-stdin'), debugMode = process.argv[3] == '1';
 
 //	Define JSX transpilation.
 const transpileJSX = source => {
-	let babel = require('babel-core');
+	const babel = require('babel-core');
 	let code = babel.transform(source, {
 		presets: [
 			['es2015', {
@@ -23,7 +22,7 @@ const transpileJSX = source => {
 	}).code;
 
 	if (!debugMode) {
-		let uglifyJS = require('uglify-js');
+		const uglifyJS = require('uglify-js');
 		return uglifyJS.minify(code).code;
 	}
 	return code;
@@ -31,11 +30,11 @@ const transpileJSX = source => {
 
 //	Define less compilation.
 const compileLESS = source => {
-	let less = require('less');
+	const less = require('less');
 	let result = null, plugins = [];
 
 	if (!debugMode) {
-		let LPlCleanCSS = require('less-plugin-clean-css');
+		const LPlCleanCSS = require('less-plugin-clean-css');
 		plugins.push(new LPlCleanCSS());
 	}
 
