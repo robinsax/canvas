@@ -9,8 +9,10 @@
 class View {
 	/* The root view class. Override is invariantly implicit. */
 
+	onceConstructed() {}
 	onceCreated() {}
-	
+	onceFetched() {}
+
 	attachToParent(parent) {
 		parent.children.push(this);
 	}
@@ -90,14 +92,7 @@ class PagePart {
 		this.element = null;
 		this.renderQueue = [];
 
-		//	Ensure actualize is resolved appropriately.
-		if (document.readyState == 'ready') {
-			this.actualize();
-		}
-		else {
-			document.addEventListener('DOMContentLoaded', 
-					this.actualize.bind(this));
-		}
+		onceReady(this.actualize.bind(this));
 	}
 
 	actualize() {
@@ -158,16 +153,9 @@ class ViewProvider {
 		return (ViewClass) => {
 			if (route != '*' && route != document.head.getAttribute('data-route')) return;
 
-			const create = () => {
+			onceReady(() => {
 				cv[part].render(new ViewClass());
-			}
-
-			if (document.readyState == 'ready') {
-				create();
-			}
-			else {
-				document.addEventListener('DOMContentLoaded', create);
-			}
+			});
 		}
 	}
 
@@ -213,12 +201,19 @@ class ViewProvider {
 						
 						return {
 							set: set = newValue => {
+								if (newValue instanceof DataCache) {
+									newValue.addView(self);
+									self.dataCache = self;
+									newValue = newValue.data;
+								}
 								value = newValue;
 								self.render();	
 							},
 							get: () => value
 						};
 					})(options.data));
+
+					this.onceConstructed(...args);
 				}
 			}
 

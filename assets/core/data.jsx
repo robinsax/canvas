@@ -27,10 +27,16 @@ class DataCache {
 
 	completeFetch(response) {
 		/* Update the data in this cache and it's views. */
-		this.data = response.data;
-		
+		if (typeof response == 'object') {
+			this.data = response.data;
+		}
+		else {
+			this.data = response;
+		}
+
 		for (var i = 0; i < this.views.length; i++) {
 			this.views[i].data = this.data;
+			this.views[i].onceFetched();
 		}
 	}
 

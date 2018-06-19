@@ -59,7 +59,7 @@ class VirtualDOMRenderer {
 		return (
 			(typeof oldVirtual != typeof newVirtual) ||
 			(
-				['string', 'number'].indexOf(typeof oldVirtual) > 0 && 
+				['string', 'number'].indexOf(typeof oldVirtual) >= 0 && 
 				oldVirtual != newVirtual
 			) ||
 			oldVirtual.tag != newVirtual.tag ||
@@ -133,7 +133,19 @@ class VirtualDOMRenderer {
 			for (var i = 0; i < checkEvents.length; i++) {
 				let checkEvent = checkEvents[i];
 				if (el.matches(checkEvent[0])) {
-					el.addEventListener(checkEvent[1], currentView[checkEvent[2]].bind(currentView));
+					el.addEventListener(checkEvent[1], (event) => {
+						let context = {element: el, event: event};
+						let cur = el;
+						while (cur && cur != document) {
+							if (cur.__data__) {
+								context.data = cur.__data__;
+								context.index = cur.__index__;
+								break;
+							}
+							cur = cur.parentNode;
+						}
+						currentView[checkEvent[2]](context);
+					});
 				}
 			}
 		}
@@ -154,6 +166,13 @@ class VirtualDOMRenderer {
 	}
 
 	update(parentEl, newVirtual, oldVirtual, index=0) {
+		if (newVirtual instanceof View){
+			//	TODO: This is a hotfix. onceCreated should never be invoked for
+			//	these throwaway views.
+			newVirtual.onceCreated = () => {}
+		}
+
+
 		if (oldVirtual === undefined || oldVirtual === null) {
 			parentEl.appendChild(this.devirtualize(newVirtual));
 		}
@@ -235,7 +254,7 @@ class VirtualDOMRenderer {
 		if (this.renderStack.length == 0) {
 			while (this.renderBatch.length > 0) {
 				let next = this.renderBatch.pop();
-				if (!next.created) {
+				if (next && !next.created) {
 					next.created = true;
 					next.onceCreated();
 				}

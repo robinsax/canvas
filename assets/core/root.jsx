@@ -7,3 +7,12 @@ const coreComponents = [],
 	exposedMethod = (target, property) => {
 		target[property].isExposed = true;
 	};
+
+const onceReady = callback => {
+	if (['ready', 'interactive'].indexOf(document.readyState) >= 0) {
+		callback();
+	}
+	else {
+		document.addEventListener('DOMContentLoaded', callback);
+	}
+}

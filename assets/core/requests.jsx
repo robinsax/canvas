@@ -67,17 +67,16 @@ class Request {
 		/* Check the request state, handling a return if it occurred. */
 		if (this.xhrObject.readyState != 4) return;
 
+		//	Log.
+		requestLog.info('Received ' + this.logRepr + ' ' + this.xhrObject.status);
+
 		//	Process the response body.
 		this.response = this.processResponse({
 			status: this.xhrObject.status,
 			mimetype: this.xhrObject.getResponseHeader('Content-Type'),
-			pureData: this.xhrObject.responseText,
+			pureData: this.xhrObject.responseText
 		});
 		
-		//	Log.
-		requestLog.info('Received ' + this.logRepr + ' ' + this.response.status);
-		requestLog.debug(this.response.data);
-
 		//	Invoke the appropriate callback set.
 		if (this.response.status < 400) {
 			//	Dispatch success callbacks.
@@ -117,6 +116,7 @@ class Request {
 			case 'application/json':
 			case 'text/json':
 				response.data = JSON.parse(response.pureData);
+				requestLog.debug(response.data);
 				break;
 			default:
 				requestLog.warning('Unknown mimetype ' + response.mimetype);

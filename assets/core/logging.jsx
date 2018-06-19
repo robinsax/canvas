@@ -14,7 +14,7 @@ class Logger {
 	}
 
 	log(prefix, color, item) {
-		if (!this.enabled) return;
+		if (!this.enabled || LoggerFactory.instance.suppressed) return;
 
 		let time = ((new Date()).getTime() - this.initMS)/1000;
 		time = (time > 99 ? time.toFixed(0) : time.toFixed(2)) + 's';
@@ -61,8 +61,22 @@ class Logger {
 class LoggerFactory {
 	/* A core component for creating logs for a backend-consitant API. */
 	
+	constructor() {
+		LoggerFactory.instance = this;
+	}
+
 	@exposedMethod
 	logger(name) {
 		return new Logger(name);
+	}
+
+	@exposedMethod
+	suppressLog() {
+		this.suppressed = true;
+	}
+
+	@exposedMethod
+	unsuppressLog() {
+		this.suppressed = false;
 	}
 }
