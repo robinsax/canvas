@@ -46,5 +46,5 @@ if __installed__:
 		on_error, on_request_received, parse_datetime, create_json, \
 		create_redirect, create_page, on_routing, type_adapter, model, \
 		create_session, resolve_route, dictized_property, dictize, \
-		handle_request as application, initialize
+		handle_request as application, initialize, on_init, on_post_init
 	from . import ext, plugins

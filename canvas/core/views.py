@@ -12,7 +12,7 @@ from pyxl.element import x_element
 from ..exceptions import InvalidAsset
 from ..utils import create_callback_registrar
 from ..configuration import config
-from ..dictionaries import AttributedDict
+from ..json_io import serialize_json
 from .request_context import RequestContext
 
 #    Define the page view alteration callback, used to override the root page 
@@ -38,7 +38,7 @@ def view(_=None):
         return type(cls.__name__, (cls, View), dict())
     return inner_view
 
-#	TODO: Scripts at bottom of page.
+#    TODO: Scripts at bottom of page.
 
 @view()
 class PageView:
@@ -50,12 +50,13 @@ class PageView:
     #    Used to store the plugin-modified version of this class.
     resolved_class = None
 
-    def __init__(self, title, description=None, assets=tuple()):
+    def __init__(self, title, description=None, assets=tuple(), page_data=None):
         '''
         Configure an overriding page view. Overrides of this class must have
         the same argument specification.
         '''
         self.title, self.description = title, description
+        self.page_data = page_data
         self.assets = ['canvas.css', 'canvas.js', *assets]
         self.header_views, self.page_views, self.footer_views = list(), \
                 list(), list()
@@ -77,25 +78,42 @@ class PageView:
         description = self.description
         if not description:
             description = "This page has no description."
-        return <frag>
+        meta_fragment = <frag>
             <meta charset="utf-8"></meta>
             <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
             <link rel="stylesheet" href="/assets/lib/font-awesome.min.css"/>
             <link rel="icon" type="image/png" href="/assets/media/site_icon.png"/>
             <meta name="description" content={ description }></meta>
         </frag>
+        if self.page_data:
+            page_data = ''.join(('var page = ', serialize_json(self.page_data)))
+            meta_fragment.append(
+                <script type="text/javascript">{ html.rawhtml(page_data) }</script>
+            )
+        return meta_fragment
 
     def tagify_asset(self, route):
-        '''Create a tag for the asset at `route`.'''
+        '''
+        Create a tag for the asset at `route`, which for ambiguous assets 
+        should be an iterable containing the asset route and a string 
+		representation of the equivalent asset extension ('js' or 'css').
+        '''
+        which = None
+        if isinstance(route, (list, tuple)):
+            route, which = route
+        
         #    Ensure route is asset prefixed.
-        if not route.startswith(config.customization.asset_route_prefix):
+        if (
+			not route.startswith('http') and 
+			not route.startswith(config.customization.asset_route_prefix)
+		):
             route = '/'.join((
                 config.customization.asset_route_prefix, route
             ))
         
-        if route.endswith('.css'):
+        if route.endswith('.css') or which == 'css':
             return <link rel="stylesheet" type="text/css" href={ route }></link>
-        elif route.endswith('.js'):
+        elif route.endswith('.js') or which == 'js':
             return <script type="text/javascript" src={ route }></script>
         else:
             raise InvalidAsset(route)

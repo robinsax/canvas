@@ -50,17 +50,17 @@ class Page(Controller):
 	def on_get(self, context):
 		return self.render()
 
-	def get_view(self, title=None, description=None):
+	def get_view(self, title=None, description=None, page_data=None):
 		'''Return the root view to be rendered.'''
 		if not title:
 			title = self.__title__
 		if not description:
 			description = self.__description__
-		return PageView.resolved(title, description, self.__assets__)
+		return PageView.resolved(title, description, self.__assets__, page_data)
 
-	def render(self, title=None, description=None, code=200, headers=dict()):
+	def render(self, title=None, description=None, page_data=None, code=200, headers=dict()):
 		'''Return the rendered view for this page as a response tuple.'''
-		view = self.get_view(title, description)
+		view = self.get_view(title, description, page_data)
 		return create_page(view, code, headers)
 
 def controller(*routes, _destiny=Controller, **attrs):

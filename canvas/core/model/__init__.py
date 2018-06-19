@@ -30,6 +30,8 @@ def initialize_model():
 	Finalize the ORM system initialization and create all known in-database 
 	objects.
 	'''
+	Table.build_relations()
+
 	#	Create a database session.
 	session = create_session()
 	

@@ -53,7 +53,7 @@ class RequestContext(AttributedDict):
 		'''Create a new request context.'''
 		super().__init__(**kwargs)
 		if self.verb == 'get':
-			self.index = ['query', 'session', 'route', 'cookie']
+			self.indexed = ['query', 'session', 'route', 'cookie']
 		else:
 			self.indexed = ['request', 'session', 'route', 'cookie']
 

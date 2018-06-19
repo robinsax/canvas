@@ -1,15 +1,11 @@
-#fefefe 	-> background
-#000000 	-> text
-#dedede 	-> subtext, input, focused-input
-#cccccc 	-> theme1, theme3, visited-link
-#bbbbbb 	-> theme2, link
-#aaaaaa 	-> highlight, title
-
+white 		-> background, input, focused-input
+black 		-> text, title, subtext, theme1, theme2, theme3
+blue 		-> link, visited-link
 red 		-> error
-orange		-> warning
+orange		-> warning, highlight
 green 		-> success
 
-'Helvetica' -> text-font, title-font
+'Times New Roman'	-> text-font, title-font
 
 1000px 		-> breakpoint1
 700px		-> breakpoint2

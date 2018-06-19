@@ -51,15 +51,18 @@ class Table(ObjectReference, IJoinable):
 		#	This invariant supports the Session class's functionality.
 		self.columns.move_to_end(self.primary_key.name, False)
 
-		#	Bind constituents.
-		for item in self.columns.values():
-			item.bind(self)
-		for item in self.constraints:
-			item.bind(self)
-
 		#	Add this table to the master list.
 		Table.instances.append(self)
 	
+	@classmethod
+	def build_relations(cls):
+		for table in Table.instances:
+			#	Bind constituents.
+			for columns in table.columns.values():
+				columns.bind(table)
+			for constraints in table.constraints:
+				constraints.bind(table)
+
 	@classmethod
 	def get(cls, reference_key):
 		'''Return the table attached to the class named `reference_key`.'''
