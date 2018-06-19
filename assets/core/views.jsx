@@ -71,7 +71,7 @@ class View {
 	submitForm(method=null, url=null) {
 		if (!this.validateForm()) return;
 
-		cv.request(method || this.formMethod, url || this.formRoute, this.formData)
+		return cv.request(method || this.formMethod, url || this.formRoute, this.formData)
 			.success(this.submitSuccess.bind(this))
 			.failure(this.submitFailure.bind(this));
 	}

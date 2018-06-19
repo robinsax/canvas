@@ -5,6 +5,7 @@ processor invocation logic.
 '''
 
 import os
+import sys
 
 from subprocess import Popen, PIPE
 
@@ -28,7 +29,7 @@ def process(source, which):
 	'''
 	#	Create the command line.
 	cmdline = ' '.join((
-		'node', _script_path, which, 
+		'node' if 'nix' in sys.platform else 'nodejs', _script_path, which, 
 		'1' if config.development.debug else '0'
 	))
 	log.debug('Compiling asset: %s', cmdline)
