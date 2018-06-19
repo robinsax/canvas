@@ -4,7 +4,6 @@
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
 
 A full-stack web application framework for building modern web products simply.
-
 http://canvas-framework.com
 
 ## What's it like?
