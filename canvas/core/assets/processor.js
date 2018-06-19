@@ -2,7 +2,8 @@
 *	JSX and LESS asset processor invocation. Invoked with either 'jsx' or 
 *	'less' in the command line; reads processing target from stdin.
 */
-const getStdIn = require('get-stdin'), debugMode = process.argv[3] == '1';
+const getStdIn = require('get-stdin'), 
+	debugMode = process.argv[3] == '1';
 
 //	Define JSX transpilation.
 const transpileJSX = source => {
