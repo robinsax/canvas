@@ -10,6 +10,8 @@ from werkzeug.wrappers import BaseResponse
 
 from ..exceptions import Failed
 from ..utils import logger, format_exception, create_callback_registrar
+from ..core import create_controllers, create_routing, initialize_model
+from ..core.routing import _route_map
 from .. import application
 
 #	Create a log.
@@ -20,6 +22,14 @@ _tests = list()
 
 #	Define a cleanup function registrar.
 on_cleanup = create_callback_registrar()
+
+def reset_model():
+	initialize_model()
+
+def reset_controllers():
+	global _route_map
+	_route_map = dict()
+	create_routing(create_controllers())
 
 def test(name):
 	'''The test function registrar.'''

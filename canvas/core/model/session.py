@@ -68,7 +68,7 @@ class Session:
 
 		#	Track this model.
 		row_reference = '=>'.join((
-			table.name, table.primary_key.value_on(model)
+			table.name, str(table.primary_key.value_on(model))
 		))
 		self.loaded_models[row_reference] = model
 
@@ -112,10 +112,13 @@ class Session:
 
 	def load_model_instance(self, model_cls, row_segment):
 		'''Load an instance of `model_cls` from `row_segment`.'''
+		if not row_segment:
+			return None
+		
 		#	Create a row reference for this row and check if a model is 
 		#	already loaded for that row.
 		row_reference = '=>'.join((
-			model_cls.__table__.name, row_segment[0]
+			model_cls.__table__.name, str(row_segment[0])
 		))
 		is_remap = row_reference in self.loaded_models
 
@@ -195,7 +198,7 @@ class Session:
 			#	TODO: Handle other in-database defaults.
 			resultant_id = self.cursor.fetchone()[0]
 			table.primary_key.set_value_on(model, resultant_id)
-			self.loaded_models['=>'.join((table.name, resultant_id))] = model
+			self.loaded_models['=>'.join((table.name, str(resultant_id)))] = model
 			model.__loaded__(self)
 		return self
 
@@ -204,7 +207,7 @@ class Session:
 		table = model.__class__.__table__
 		#	Delete the entry.
 		del self.loaded_models[
-			'=>'.join([table.name, table.primary_key.value_on(model)])
+			'=>'.join([table.name, str(table.primary_key.value_on(model))])
 		]
 		#	Inform the model.
 		model.__loaded__(None)
@@ -217,7 +220,7 @@ class Session:
 			table = model.__class__.__table__
 			#	Create and execute a delete statement.
 			condition = table.primary_key == table.primary_key.value_on(model)
-			self.execute_statement(*DeleteStatement(table, condition, cascade))
+			self.execute_statement(DeleteStatement(table, condition, cascade))
 			#	Detach the now-orphaned model.
 			self.detach(model)
 

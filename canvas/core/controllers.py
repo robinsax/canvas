@@ -26,7 +26,9 @@ class _ControllerRegistration:
 	@classmethod
 	def create(cls, *args):
 		'''Create and store a new controller registration.'''
-		cls.instances.append(_ControllerRegistration(*args))
+		instance = _ControllerRegistration(*args)
+		cls.instances.append(instance)
+		return instance
 
 class Controller:
 	'''The base controller class.'''
@@ -72,7 +74,9 @@ def controller(*routes, _destiny=Controller, **attrs):
 		#	Create a patched type of the controller and its destiny.
 		patched = type(cls.__name__, (cls, _destiny), dict())
 		#	Create this registration.
-		_ControllerRegistration.create(patched, routes, attrs)
+		patched.__controllerness__ = _ControllerRegistration.create(
+			patched, routes, attrs
+		)
 
 		return patched
 	return controller_inner
@@ -129,7 +133,7 @@ def create_controllers():
 		controller.__verbs__ = supported_verbs
 
 		log.debug('Created controller %s (Verbs: %s, Routes: %s)'%(
-			created.__class__.__name__, supported_verbs, registration.routes
+			controller.__class__.__name__, supported_verbs, registration.routes
 		))
 		created.append(controller)
 	return created

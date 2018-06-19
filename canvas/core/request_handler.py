@@ -90,7 +90,7 @@ def serve_controller(request):
 			#	If controller has default expectation, empty bodies have are
 			#	an empty parameter set.
 			if 'json' in controller.__expects__:
-				request_parameters = RequestParameters()
+				request_parameters = RequestParameters(dict())
 		else:
 			#	If it should be asserted, assert the content type is correct.
 			should_assert = content_type and controller.__expects__ != '*'

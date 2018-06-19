@@ -82,7 +82,7 @@ class DeleteStatement(Statement):
 			'DELETE FROM', self.host.serialize(values),
 			'WHERE', self.condition.serialize(values)
 		))
-		return values, sql
+		return sql, values
 
 class UpdateStatement(Statement):
 	'''An SQL 'UPDATE' statement.'''

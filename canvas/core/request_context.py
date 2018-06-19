@@ -52,7 +52,10 @@ class RequestContext(AttributedDict):
 	def __init__(self, **kwargs):
 		'''Create a new request context.'''
 		super().__init__(**kwargs)
-		self.indexed = ['request', 'cookie', 'session', 'route']
+		if self.verb == 'get':
+			self.index = ['query', 'session', 'route', 'cookie']
+		else:
+			self.indexed = ['request', 'session', 'route', 'cookie']
 
 	def __getitem__(self, item):
 		'''Retrieve an item, allowing slicing and indexing.'''

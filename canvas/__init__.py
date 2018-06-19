@@ -35,7 +35,7 @@ from .exceptions import InvalidSchema, InvalidQuery, InvalidTag, InvalidAsset, \
 	ValidationErrors, InternalServerError
 from .utils import cached_property, logger
 from .configuration import config, plugin_config
-from .json_io import serialize_datetime, deserialize_json, serialize_datetime
+from .json_io import serialize_json, deserialize_json, serialize_datetime
 from .cli import launcher, launch_cli
 
 if __installed__:

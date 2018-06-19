@@ -16,6 +16,8 @@ from ..utils import create_callback_registrar
 #	Define a variable sentinel that keyed RouteVariables can use to recognize each
 #	other.
 _variable_sentinel = object()
+#	Define a sentinel key for on-branch leaf controllers.
+_here_sentinel = object()
 #	Define the root of the route map, a dictionary tree with controller leaves.
 _route_map = dict()
 
@@ -56,7 +58,8 @@ def create_routing(controller_list):
 	def update_route_map(route, controller):
 		#	Follow this route into the route map, generating branches and
 		#	placing the controller as a leaf.
-		current_node, route_parts = _route_map, route[1:].split('/')
+		current_node, last_node, last_key = _route_map, None, None
+		route_parts = route[1:].split('/')
 		for i, route_part in enumerate(route_parts):
 			#	Check if this is a variable definition, updating the key
 			#	to a variable if it is.
@@ -64,19 +67,27 @@ def create_routing(controller_list):
 			if variable_definition:
 				route_part = RouteVariable(variable_definition.group(1))
 			
+			#	Assert this isn't a leaf; if it is, make it on-branch.
+			if not isinstance(current_node, dict):
+				new_current_node = dict()
+				new_current_node[_here_sentinel] = current_node
+				last_node[last_key] = current_node = new_current_node
+
 			if route_part not in current_node:
 				#	Expand the tree.
 				if i == len(route_parts) - 1:
 					current_node[route_part] = controller
 				else:
 					current_node[route_part] = dict()
-					
+			
+			last_node, last_key = current_node, route_part
 			current_node = current_node[route_part]
-
+	
 	#	Update the route map for all routes for all controllers.
 	for controller in controller_list:
 		for route in controller.__routes__:
 			update_route_map(route, controller)
+
 	#	Invoke modification callbacks.
 	on_routing.invoke(_route_map)
 
@@ -104,6 +115,9 @@ def resolve_route(route):
 			#	No further branch.
 			raise NotFound(route)
 	if isinstance(current_node, dict):
+		#	Check for an on-branch leaf.
+		if _here_sentinel in current_node:
+			return current_node[_here_sentinel], variables
 		#	Didn't reach a controller.
 		raise NotFound(route)
 	return current_node, variables
