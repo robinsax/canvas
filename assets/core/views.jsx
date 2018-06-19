@@ -68,10 +68,10 @@ class View {
 		}
 	}
 
-	submitForm() {
+	submitForm(method=null, url=null) {
 		if (!this.validateForm()) return;
 
-		cv.request(this.formMethod, this.formRoute, this.formData)
+		cv.request(method || this.formMethod, url || this.formRoute, this.formData)
 			.success(this.submitSuccess.bind(this))
 			.failure(this.submitFailure.bind(this));
 	}

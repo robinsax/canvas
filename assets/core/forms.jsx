@@ -110,7 +110,7 @@ class FormViewExposure {
 
 			onceCreated() {
 				let base = this.parent.formModel ? this.parent.formModel[this.name] : {},
-					resolve = key => (this.overrides[key] ? this.overrides[key] : base[key]) || '';
+					resolve = key => (this.overrides[key] ? this.overrides[key] : base[key]);
 				
 				let label = this.overrides.label ? this.overrides.label 
 						: this.name.replace(
@@ -132,9 +132,9 @@ class FormViewExposure {
 
 				this.data = {
 					name: this.name,
-					type: resolve('type'),
+					type: resolve('type') || 'text',
 					label: label,
-					placeholder: resolve('placeholder')
+					placeholder: resolve('placeholder') || ''
 				}
 			}
 		}
