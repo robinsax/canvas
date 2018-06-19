@@ -3,9 +3,9 @@
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
 
-http://canvas-framework.com
-
 A full-stack web application framework for building modern web products simply.
+
+http://canvas-framework.com
 
 ## What's it like?
 
