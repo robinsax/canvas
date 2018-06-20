@@ -10,10 +10,11 @@ A full-stack web application framework for building modern web products simply.
 canvas is designed for minimalism and extensibility. 
 *Especially its documentation...* (I'm working on this).
 
-The following code samples define a Breakfast model, an API endpoint that
-serves an instance of it, and a view that displays it.
+The following code samples define a web application consisting of a 
+breakfast model, an API endpoint that serves an instance of it, and a page 
+which contains a view that displays it.
 
-The model and controller:
+The model and controllers (`breakfast/__init__.py`):
 
 ```python
 #   Import canvas.
@@ -53,10 +54,11 @@ class BreakfastEndpoint:
 class Homepage: pass
 ```
 
-The view:
+The view (`assets/breakfast.jsx`):
 
 ```javascript
-//  Define a breakfast view.
+//  Define a breakfast view that renders on '/' and retrieves its data from
+//	the endpoint.
 @cv.page('/')
 @cv.view({
     data: cv.fetch('/api/breakfast'),
