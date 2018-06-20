@@ -26,6 +26,9 @@ class View {
 		if (this.state) {
 			context.push(this.state);
 		}
+		if (this.subtemplates) {
+			context.push(this.subtemplates);
+		}
 		return context;
 	}
 
@@ -41,6 +44,8 @@ class View {
 		let data = {};
 		for (let name in this.fields) {
 			let field = this.fields[name];
+			if (field.unincluded) continue;
+			
 			data[name] = field.value;
 		}
 		return data;
@@ -68,10 +73,35 @@ class View {
 		}
 	}
 
-	submitForm(method=null, url=null) {
+	clearForm() {
+		for (let key in this.fields) {
+			this.fields[key].value = null;
+		}
+
+		if (this.errorSummary) {
+			this.errorSummary.hide();
+		}
+	}
+
+	fillForm(data) {
+		this.clearForm();
+		for (let key in data) {
+			if (!this.fields[key]) continue;
+
+			this.fields[key].value = data[key];
+		}
+	}
+
+	submitForm(method=null, url=null, extras={}) {
 		if (!this.validateForm()) return;
 
-		return cv.request(method || this.formMethod, url || this.formRoute, this.formData)
+		//	Update extras.
+		let data = this.formData;
+		for (let key in extras) {
+			data[key] = extras[key];
+		}
+
+		return cv.request(method || this.formMethod, url || this.formRoute, data)
 			.success(this.submitSuccess.bind(this))
 			.failure(this.submitFailure.bind(this));
 	}
@@ -81,6 +111,41 @@ class View {
 		if (!this.created) return;
 		
 		VirtualDOMRenderer.instance.render(this);
+	}
+}
+
+class ModalMixin {
+	constructor(className) {
+		this.className = className;
+	}
+
+	updateHostOptions(options) {
+		options.state = options.state || {};
+		options.state.open = false;
+	}
+
+	attachToHost(host) {
+		const innerTemplate = host.template;
+		host.template = (...args) =>
+			<div class={ "modal " + this.className + (host.state.open ? " open" : "") }>
+				<div class="panel">
+					<i class="fa fa-times close"/>
+					{ innerTemplate(...args) }
+				</div>
+			</div>
+		
+		if (!host.open) {
+			host.open = (function() { this.state.open = true; }).bind(host);
+		}
+		if (!host.close) {
+			host.close = (function() { this.state.open = false; }).bind(host);
+		}
+		host.__stopEvent__ = context => context.event.stopPropagation();
+		host.__events__.push(
+			['.close', 'click', 'close'],
+			['.modal', 'click', 'close'],
+			['.panel', 'click', '__stopEvent__']
+		);
 	}
 }
 
@@ -130,6 +195,7 @@ class ViewProvider {
 		//	Expose the View type for type checks.
 		View.log = new Logger('views');
 		core.View = View;
+		core.ModalMixin = ModalMixin;
 
 		//	Preset component definitions require access to this instance.
 		ViewProvider.instance = this;
@@ -151,7 +217,7 @@ class ViewProvider {
 	@exposedMethod
 	page(route, part='mainPage') {
 		return (ViewClass) => {
-			if (route != '*' && route != document.head.getAttribute('data-route')) return;
+			if (route !== true && route != '*' && route != document.head.getAttribute('data-route')) return;
 
 			onceReady(() => {
 				cv[part].render(new ViewClass());
@@ -172,6 +238,12 @@ class ViewProvider {
 		*/
 		return (ViewClass) => {
 			//	Create a derived view class.
+			if (options.mixins) {
+				for (let i = 0; i < options.mixins.length; i++) {
+					let mixin = options.mixins[i];
+					mixin.updateHostOptions(options);
+				}
+			}
 			class DerivedViewClass extends ViewClass {
 				constructor(...args) {
 					super(...args);
@@ -179,6 +251,7 @@ class ViewProvider {
 					this.element = this.referenceDOM = null;
 					this.state = new State(options.state);
 					this.template = options.template;
+					this.subtemplates = options.subtemplates || null;
 					this.formModel = options.formModel || null;
 					this.formMethod = options.formMethod || 'post';
 					this.formRoute = options.formRoute || document.head.getAttribute('data-route');
@@ -192,7 +265,7 @@ class ViewProvider {
 						let value;
 						if (initialValue instanceof DataCache) {
 							initialValue.addView(self);
-							self.dataCache = self;
+							self.dataCache = initialValue;
 							value = initialValue.data;
 						}
 						else {
@@ -214,6 +287,12 @@ class ViewProvider {
 					})(options.data));
 
 					this.onceConstructed(...args);
+					if (options.mixins) {
+						for (let i = 0; i < options.mixins.length; i++) {
+							let mixin = options.mixins[i];
+							mixin.attachToHost(this);
+						}
+					}
 				}
 			}
 

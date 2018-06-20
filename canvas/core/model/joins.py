@@ -47,9 +47,9 @@ class Join(Node, ISelectable, IJoinable):
 		self.name = name
 
 		#	Rename child if it is a Join
-		def maybe_rename(child, name):
+		def maybe_rename(child, c_name):
 			if isinstance(child, Join):
-				child.set_name(name)
+				child.set_name(c_name)
 
 		#	Maybe rename each child.
 		maybe_rename(self.source, '%s_s'%self.name)
@@ -81,6 +81,9 @@ class Join(Node, ISelectable, IJoinable):
 		Return the constituents of this join loaded onto `row_segment` or 
 		return `None`.
 		'''
+		if not row_segment:
+			return None
+
 		#	Check if the source model instance has changed.
 		if row_segment[0] != self.current_source_id:
 			if row_segment[0] is None:

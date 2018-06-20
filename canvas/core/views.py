@@ -57,7 +57,7 @@ class PageView:
         '''
         self.title, self.description = title, description
         self.page_data = page_data
-        self.assets = ['canvas.css', 'canvas.js', *assets]
+        self.assets = list(assets)
         self.header_views, self.page_views, self.footer_views = list(), \
                 list(), list()
 
@@ -108,7 +108,7 @@ class PageView:
 			not route.startswith(config.customization.asset_route_prefix)
 		):
             route = '/'.join((
-                config.customization.asset_route_prefix, route
+                '', config.customization.asset_route_prefix, route
             ))
         
         if route.endswith('.css') or which == 'css':
@@ -120,7 +120,7 @@ class PageView:
 
     def asset_fragement(self):
         '''Return the asset inclusion fragement of this page.'''
-        asset_tags = (self.tagify_asset(asset) for asset in self.assets)
+        asset_tags = (self.tagify_asset(asset) for asset in ('canvas.js', 'canvas.css', *self.assets))
         return <frag>{ *asset_tags }</frag>
 
     def html_attributes(self, route):

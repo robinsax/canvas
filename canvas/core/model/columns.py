@@ -15,7 +15,8 @@ import uuid
 
 from ...exceptions import InvalidSchema
 from ...utils import logger
-from .ast import Literal, ObjectReference, ILiteral, MAllTypes, Aggregation
+from .ast import Literal, ObjectReference, ILiteral, MAllTypes, Aggregation, \
+	OrderItem
 from .constraints import ForeignKeyConstraint, PrimaryKeyConstraint, \
 	NotNullConstraint, UniquenessConstraint
 from .tables import Table
@@ -34,6 +35,7 @@ class ColumnType:
 	def __init__(self, lazy):
 		'''::lazy Whether this column type is lazy-loaded.'''
 		self.lazy = lazy
+		self.type = self.input_type = None
 
 	@classmethod
 	def resolve(cls, specifier):
@@ -201,11 +203,11 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 
 	@property
 	def asc(self):
-		return Literal(self.serialize(), 'ASC')
+		return OrderItem(self, 'ASC')
 
 	@property
 	def desc(self):
-		return Literal(self.serialize(), 'DESC')
+		return OrderItem(self, 'DESC')
 
 	def add_constraint(self, constraint):
 		'''Add and bind a constraint to this column.'''
@@ -220,7 +222,10 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 		if self.default is _meta_null:
 			default = self.type.get_default()
 		else:
-			default = self.default
+			if callable(self.default):
+				default = self.default()
+			else:
+				default = self.default
 		setattr(model, self.name, default)
 
 	def serialize(self, values=None, name_policy=None):

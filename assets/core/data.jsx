@@ -12,31 +12,42 @@ class DataCache {
 		this.data = {};
 		//	Define the list of views which are using this data cache.
 		this.views = [];
+		this.callbacks = [];
 
 		this.fetch();
 	}
 
 	alias(alias) {
 		DataManager.instance.dataCaches[alias] = this;
+		return this;
 	}
 
 	fetch() {
 		/* Refresh this cache. */
 		(new Request(this.requestOptions)).success(this.completeFetch.bind(this));
+		return this;
+	}
+
+	onceFetched(callback) {
+		this.callbacks.push(callback);
+		return this;
 	}
 
 	completeFetch(response) {
 		/* Update the data in this cache and it's views. */
 		if (typeof response == 'object') {
-			this.data = response.data;
+			this.data = response.data || {};
 		}
 		else {
 			this.data = response;
 		}
 
-		for (var i = 0; i < this.views.length; i++) {
+		for (let i = 0; i < this.views.length; i++) {
 			this.views[i].data = this.data;
 			this.views[i].onceFetched();
+		}
+		for (let i = 0; i < this.callbacks.length; i++) {
+			this.callbacks[i](this.data);
 		}
 	}
 

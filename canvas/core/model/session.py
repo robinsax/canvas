@@ -152,6 +152,7 @@ class Session:
 		except IntegrityError as ex:
 			#	Retrieve the violated constraint.
 			constraint = Constraint.get(ex.diag.constraint_name)
+			print(ex.diag.constraint_name)
 			if not constraint:
 				#	TODO: Some cases are not yet handled.
 				raise NotImplementedError() from ex
@@ -260,7 +261,9 @@ class Session:
 		if order:
 			if not isinstance(order, (list, tuple)):
 				order = (order,)
-			modifiers.append(Literal('ORDER BY', Literal(*order, joiner=', ')))
+			modifiers.append(Literal('ORDER BY', Literal(*(
+				' '.join((target.name_column(item.column), item.which)) for item in order 
+			), joiner=', ')))
 		if for_share or for_update:
 			which = 'SHARE' if for_share else 'UPDATE'
 			modifiers.append(Literal('FOR', which))
@@ -272,7 +275,18 @@ class Session:
 		#	Retrieve a loader and return it's output.
 		loader = deproxy(target)
 		if one:
-			return loader.load_next(self.cursor.fetchone(), self)
+			row, host = self.cursor.fetchone(), None
+			if not row:
+				return None
+			
+			pk = row[0]
+			while True:
+				host = loader.load_next(row, self)
+
+				row = self.cursor.fetchone()
+				if not row or row[0] != pk:
+					return host
+				pk = row[0]
 		else:
 			#	Load each model, adding to results a maximum of once.
 			loaded = OrderedDict()

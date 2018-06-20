@@ -145,7 +145,9 @@ class NotNullConstraint(Constraint):
 		return None
 	
 	def describe_rule(self):
-		return 'NOT NULL'
+		return ' '.join((
+			'CHECK (', self.host.serialize(), 'IS NOT NULL)'
+		))
 
 class UniquenessConstraint(Constraint):
 	'''A `UNIQUE` constraint on a column.'''

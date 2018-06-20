@@ -77,10 +77,10 @@ def controller(*routes, _destiny=Controller, **attrs):
 	def controller_inner(cls):
 		#	Create a patched type of the controller and its destiny.
 		patched = type(cls.__name__, (cls, _destiny), dict())
+		if 'expects' not in attrs:
+			attrs['expects'] = '*'
 		#	Create this registration.
-		patched.__controllerness__ = _ControllerRegistration.create(
-			patched, routes, attrs
-		)
+		_ControllerRegistration.create(patched, routes, attrs)
 
 		return patched
 	return controller_inner

@@ -9,7 +9,7 @@ const coreComponents = [],
 	};
 
 const onceReady = callback => {
-	if (['ready', 'interactive'].indexOf(document.readyState) >= 0) {
+	if (['ready', 'interactive', 'complete'].indexOf(document.readyState) >= 0) {
 		callback();
 	}
 	else {

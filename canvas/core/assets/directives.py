@@ -16,6 +16,7 @@ from ...exceptions import AssetError
 from ...json_io import serialize_json
 from ..plugins import get_path
 from ..model import Table
+from .palettes import get_palette
 
 #	The global name to directive function mapping.
 _directives = dict()
@@ -77,7 +78,7 @@ def apply_export(asset, *args):
 		asset.source, asset.module, to_export
 	)
 
-@directive('include', priority=10)
+@directive('include', priority=-2)
 def apply_include(asset, *args):
 	'''The literal file inclusion directive.'''
 	for inclusion in reversed(args):
@@ -120,7 +121,14 @@ def apply_model_load(asset, *model_cls_list):
 		#	Save the output on the to-be-generated object.
 		models_dict[table.model_cls.__name__] = schema_dict
 	asset.source = '\n'.join((
-		'='.join(('const model', serialize_json(models_dict))), asset.source
+		' = '.join(('const model', serialize_json(models_dict))), asset.source
+	))
+
+@directive('load_palette', allow=('jsx',), priority=-1)
+def apply_palette_load(asset, which):
+	palette = get_palette(which).styles
+	asset.source = '\n'.join((
+		' = '.join(('const palette', serialize_json(palette))), asset.source
 	))
 
 def apply_directives(asset):

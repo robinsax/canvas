@@ -45,7 +45,7 @@ class Model:
 				table.primary_key == row_access, 
 				one=True
 			)
-			setattr(self, key,  value)
+			setattr(self, key, value)
 			return value
 
 		return super().__getattribute__(key)
@@ -54,7 +54,9 @@ class Model:
 		'''Set the dirty flag for in-schema attributes when assigned.'''
 		if key in self.__table__.columns:
 			if key not in self.__dirty__:
-				self.__dirty__[key] = value
+				existing = super().__getattribute__(key)
+				if not isinstance(existing, Column) and value != existing:
+					self.__dirty__[key] = value
 
 		return super().__setattr__(key, value)
 

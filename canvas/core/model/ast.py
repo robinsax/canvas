@@ -345,3 +345,8 @@ class Unique(Node, MFlag):
 			', '.join(column.name for column in self.columns),
 			')'
 		))
+
+class OrderItem:
+
+	def __init__(self, column, which):
+		self.column, self.which = column, which

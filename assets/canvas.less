@@ -32,20 +32,20 @@ a {
 
 //	Paragraphs.
 p {
-	margin: 0.5em 0px;
+	margin: 0.5rem 0px;
 	font-size: 12pt;
 	line-height: 1.4;
 	color: @text;
 }
 
 //	Lists.
-ul, ol { margin-left: 1.5em; }
+ul, ol { margin-left: 1.5rem; }
 li { line-height: 1.5; }
 
 //	Heading styles.
 h1, h2, h3, h4 {
 	margin: 0px;
-	padding: 0.25em 0em;
+	padding: 0.25rem 0rem;
 	font-weight: normal;
 	font-family: @title-font;
 	color: @title;
@@ -143,8 +143,9 @@ h4 { font-size: 16pt; }
 //	Forms.
 .form {
 	.inline-block();
-	padding: 1em;
-	width: 30em;
+	padding: 1rem;
+	padding-bottom: 0px;
+	width: 30rem;
 }
 
 .error-summary {
@@ -155,14 +156,15 @@ h4 { font-size: 16pt; }
 
 .field {
 	.inline-block();
-	width: 28em;
-	margin-bottom: 2em;
+	width: 28rem;
+	margin-bottom: 2rem;
+	&:last-child { margin-bottom: 1rem; }
 
 	label {
 		.inline-block();
 		color: @text;
-		width: 8em;
-		margin-right: 1em;
+		width: 8rem;
+		margin-right: 1rem;
 		text-align: right;
 	}
 	&.required label:after {
@@ -171,23 +173,23 @@ h4 { font-size: 16pt; }
 	}
 
 	.error-message {
-		margin-top: 0.5em;
-		margin-left: 9em;
-		width: 10em;
+		margin-top: 0.5rem;
+		margin-left: 9rem;
+		width: 19rem;
 		text-align: left;
 	}
 	&.error {
-		margin-bottom: 1em;
+		margin-bottom: 1rem;
 
-		.input { 
-			outline: 2px solid @error; 
+		.input {
+			border: 1px solid @error; 
 		}
 	}
 
 	.input {
 		vertical-align: top;
-		height: 2em;
-		width: 19em;
+		height: 2rem;
+		width: 19rem;
 		padding: 0px 10px;
 		outline: none;
 		border: none;
@@ -196,14 +198,14 @@ h4 { font-size: 16pt; }
 		font-size: 12pt;
 		font-family: @text-font;
 
-		&textarea {
-			padding: 10px;
-			height: 15em;
-			resize: none;
-		}
-		&[type="file"] { line-height: 2em; }
-		&[type="checkbox"] { width: 1em; height: 1em; }
+		&[type="file"] { line-height: 2rem; }
+		&[type="checkbox"] { width: 1rem; height: 1rem; }
 		&:hover { background-color: @focused-input; }
+	}
+	textarea.input {
+		padding: 10px;
+		height: 15rem;
+		resize: none;
 	}
 }
 
@@ -246,8 +248,8 @@ input[type="submit"] {
 	display: inline-block;
 	vertical-align: middle;
 	
-	height: 1.5em;
-	line-height: 1.5em;
+	height: 1.5rem;
+	line-height: 1.5rem;
 	margin: 3px 10px;
 	padding: 0px 12px;
 	

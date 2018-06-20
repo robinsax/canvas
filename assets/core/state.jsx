@@ -91,11 +91,10 @@ class State {
 	update(updateMap={}) {
 		/* Carefully update this state. */
 		const updateObject = (dest, src) => {
-			for (let key in dest) {
+			for (let key in src) {
 				let current = dest[key], future = src[key];
-				if (!future) continue;
-
-				if (typeof current != typeof future || typeof current !=' object') {
+				
+				if (future == null || typeof current != typeof future || typeof current !=' object') {
 					dest[key] = future;
 				}
 				else {
@@ -105,6 +104,10 @@ class State {
 		}
 
 		updateObject(this, updateMap);
+		this.observe();
+		if (this.callback) {
+			this.callback();
+		}
 	}
 }
 

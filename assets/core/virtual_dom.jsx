@@ -101,9 +101,6 @@ class VirtualDOMRenderer {
 				if (attr === 'safeHTML') {
 					el.innerHTML = value;
 				}
-				else if (attr == 'boundData') {
-					el.__data__ = value;
-				}
 				else {
 					el.setAttribute(attr, value);
 				}
@@ -133,9 +130,9 @@ class VirtualDOMRenderer {
 			for (var i = 0; i < checkEvents.length; i++) {
 				let checkEvent = checkEvents[i];
 				if (el.matches(checkEvent[0])) {
-					el.addEventListener(checkEvent[1], (event) => {
-						let context = {element: el, event: event};
-						let cur = el;
+					el.addEventListener(checkEvent[1], (tel => event => {
+						let context = {element: tel, event: event};
+						let cur = tel;
 						while (cur && cur != document) {
 							if (cur.__data__) {
 								context.data = cur.__data__;
@@ -145,7 +142,7 @@ class VirtualDOMRenderer {
 							cur = cur.parentNode;
 						}
 						currentView[checkEvent[2]](context);
-					});
+					})(el));
 				}
 			}
 		}

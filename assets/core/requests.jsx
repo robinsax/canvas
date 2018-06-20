@@ -53,16 +53,6 @@ class Request {
 		this.xhrObject.send(serializedBody[0]);
 	}
 
-	invokeCallback(callback) {
-		/* Safely invoke `callback`. */
-		try {
-			callback(this.response.data, this.response.status);
-		}
-		catch (ex) {
-			requestLog.critical('Error in request callback: ' + ex);
-		}
-	}
-
 	checkRequestState() {
 		/* Check the request state, handling a return if it occurred. */
 		if (this.xhrObject.readyState != 4) return;
@@ -84,7 +74,7 @@ class Request {
 				requestLog.warning('Unhandled request success for ' + this.options.url);
 			}
 			for (var i = 0; i < this.successCallbacks.length; i++) {
-				this.invokeCallback(this.successCallbacks[i]);
+				this.successCallbacks[i](this.response.data, this.response.status);
 			}
 		}
 		else {
@@ -93,7 +83,7 @@ class Request {
 				requestLog.warning('Unhandled request failure for ' + this.options.url);
 			}
 			for (var i = 0; i < this.failureCallbacks.length; i++) {
-				this.invokeCallback(this.failureCallbacks[i]);
+				this.failureCallbacks[i](this.response.data, this.response.status);
 			}
 		}
 	}

@@ -58,13 +58,18 @@ class ResourceManager {
 			
 			if (window[moduleName]) {
 				maybeFinishImport();
-				return;
+				continue;
 			}
-			
+			console.log(document.querySelector('script[src="' + path + '"]'))
+			let importHost = document.querySelector('script[src="' + path + '"]'),
+				didExist = !!importHost;
+			if (!didExist) {
+				importHost = document.createElement('script');
+				importHost.type = 'text/javascript';
+			}
+
 			this.log.debug('Importing ' + moduleName + ' from ' + path);
 			//	Create and attach the host script tag.
-			let importHost = document.createElement('script');
-			importHost.type = 'text/javascript';
 			if (importHost.readyState) {
 				//	Legacy IE watch.
 				importHost.onreadystatechange = () => {
@@ -77,12 +82,14 @@ class ResourceManager {
 			}
 			else {
 				//	Actually good browser watch.
-				importHost.onload = maybeFinishImport;
-				importHost.onerror = () => this.log.critical(
+				importHost.addEventListener('load', maybeFinishImport);
+				importHost.addEventListener('error', () => this.log.critical(
 					'Failed to import "' + moduleName + '"'
-				);
+				));
 			}
-			importHost.setAttribute('src', path);
+			if (!didExist) {
+				importHost.setAttribute('src', path);
+			}
 			document.head.appendChild(importHost);
 		}
 	}

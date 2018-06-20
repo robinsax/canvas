@@ -7,6 +7,7 @@ const log = new Logger('canvas');
 class CanvasCore {
 	constructor() {
 		this.route = document.head.getAttribute('data-route');
+		this.onceReady = onceReady;
 		for (var i = 0; i < coreComponents.length; i++) {
 			let ComponentClass = coreComponents[i],
 				instance = new ComponentClass(this),
@@ -18,6 +19,18 @@ class CanvasCore {
 					this[methodName] = (function(...args) { return method.apply(this, args); }).bind(instance);
 				}
 			}
+		}
+	}
+
+	classify(element, className, flag=true) {
+		let classList = element.className.split(' '),
+			k = classList.indexOf(className);
+		if (k < 0 && flag) {
+				element.className += ' ' + className;
+		}
+		if (k > 0 && !flag) {
+			classList.splice(k, 1);
+			element.className = classList.join(' ');
 		}
 	}
 }
