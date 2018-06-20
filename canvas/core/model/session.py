@@ -243,6 +243,11 @@ class Session:
 		::for_update Whether all selections should be `FOR UPDATE`.
 		::for_share Whether all selections should be `FOR SHARE`.
 		'''
+		#	Resolve to the table or joinable target node.
+		target_node = deproxy(target)
+		if isinstance(target_node, Column):
+			target_node = target_node.table
+
 		if condition is False:
 			#	Nothing would be returned.
 			return None if one else list()
@@ -262,7 +267,7 @@ class Session:
 			if not isinstance(order, (list, tuple)):
 				order = (order,)
 			modifiers.append(Literal('ORDER BY', Literal(*(
-				' '.join((target.name_column(item.column), item.which)) for item in order 
+				' '.join((target_node.name_column(item.column), item.which)) for item in order 
 			), joiner=', ')))
 		if for_share or for_update:
 			which = 'SHARE' if for_share else 'UPDATE'
