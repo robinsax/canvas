@@ -21,11 +21,9 @@ import canvas as cv
 
 #   Create a breakfast model.
 @cv.model('breakfasts', {
-    'id': model.Column('uuid', primary_key=True),
-    'name': model.Column('text', (
-		cv.NotNullConstraint(),
-	)),
-    'ingredients': model.Column('json')
+    'id': cv.Column('uuid', primary_key=True),
+    'name': cv.Column('text', nullable=False),
+    'ingredients': cv.Column('json')
 })
 class Breakfast:
 
@@ -34,10 +32,10 @@ class Breakfast:
 
 #   Create an initialization function that cooks a breakfast if there isn't
 #   one already.
-@cv.on_init
+@cv.on_post_init
 def cook_breakfast():
     session = cv.create_session()
-
+	
     if not session.query(Breakfast, one=True):
         breakfast = Breakfast('Bacon and Eggs', ['Bacon', 'Eggs'])
         session.save(breakfast).commit()
@@ -49,20 +47,25 @@ class BreakfastEndpoint:
     def on_get(self, context):
         breakfast = context.session.query(Breakfast, one=True)
         return cv.create_json('success', cv.dictize(breakfast))
+
+#	Create a page that will contain our view.
+@cv.page('/', title='Breakfast!', assets=('breakfast.js',))
+class Homepage: pass
 ```
 
 The view:
 
 ```javascript
 //  Define a breakfast view.
+@cv.page('/')
 @cv.view({
-    dataSource: '/api/breakfast',
-    template: (breakfast) => 
-        <article class="breakfast">
+    data: cv.fetch('/api/breakfast'),
+    template: breakfast => 
+        <article class="col-6 breakfast">
             <em>Breakfast is served...</em>
             <h1>{ breakfast.name }</h1>
             <ul>
-                { tk.comp(breakfast.ingredients, (ingredient) => <li>{ ingredient }</li>) }
+                { cv.comp(breakfast.ingredients, ingredient => <li>{ ingredient }</li>) }
             </ul>
             <button>Eat!</button>
         </article>
@@ -89,7 +92,7 @@ cd canvas
 #   Install Python 3, Pip, Node JS, NPM, and PostgreSQL.
 sudo ./etc/install_dependencies.sh
 #   Initialize the canvas installation.
-sudo python3 canvas --init
+sudo -H python3 canvas --init
 ```
 
 You can now configure canvas by editing `settings.json`.
