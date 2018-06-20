@@ -75,7 +75,7 @@ class VirtualDOMRenderer {
 				el.removeEventListener(listener.selector, listener.listener);
 			}
 		}
-
+		
 		el.__listeners__ = [];
 		let currentView = this.renderStack[this.renderStack.length - 1],
 			checkEvents = currentView.__events__ || [];

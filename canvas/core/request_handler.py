@@ -181,8 +181,9 @@ def serve_asset(request):
 
 	#	Run cache check.
 	if 'If-Modified-Since' in request.headers:
+		cache_str = request.headers['If-Modified-Since'].split(';')[0][:-4]
 		cache_time = datetime.strptime(
-			request.headers['If-Modified-Since'][:-4], 
+			cache_str, 
 			'%a, %d %b %Y %H:%M:%S'
 		)
 
