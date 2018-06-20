@@ -7,6 +7,9 @@ class DataCache {
 	/* A cache of retrieved data. */
 
 	constructor(requestOptions) {
+		if (typeof requestOptions == 'string') {
+			requestOptions = {url: requestOptions};
+		}
 		this.requestOptions = requestOptions;
 
 		this.data = {};
@@ -31,6 +34,11 @@ class DataCache {
 	onceFetched(callback) {
 		this.callbacks.push(callback);
 		return this;
+	}
+
+	updateQuery(query) {
+		this.requestOptions.query = query;
+		this.fetch();
 	}
 
 	completeFetch(response) {

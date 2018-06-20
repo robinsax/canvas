@@ -67,6 +67,44 @@ class VirtualDOMRenderer {
 		)
 	}
 
+	hydrateElement(el, virtual) {
+		//	TODO: Use for rehydration.
+		if (el.__listeners__) {
+			for (let i = 0; i < el.__listeners__.length; i++) {
+				let listener = el.__listeners__[i];
+				el.removeEventListener(listener.selector, listener.listener);
+			}
+		}
+
+		el.__listeners__ = [];
+		let currentView = this.renderStack[this.renderStack.length - 1],
+			checkEvents = currentView.__events__ || [];
+		for (var i = 0; i < checkEvents.length; i++) {
+			let checkEvent = checkEvents[i];
+			if (!el.matches(checkEvent[0])) continue;
+
+			let listener = event => {
+				let context = {element: el, event: event};
+				let cur = el;
+				while (cur && cur != document) {
+					if (cur.__data__) {
+						context.data = cur.__data__;
+						context.index = cur.__index__;
+						break;
+					}
+					cur = cur.parentNode;
+				}
+				currentView[checkEvent[2]](context);
+			};
+
+			el.__listeners__.push({
+				listener: listener,
+				selector: checkEvent[1]
+			});
+			el.addEventListener(checkEvent[1], listener);
+		}
+	}
+
 	devirtualize(virtual) {
 		if (virtual == undefined || virtual == null) return document.createTextNode('');
 		if (virtual instanceof View) {
@@ -125,26 +163,7 @@ class VirtualDOMRenderer {
 				}
 			}
 
-			let currentView = this.renderStack[this.renderStack.length - 1],
-				checkEvents = currentView.__events__ || [];
-			for (var i = 0; i < checkEvents.length; i++) {
-				let checkEvent = checkEvents[i];
-				if (el.matches(checkEvent[0])) {
-					el.addEventListener(checkEvent[1], (tel => event => {
-						let context = {element: tel, event: event};
-						let cur = tel;
-						while (cur && cur != document) {
-							if (cur.__data__) {
-								context.data = cur.__data__;
-								context.index = cur.__index__;
-								break;
-							}
-							cur = cur.parentNode;
-						}
-						currentView[checkEvent[2]](context);
-					})(el));
-				}
-			}
+			this.hydrateElement(el, virtual);
 		}
 
 		return el;
@@ -188,13 +207,19 @@ class VirtualDOMRenderer {
 			);
 		}
 		else if (newVirtual.tag) {
-			this.updateAttributes(parentEl.childNodes[index], newVirtual.attributes, oldVirtual.attributes);
+			let el = parentEl.childNodes[index];
+			this.updateAttributes(el, newVirtual.attributes, oldVirtual.attributes);
 			
+			if (newVirtual.data) {
+				el.__data__ = newVirtual.data;
+				el.__index__ = newVirtual.index;
+			}
+
 			let maxI = Math.max(newVirtual.children.length, oldVirtual.children.length);
 
 			for (let i = 0; i < maxI; i++) {
 				try {
-					this.update(parentEl.childNodes[index], newVirtual.children[i], oldVirtual.children[i], i);
+					this.update(el, newVirtual.children[i], oldVirtual.children[i], i);
 				}
 				catch (ex) {
 					if (ex !== 'x') throw ex;

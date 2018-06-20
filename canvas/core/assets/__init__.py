@@ -48,7 +48,7 @@ class Asset:
 	@property
 	def mtime(self):
 		'''The modified time of this asset in the file system.'''
-		return datetime.fromtimestamp(os.path.getmtime(get_path(self.path)))
+		return datetime.utcfromtimestamp(os.path.getmtime(get_path(self.path)))
 
 	def load(self):
 		'''Load this asset from the filesystem.'''
@@ -94,7 +94,7 @@ class ProcessedAsset(Asset):
 		Return the lastest modified time on the filesystem of one of this
 		assets component files.
 		'''
-		return datetime.fromtimestamp(
+		return datetime.utcfromtimestamp(
 			max(os.path.getmtime(get_path(path)) for path in self.paths)
 		)
 

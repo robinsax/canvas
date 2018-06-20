@@ -14,7 +14,15 @@ class State {
 			this[key] = initialMap[key];
 		}
 
-		this.callback = null;
+		Object.defineProperty(this, 'callback', (() => {
+			let value = null;
+			
+			return {
+				get: () => value,
+				set: (newValue) => value = newValue,
+				enumerable: false
+			}
+		})());
 	}
 
 	observe() {

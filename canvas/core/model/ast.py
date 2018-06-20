@@ -236,7 +236,7 @@ class Value(Node, ILiteral, MAllTypes):
 		if self.value is None:
 			return 'NOT NULL' if self.inverted else 'NULL'
 		if isinstance(self.value, bool):
-			return 'FALSE' if self.inverted is self.value else 'TRUE'
+			return 'FALSE' if self.inverted == self.value else 'TRUE'
 
 		#	Use a format.
 		values.append(self.value)

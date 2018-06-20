@@ -19,7 +19,7 @@ class CanvasCore {
 					this[methodName] = (function(...args) { return method.apply(this, args); }).bind(instance);
 				}
 			}
-		}
+		} 
 	}
 
 	classify(element, className, flag=true) {

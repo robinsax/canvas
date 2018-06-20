@@ -50,7 +50,7 @@ class RequestParameters(AttributedDict):
 	'''
 
 	def __init__(self, content, locked=False):
-		super().__init__(content, ignored=('_locked', 'propagate_and_locked'))
+		super().__init__(content, ignored=('_locked', 'propagate_and_lock'))
 		self._locked = locked
 
 	@classmethod
@@ -75,6 +75,11 @@ class RequestParameters(AttributedDict):
 		RequestParameters.propagate_onto(self)
 		self._locked = True
 
+	def get(self, key, default):
+		if key in self:
+			return self[(key, type(default))]
+		return default
+
 	def __setitem__(self, key, value):
 		try:
 			locked = self._locked
@@ -83,7 +88,7 @@ class RequestParameters(AttributedDict):
 		if locked:
 			raise Immutable()
 		return super().__setitem__(key, value)
-		
+
 	def __getitem__(self, key):
 		#	Maybe unpack the key as a tuple with a type expectation.
 		expected_typ = None
@@ -103,13 +108,18 @@ class RequestParameters(AttributedDict):
 			from .core import parse_datetime
 			#	Distrustfully parse.
 			return parse_datetime(value)
+		elif expected_typ is bool and isinstance(value, str):
+			if value == 'true':
+				return True
+			elif value == 'false':
+				return False
 		elif isinstance(value, expected_typ):
 			#	Passed.
 			return value
 		
 		#	Failed.
 		raise BadRequest('Invalid request parameter type for "%s"'%key)
-
+		
 class Configuration(AttributedDict):
 	'''
 	The configuration dictionary, which propagates to constituent dictionaries.

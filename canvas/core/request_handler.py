@@ -30,6 +30,8 @@ from .. import __version__ as canvas_version
 #	Define the value for the server header.
 __server__ = 'canvas/%s Python/%s'%(canvas_version, platform.python_version())
 
+__epoch__ = datetime.utcfromtimestamp(0)
+
 #	Create a logger.
 log = logger(__name__)
 #	Define the request handling kickoff callback. 
@@ -179,9 +181,14 @@ def serve_asset(request):
 
 	#	Run cache check.
 	if 'If-Modified-Since' in request.headers:
-		cache_time = datetime.strptime(request.headers['If-Modified-Since'], 
-				'%a, %d %b %Y %H:%m:%S GMT')
-		if asset.mtime <= cache_time:
+		cache_time = datetime.strptime(
+			request.headers['If-Modified-Since'][:-4], 
+			'%a, %d %b %Y %H:%M:%S'
+		)
+
+		asset_seconds = int((asset.mtime - __epoch__).total_seconds())
+		cache_seconds = int((cache_time - __epoch__).total_seconds())
+		if asset_seconds <= cache_seconds:
 			return BaseResponse(status=304)
 	
 	#	Return the asset.
@@ -191,7 +198,9 @@ def serve_asset(request):
 		mimetype=asset.mimetype,
 		headers={
 			'Cache-Control': 'max-age=0, must-revalidate',
-			'Last-Modified': asset.mtime.strftime('%a, %d %b %Y %H:%m:%S GMT')
+			'Last-Modified': ''.join((
+				asset.mtime.strftime('%a, %d %b %Y %H:%M:%S'), ' GMT'
+			))
 		}
 	)
 
