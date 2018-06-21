@@ -96,7 +96,7 @@ class Request {
 			return [JSON.stringify(options.json), 'application/json']
 		}
 		
-		return '';
+		return ['', 0];
 	}
 
 	processResponse(response) {
