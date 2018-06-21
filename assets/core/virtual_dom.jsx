@@ -79,20 +79,27 @@ class VirtualDOMRenderer {
 		el.__listeners__ = [];
 		let currentView = this.renderStack[this.renderStack.length - 1],
 			checkEvents = currentView.__events__ || [];
+
+		const findData = cur => {
+			while (cur && cur != document) {
+				if (cur.__data__) return curn
+				
+				cur = cur.parentNode;
+			}
+			return null;
+		}
+
 		for (var i = 0; i < checkEvents.length; i++) {
 			let checkEvent = checkEvents[i];
 			if (!el.matches(checkEvent[0])) continue;
 
 			let listener = event => {
-				let context = {element: el, event: event};
-				let cur = el;
-				while (cur && cur != document) {
-					if (cur.__data__) {
-						context.data = cur.__data__;
-						context.index = cur.__index__;
-						break;
-					}
-					cur = cur.parentNode;
+				let context = {element: el, event: event},
+					dataHost = findData(el);
+				if (dataHost) {
+					context.dataAbove = (start => () => findData(start))(dataHost.parentNode);
+					context.data = dataHost.__data__;
+					context.index = dataHost.__index__;
 				}
 				currentView[checkEvent[2]](context);
 			};

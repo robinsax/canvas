@@ -22,6 +22,19 @@ class CanvasCore {
 		} 
 	}
 
+	iter(iterable, callback) {
+		if (iterable instanceof Array) {
+			for (let i = 0; i < iterable.length; i++) {
+				callback(iterable[i], i);
+			}
+		}
+		else {
+			for (let key in iterable) {
+				callback(key, iterable[key]);
+			}
+		}
+	}
+
 	classify(element, className, flag=true) {
 		let classList = element.className.split(' '),
 			k = classList.indexOf(className);
