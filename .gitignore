@@ -6,4 +6,3 @@ node_modules
 /settings.json
 /package-lock.json
 /canvas_uwsgi.ini
-fake.txt
