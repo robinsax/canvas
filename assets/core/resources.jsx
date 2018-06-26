@@ -52,15 +52,20 @@ class ResourceManager {
 
 		//	Iterate the moduels to import, importing each with a script tag.
 		for (var i = 0; i < importTotal; i++) {
-			let moduleName = moduleNames[i],
-				//	Decide the path.
+			let moduleName = moduleNames[i], path;
+
+			//	Decide the path.
+			if (moduleName[0] == '!') {
+				path = '/assets/' + moduleName.substring(1) + '.js';
+			}
+			else {
 				path = '/assets/' + moduleName.replace('.', '/') + '.js';
-			
+			}
+
 			if (window[moduleName]) {
 				maybeFinishImport();
 				continue;
 			}
-			console.log(document.querySelector('script[src="' + path + '"]'))
 			let importHost = document.querySelector('script[src="' + path + '"]'),
 				didExist = !!importHost;
 			if (!didExist) {
