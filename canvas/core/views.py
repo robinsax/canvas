@@ -118,7 +118,7 @@ class PageView:
         else:
             raise InvalidAsset(route)
 
-    def asset_fragement(self):
+    def asset_fragment(self):
         '''Return the asset inclusion fragement of this page.'''
         asset_tags = (self.tagify_asset(asset) for asset in ('canvas.js', 'canvas.css', *self.assets))
         return <frag>{ *asset_tags }</frag>
@@ -157,7 +157,7 @@ class PageView:
         head = <head>
             { self.meta_fragment() }
             <title>{ self.get_title() }</title>
-            { self.asset_fragement() }
+            { self.asset_fragment() }
         </head>
         for key, value in self.head_attributes(route).items():
             head.set_attr(key, value)
