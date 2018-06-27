@@ -82,7 +82,7 @@ class VirtualDOMRenderer {
 
 		const findData = cur => {
 			while (cur && cur != document) {
-				if (cur.__data__) return curn
+				if (cur.__data__) return cur
 				
 				cur = cur.parentNode;
 			}

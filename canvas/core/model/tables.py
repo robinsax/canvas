@@ -95,7 +95,8 @@ class Table(ObjectReference, IJoinable):
 			for column in table.columns.values():
 				if not isinstance(column.type, ForeignKeyColumnType):
 					continue
-				visit(column.type.target.table)
+				if column.type.target.table is not table:
+					visit(column.type.target.table)
 
 			#	Mark and insert in output.
 			marked[table.name] = True

@@ -60,7 +60,7 @@ class ResourceManager {
 				maybeFinishImport();
 				continue;
 			}
-			console.log(document.querySelector('script[src="' + path + '"]'))
+			
 			let importHost = document.querySelector('script[src="' + path + '"]'),
 				didExist = !!importHost;
 			if (!didExist) {

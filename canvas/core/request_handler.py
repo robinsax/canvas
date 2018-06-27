@@ -126,9 +126,10 @@ def serve_controller(request):
 		cookie = SecureCookie(secret_key=secret)
 	
 	#	Create and associate the request context.
+	context_session = create_session()
 	context = RequestContext(
 		cookie=cookie,
-		session=create_session(),
+		session=context_session,
 		request=request_parameters,
 		query=query_parameters,
 		headers=request.headers,
@@ -143,7 +144,9 @@ def serve_controller(request):
 	def cleanup(response=None):
 		#	Disassociate request context.
 		RequestContext.pop()
-
+		#	Close the database session.
+		context_session.close()
+		
 		#	Save the cookie if applicable.
 		if response and cookie.should_save:
 			response.set_cookie(cookie_key, cookie.serialize())

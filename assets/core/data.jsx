@@ -39,6 +39,7 @@ class DataCache {
 	updateQuery(query) {
 		this.requestOptions.query = query;
 		this.fetch();
+		return this;
 	}
 
 	completeFetch(response) {
