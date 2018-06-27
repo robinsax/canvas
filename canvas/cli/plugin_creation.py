@@ -14,7 +14,7 @@ from .api import launcher
 #	Create a logger.
 log = logger(__name__)
 
-@launcher('create-plugin',
+@launcher('make-plugin',
 	argspec='<name>', 
 	description='Create a new plugin', 
 	init=True
@@ -29,7 +29,7 @@ def launch_plugin_creation(args):
 	#	Decide plugin name and directory.
 	plugin_name = args[0]
 	plugin_dir = plugin_base_path(plugin_name)
-
+	
 	#	Create and asset that no such plugin exists already.
 	try:
 		os.mkdir(plugin_dir)

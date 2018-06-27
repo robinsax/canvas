@@ -1,11 +1,11 @@
-# canvas Changelog
+## canvas changelog
 
-## Version 0.3
-*Alpha 0 - Released June 20th, 2018*
-* First stable release
+### version 0.3
 
-## Version 0.2
-*Indev milestone*
+Alpha 0 - Released June 20th, 2018
 
-## Version 0.1
-*Indev milestone*
+First stable release
+
+### version 0.1 - 0.2
+
+Indev milestones

@@ -1,3 +1,4 @@
+@echo off
 rem	A Windows install script for pyxl.
 
 git clone https://github.com/gvanrossum/pyxl3.git

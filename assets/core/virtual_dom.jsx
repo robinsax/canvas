@@ -67,7 +67,7 @@ class VirtualDOMRenderer {
 		)
 	}
 
-	hydrateElement(el, virtual) {
+	hydrateElement(el, virtual, wasCreated=false) {
 		//	TODO: Use for rehydration.
 		if (el.__listeners__) {
 			for (let i = 0; i < el.__listeners__.length; i++) {
@@ -92,6 +92,11 @@ class VirtualDOMRenderer {
 		for (var i = 0; i < checkEvents.length; i++) {
 			let checkEvent = checkEvents[i];
 			if (!el.matches(checkEvent[0])) continue;
+
+			if (checkEvent[1] == 'create' && wasCreated) {
+				currentView[checkEvent[2]]({element: el});
+				continue;
+			}
 
 			let listener = event => {
 				let context = {element: el, event: event},
@@ -170,7 +175,7 @@ class VirtualDOMRenderer {
 				}
 			}
 
-			this.hydrateElement(el, virtual);
+			this.hydrateElement(el, virtual, true);
 		}
 
 		return el;
@@ -267,7 +272,8 @@ class VirtualDOMRenderer {
 		else {
 			parentEl = document.createDocumentFragment();
 		}
-
+		
+		view.processState();
 		let newDOM = view.template(...view.getRenderContext());
 		this.update(parentEl, newDOM, view.referenceDOM, index);
 		view.referenceDOM = newDOM;

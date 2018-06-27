@@ -176,7 +176,7 @@ def serve_asset(request):
 	#	TODO: Revving support.
 	#	Retrieve the requested asset.
 	asset = get_asset(
-		request.path[len(config.customization.asset_route_prefix) + 1:]
+		request.path[len(config.route_prefixes.assets) + 1:]
 	)
 	#	Assert it exists.
 	if asset is None:
@@ -214,7 +214,7 @@ def handle_request(environ, start_response):
 	request = BaseRequest(environ)
 	route = request.path
 
-	if route.startswith('/%s'%config.customization.asset_route_prefix):
+	if route.startswith('/%s'%config.route_prefixes.assets):
 		#	Serve an asset.
 		try:
 			response = serve_asset(request)

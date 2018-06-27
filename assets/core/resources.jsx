@@ -52,10 +52,16 @@ class ResourceManager {
 
 		//	Iterate the moduels to import, importing each with a script tag.
 		for (var i = 0; i < importTotal; i++) {
-			let moduleName = moduleNames[i],
-				//	Decide the path.
+			let moduleName = moduleNames[i], path;
+
+			//	Decide the path.
+			if (moduleName[0] == '!') {
+				path = '/assets/' + moduleName.substring(1) + '.js';
+			}
+			else {
 				path = '/assets/' + moduleName.replace('.', '/') + '.js';
-			
+			}
+
 			if (window[moduleName]) {
 				maybeFinishImport();
 				continue;

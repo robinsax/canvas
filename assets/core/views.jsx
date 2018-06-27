@@ -13,6 +13,8 @@ class View {
 	onceCreated() {}
 	onceFetched() {}
 
+	processState() {}
+
 	attachToParent(parent) {
 		parent.children.push(this);
 	}
@@ -247,6 +249,7 @@ class ViewProvider {
 			class DerivedViewClass extends ViewClass {
 				constructor(...args) {
 					super(...args);
+
 					//	Process `options`.
 					this.element = this.referenceDOM = null;
 					this.state = new State(options.state);

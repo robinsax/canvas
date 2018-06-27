@@ -2,7 +2,7 @@
 //	::include core.root, core.shims, core.logging, core.resources, core.state, core.virtual_dom, core.views, core.requests, core.data, core.forms, core.svg
 //	::export canvas --hard
 
-const log = new Logger('canvas');
+const log = new Logger('canvas'); 
 
 class CanvasCore {
 	constructor() {
