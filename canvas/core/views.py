@@ -105,10 +105,10 @@ class PageView:
         #    Ensure route is asset prefixed.
         if (
 			not route.startswith('http') and 
-			not route.startswith(config.customization.asset_route_prefix)
+			not route.startswith(config.route_prefixes.assets)
 		):
             route = '/'.join((
-                '', config.customization.asset_route_prefix, route
+                '', config.route_prefixes.assets, route
             ))
         
         if route.endswith('.css') or which == 'css':

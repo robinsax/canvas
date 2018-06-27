@@ -84,7 +84,7 @@ class ProcessedAsset(Asset):
 		self.paths, self.ext = [root_path], ext
 		self.mimetype = guess_type('.'.join(('a', ext)))[0]
 		#	Define the referenced name of this asset as a module.
-		realm_end_i = len(config.customization.asset_route_prefix) + 1
+		realm_end_i = len(config.route_prefixes.assets) + 1
 		self.module = root_path[realm_end_i:-(len(ext) + 2)].replace('/', '.')
 		self.source = None
 

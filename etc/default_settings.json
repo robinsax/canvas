@@ -7,26 +7,20 @@
 	},
 	"security": {
 		"max_bytes_receivable": 1000000,
-		"cookie_secret": "991b735f3677497e8a8c1baf7639df5f",
-		"cookie_key": "cv_sess"
+		"cookie_secret": "not-prod-safe",
+		"cookie_key": "canvas_session"
 	},
 	"database": {
 		"database": "devdb",
 		"user": "devuser",
 		"password": "canvasbackend",
-		"host": "localhost",
-		"eager_drop_cascades": false
+		"host": "localhost"
 	},
 	"plugins": {
 		"directory": "../canvas_plugins",
 		"activated": []
 	},
-	"customization": {
-		"asset_route_prefix": "assets",
-		"api_route_prefix": "api",
-		"defer_scripts": true,
-		"palette": "default"
-	},
+	"route_prefixes": {"asset": "assets", "api": "api"},
 	"datetime": {
 		"input_format": "%Y-%m-%dT%H:%M:%S",
 		"output_format": "%Y-%m-%dT%H:%M:%S"

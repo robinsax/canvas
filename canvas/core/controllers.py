@@ -92,7 +92,7 @@ def endpoint(*routes, expects='json', **attrs):
 	::expects The secondary type of the expected mimetype.
 	'''
 	#	Assert all routes are valid.
-	route_prefix = '/%s'%config.customization.api_route_prefix
+	route_prefix = '/%s'%config.route_prefixes.api
 	for route in routes:
 		if not route.startswith(route_prefix):
 			raise IllegalEndpointRoute(route)

@@ -137,7 +137,7 @@ activated in configuration.
 To create a plugin in the configured plugin directory, run:
 
 ```bash
-python3 canvas --create-plugin <plugin_name>
+python3 canvas --make-plugin <plugin_name>
 ```
 
 To activate a plugin, modify the appropriate entry of `settings.json`, or run:

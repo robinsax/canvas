@@ -30,7 +30,7 @@ def get_error_response(http_ex, source_ex, route, verb, context=None):
 	
 	#	Check whether this request occurred at an endpoint.
 	in_api_realm = route.startswith('/%s'%(
-		config.customization.api_route_prefix
+		config.route_prefixes.api
 	))
 
 	#	Create an error diagnostic to pass to callbacks.
