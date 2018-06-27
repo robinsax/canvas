@@ -20,7 +20,7 @@
 		"directory": "../canvas_plugins",
 		"activated": []
 	},
-	"route_prefixes": {"asset": "assets", "api": "api"},
+	"route_prefixes": {"assets": "assets", "api": "api"},
 	"datetime": {
 		"input_format": "%Y-%m-%dT%H:%M:%S",
 		"output_format": "%Y-%m-%dT%H:%M:%S"

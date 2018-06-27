@@ -94,7 +94,7 @@ class ProcessedAsset(Asset):
 		Return the lastest modified time on the filesystem of one of this
 		assets component files.
 		'''
-		return datetime.utcfromtimestamp(
+		return datetime.fromtimestamp(
 			max(os.path.getmtime(get_path(path)) for path in self.paths)
 		)
 
