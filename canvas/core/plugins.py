@@ -62,8 +62,8 @@ def load_plugins():
 		plugin_label = name
 		if dependency_of:
 			plugin_label = '%s (from %s)'%(plugin_label, dependency_of)
-		log.info('Loading plugin "%s"', plugin_label)
-
+		log.info('Loading plugin %s', plugin_label)
+		
 		try:
 			#	Import the plugin as a member of the plugins namespace.
 			plugins_namespace.__path__.append(path)

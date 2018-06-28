@@ -74,6 +74,9 @@ h4 { font-size: 16pt; }
 .highlight-bg { background-color: @highlight; }
 .background-bg { background-color: @background; }
 
+.pointer { cursor: pointer; }
+.relative { position: relative; }
+
 //	Visiblity modifiers.
 .invisible { visibility: hidden !important; pointer-events: none; }
 .hidden { display: none !important; }
@@ -96,6 +99,18 @@ h4 { font-size: 16pt; }
 	top: 0px; left: 0px;
 	right: 0px; bottom: 0px;
 }
+.top-right {
+	position: absolute;
+	top: 15px;
+	right: 15px;
+}
+.top-left {
+	position: absolute;
+	top: 15px;
+	left: 15px;
+}
+
+.vertical-space { padding: 15px 0px; }
 
 .align-right { text-align: right !important; }
 .align-left { text-align: left !important; }
