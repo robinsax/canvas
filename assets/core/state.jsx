@@ -89,11 +89,15 @@ class State {
 			}
 
 		observeObject(this);
+
+		return this;
 	}
 
 	bind(callback) {
 		/* Bind this state to call `callback` on change. */
 		this.callback = callback;
+		
+		return this;
 	}
 
 	update(updateMap={}) {

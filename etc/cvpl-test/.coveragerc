@@ -1,0 +1,7 @@
+[run]
+omit = 
+    assets/*
+    docs/*
+    */tests/*
+    */lib/*
+    */canvas/*

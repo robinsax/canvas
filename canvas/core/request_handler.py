@@ -168,6 +168,11 @@ def serve_controller(request):
 	
 	#	Clean up and return parsed response.
 	response = parse_response_tuple(response)
+	
+	if route.startswith('/%s'%config.route_prefixes.api):
+		#	Prevent IE's aggressive AJAX caching for the API region.
+		response.headers['Cache-Control'] = 'no-cache'
+
 	cleanup(response)
 	return response
   

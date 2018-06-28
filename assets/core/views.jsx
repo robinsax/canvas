@@ -11,9 +11,12 @@ class View {
 
 	onceConstructed() {}
 	onceCreated() {}
+	beforeDestroyed(replacement) {}
 	onceFetched() {}
 
 	processState() {}
+
+	hasChanged(other) { return !(other instanceof View); }
 
 	attachToParent(parent) {
 		parent.children.push(this);
@@ -25,9 +28,16 @@ class View {
 		if (this.data) {
 			context.push(this.data);
 		}
-		if (this.state) {
+		
+		let stateHasKeys = false;
+		for (let key in this.state) {
+			stateHasKeys = true;
+			break;
+		}
+		if (stateHasKeys) {
 			context.push(this.state);
 		}
+		
 		if (this.subtemplates) {
 			context.push(this.subtemplates);
 		}
@@ -279,7 +289,7 @@ class ViewProvider {
 							set: set = newValue => {
 								if (newValue instanceof DataCache) {
 									newValue.addView(self);
-									self.dataCache = self;
+									self.dataCache = newValue;
 									newValue = newValue.data;
 								}
 								value = newValue;

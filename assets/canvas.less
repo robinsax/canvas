@@ -75,7 +75,7 @@ h4 { font-size: 16pt; }
 .background-bg { background-color: @background; }
 
 //	Visiblity modifiers.
-.invisible { visibility: hidden !important; }
+.invisible { visibility: hidden !important; pointer-events: none; }
 .hidden { display: none !important; }
 
 //	Common layout, marked important if they are single-effect.
@@ -161,11 +161,11 @@ h4 { font-size: 16pt; }
 	&:last-child { margin-bottom: 1rem; }
 
 	label {
-		.inline-block();
 		color: @text;
 		width: 8rem;
 		margin-right: 1rem;
 		text-align: right;
+		margin-top: 0px;
 	}
 	&.required label:after {
 		.highlight();	
@@ -187,26 +187,39 @@ h4 { font-size: 16pt; }
 	}
 
 	.input {
-		vertical-align: top;
 		height: 2rem;
-		width: 19rem;
 		padding: 0px 10px;
-		outline: none;
-		border: none;
-		color: @text;
-		background-color: @input;
-		font-size: 12pt;
-		font-family: @text-font;
+		width: 19rem; 
+		margin: 0px;
+	}
+}
 
-		&[type="file"] { line-height: 2rem; }
-		&[type="checkbox"] { width: 1rem; height: 1rem; }
-		&:hover { background-color: @focused-input; }
-	}
-	textarea.input {
-		padding: 10px;
-		height: 15rem;
-		resize: none;
-	}
+label {
+	.inline-block();
+	margin-top: 0.25rem;
+}
+
+input, textarea, .field .input {
+	vertical-align: top;
+	height: 1.5rem;
+	padding: 0px 5px;
+	margin: 0.25rem;
+	outline: none;
+	border: 1px solid @text;
+	border-radius: 2px;
+	color: @text;
+	background-color: @input;
+	font-size: 12pt;
+	font-family: @text-font;
+
+	&[type="file"] { line-height: 2rem; }
+	&[type="checkbox"] { width: 1rem; height: 1rem; }
+	&:hover { background-color: @focused-input; }
+}
+textarea {
+	padding: 10px;
+	height: 15rem;
+	resize: none;
 }
 
 .modal {

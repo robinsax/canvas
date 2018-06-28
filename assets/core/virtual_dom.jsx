@@ -16,14 +16,16 @@ class VirtualDOMRenderer {
 	}
 
 	@exposedMethod
-	comp(data, callback) {
+	comp(data, callback, start=0, end=-1) {
 		/*
 		*	Perform a comprehension on `data` that allows data-DOM binding if
 		*	the result items are JSX snippets.
 		*/
 		let results = [];
-		for (var i = 0; i < data.length; i++) {
+		for (var i = start; i < data.length && (end < 0 || i < end); i++) {
 			let result = callback(data[i], i);
+			if (result === undefined) continue;
+
 			if (result.tag && result.attributes && result.children) {
 				result.data = data[i];
 				result.index = i;
@@ -197,9 +199,9 @@ class VirtualDOMRenderer {
 		if (newVirtual instanceof View){
 			//	TODO: This is a hotfix. onceCreated should never be invoked for
 			//	these throwaway views.
+			newVirtual._onceCreated = newVirtual.onceCreated;
 			newVirtual.onceCreated = () => {}
 		}
-
 
 		if (oldVirtual === undefined || oldVirtual === null) {
 			parentEl.appendChild(this.devirtualize(newVirtual));
@@ -211,7 +213,22 @@ class VirtualDOMRenderer {
 			}
 		}
 		else if (oldVirtual instanceof View) {
-			this.render(oldVirtual);
+			if (!oldVirtual.hasChanged(newVirtual)) {
+				this.render(oldVirtual);
+			}
+			else {
+				if (!oldVirtual.element) return;
+				
+				//	TODO: Sometimes oldVirtual is destroyed before it is created.
+				oldVirtual.beforeDestroyed(newVirtual);
+				newVirtual.onceCreated = newVirtual._onceCreated;
+				let parentView = this.renderStack[this.renderStack.length - 1];
+				if (parentView) {
+					newVirtual.attachToParent(parentView);
+					newVirtual.parent = parentView;
+				}
+				parentEl.replaceChild(this.render(newVirtual), oldVirtual.element);
+			}
 		}
 		else if (this.diff(newVirtual, oldVirtual)) {
 			parentEl.replaceChild(
@@ -257,7 +274,7 @@ class VirtualDOMRenderer {
 			this.update(parentEl, view, null);
 			return parentEl.children[0];
 		}
-
+		
 		this.renderStack.push(view);
 		let parentEl, index = 0;
 		if (view.element) {
