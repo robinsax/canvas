@@ -45,7 +45,8 @@ li { line-height: 1.5; }
 //	Heading styles.
 h1, h2, h3, h4 {
 	margin: 0px;
-	padding: 0.25rem 0rem;
+	padding: 0px;
+	padding-bottom: 1rem;
 	font-weight: normal;
 	font-family: @title-font;
 	color: @title;
@@ -158,15 +159,42 @@ h4 { font-size: 16pt; }
 //	Forms.
 .form {
 	.inline-block();
-	padding: 1rem;
-	padding-bottom: 0px;
-	width: 30rem;
+	padding: 0.5rem 1rem;
+	width: 32rem;
 }
 
 .error-summary {
 	margin-bottom: 15px;
 	margin-top: 5px;
 	color: @error;
+}
+
+label {
+	.inline-block();
+	margin-top: 0.25rem;
+}
+
+input, textarea, .field .input {
+	vertical-align: top;
+	height: 1.5rem;
+	padding: 0px 5px;
+	margin: 0.25rem;
+	outline: none;
+	border: 1px solid @text;
+	border-radius: 2px;
+	color: @text;
+	background-color: @input;
+	font-size: 12pt;
+	font-family: @text-font;
+
+	&[type="file"] { line-height: 2rem; }
+	&[type="checkbox"] { width: 1rem; height: 1rem; }
+	&:hover { background-color: @focused-input; }
+}
+textarea {
+	padding: 10px;
+	height: 15rem;
+	resize: none;
 }
 
 .field {
@@ -207,34 +235,12 @@ h4 { font-size: 16pt; }
 		width: 19rem; 
 		margin: 0px;
 	}
-}
 
-label {
-	.inline-block();
-	margin-top: 0.25rem;
-}
-
-input, textarea, .field .input {
-	vertical-align: top;
-	height: 1.5rem;
-	padding: 0px 5px;
-	margin: 0.25rem;
-	outline: none;
-	border: 1px solid @text;
-	border-radius: 2px;
-	color: @text;
-	background-color: @input;
-	font-size: 12pt;
-	font-family: @text-font;
-
-	&[type="file"] { line-height: 2rem; }
-	&[type="checkbox"] { width: 1rem; height: 1rem; }
-	&:hover { background-color: @focused-input; }
-}
-textarea {
-	padding: 10px;
-	height: 15rem;
-	resize: none;
+	textarea.input {
+		padding: 10px;
+		height: 15rem;
+		resize: none;
+	}
 }
 
 .modal {

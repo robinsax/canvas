@@ -14,6 +14,21 @@ class View {
 	beforeDestroyed(replacement) {}
 	onceFetched() {}
 
+	addField(field) {
+		this._fields[field.name] = field;
+	}
+
+	get fields() {
+		let fields = {};
+		for (key in this._fields) {
+			let f = this._fields[key];
+			if (f.disabled) continue;
+
+			fields[f.name] = f;
+		}
+		return fields;
+	}
+
 	processState() {}
 
 	hasChanged(other) { return !(other instanceof View); }
@@ -127,7 +142,7 @@ class View {
 }
 
 class ModalMixin {
-	constructor(className) {
+	constructor(className="") {
 		this.className = className;
 	}
 
@@ -253,6 +268,8 @@ class ViewProvider {
 			if (options.mixins) {
 				for (let i = 0; i < options.mixins.length; i++) {
 					let mixin = options.mixins[i];
+					if (!mixin.updateHostOptions) continue;
+
 					mixin.updateHostOptions(options);
 				}
 			}
@@ -271,6 +288,7 @@ class ViewProvider {
 
 					this.created = false;
 					this.children = [];
+					this._fields = {};
 					this.parent = null;
 
 					const self = this;
@@ -303,6 +321,7 @@ class ViewProvider {
 					if (options.mixins) {
 						for (let i = 0; i < options.mixins.length; i++) {
 							let mixin = options.mixins[i];
+							mixin.hostArguments = args;
 							mixin.attachToHost(this);
 						}
 					}

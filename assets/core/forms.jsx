@@ -91,9 +91,9 @@ class FormViewExposure {
 		
 		@core.view({
 			data: {},
-			state: {error: null, required: false},
+			state: {error: null, required: false, gone: true},
 			template: (data, state) => 
-				<div class={ "field" + (state.error ? " error" : "") + (state.required ? " required":  "") }>
+				state.gone ? <span/> : <div class={ "field" + (state.error ? " error" : "") + (state.required ? " required":  "") }>
 					<label for={ data.name }>{ data.label }</label>
 					{ data.type =='textarea' ?
 						<textarea name={ data.name } class="input" placeholder={ data.placeholder }></textarea>
@@ -128,9 +128,20 @@ class FormViewExposure {
 				return this.element.querySelector('.input').value = value;
 			}
 
+			get disabled() {
+				return this.state.gone = (this.overrides.when && !this.overrides.when(this));
+			}
+
+			render() {
+				if (this.rendering) return;
+				this.rendering = true;
+				this.state.gone = this.disabled;
+				this.rendering = false;
+				return super.render();
+			}
+
 			attachToParent(parent) {
-				parent.fields = parent.fields || {};
-				parent.fields[this.name] = this;
+				parent.addField(this);
 			}
 
 			invalidate(error) {
@@ -139,6 +150,15 @@ class FormViewExposure {
 
 			@core.event('.input', 'keyup')
 			@core.event('.input', 'change')
+			validateOrSubmit(context) {
+				if (context.event.keyCode == 13) {
+					this.parent.submitForm();
+				}
+				else {
+					this.validate();
+				}
+			}
+
 			validate() {
 				this.state.error = null;
 				if (this.parent.errorSummary) {

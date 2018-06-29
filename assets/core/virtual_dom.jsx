@@ -101,6 +101,7 @@ class VirtualDOMRenderer {
 			}
 
 			let listener = event => {
+				event.keyCode = event.keyCode || event.which;
 				let context = {element: el, event: event},
 					dataHost = findData(el);
 				if (dataHost) {
