@@ -96,11 +96,17 @@ class CheckConstraint(Constraint):
 
 	def describe_rule(self):
 		'''Serialize the policy-specified check for this constraint.'''
+		from .tables import Table
+
 		#	Resolve the policy and assert it's result is valid.
-		condition = nodeify(self.condition_policy(self.host.model_cls))
+		if isinstance(self.host, Table):
+			condition = nodeify(self.condition_policy(self.host.model_cls))
+		else:
+			condition = nodeify(self.condition_policy(self.host))
 		if not issubclass(type(condition), MFlag):
-			raise InvalidSchema(('Check constraint %s has non flag-like '
-					+ 'condition')%self.name)
+			raise InvalidSchema((
+				'Check constraint %s has non flag-like condition'
+			)%self.name)
 		
 		#	Create and return the serialization. This is vulnerable to
 		#	injection, but only from the caller itself.
@@ -108,7 +114,7 @@ class CheckConstraint(Constraint):
 		sql = condition.serialize(values)
 		if not isinstance(condition, Unique):
 			sql = ' '.join(('CHECK', sql))
-		return sql%(*values,)
+		return sql%(*("'%s'"%v for v in values),)
 
 class PrimaryKeyConstraint(Constraint):
 	'''A primary key constraint on a column.'''

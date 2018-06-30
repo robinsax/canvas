@@ -259,3 +259,9 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 	def count(self):
 		'''Return the `COUNT` `Aggregation` of this column.'''
 		return Aggregation('COUNT', self)
+	
+	def is_one_of(self, *options):
+		query = False
+		for option in options:
+			query = (self == option) | query
+		return query.grouped
