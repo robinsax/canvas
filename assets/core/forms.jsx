@@ -78,7 +78,7 @@ class FormViewExposure {
 		@core.view({
 			state: {error: null},
 			template: state => 
-				<div class="error-summary">{ state.error }</div>
+				<div class={ "error-summary" + (state.error ? " active" : "") }>{ state.error }</div>
 		})
 		class ErrorSummary {
 			attachToParent(parent) {

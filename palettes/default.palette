@@ -1,6 +1,7 @@
 white 		-> background, input, focused-input
 black 		-> text, title, subtext, theme1, theme2, theme3
 blue 		-> link, visited-link
+grey		-> borders
 red 		-> error
 orange		-> warning, highlight
 green 		-> success
