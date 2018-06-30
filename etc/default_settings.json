@@ -9,7 +9,7 @@
 		"max_bytes_receivable": 1000000,
 		"cookie_secret": "not-prod-safe",
 		"cookie_key": "canvas_session",
-		"authorization_method": null
+		"authentication_method": null
 	},
 	"database": {
 		"database": "devdb",

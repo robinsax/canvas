@@ -243,8 +243,12 @@ class ViewProvider {
 
 	@exposedMethod
 	page(route, part='mainPage') {
+		let current = document.head.getAttribute('data-route');
 		return (ViewClass) => {
-			if (route !== true && route != '*' && route != document.head.getAttribute('data-route')) return;
+			if (
+				!((typeof route == 'function' && route(current)) ||
+				route === true || route == '*' || route == current)
+			) return;
 
 			onceReady(() => {
 				cv[part].render(new ViewClass());

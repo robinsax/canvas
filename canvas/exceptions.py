@@ -111,15 +111,15 @@ class Unauthorized(HTTPException):
 
 	def __init__(self, description=None, realm=None):
 		'''
-		::realm The realm in which further requests should be authorized, if 
-			any. Ignored if `authorization_method` is not specified in
+		::realm The realm in which further requests should be authenticated, if 
+			any. Ignored if `authentication_method` is not specified in
 			configuration.
 		'''
 		#	Clearly this import is circular.
 		from .configuration import config
 
 		#	Resolve the auth. scheme with which to inform the client.
-		auth_scheme, headers = config.security.authorization_method, None
+		auth_scheme, headers = config.security.authentication_method, None
 		if auth_scheme:
 			if realm:
 				auth_scheme = ' '.join((auth_scheme, 'realm="%s"'%realm))
