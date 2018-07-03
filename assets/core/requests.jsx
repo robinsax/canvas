@@ -3,6 +3,16 @@
 */
 
 const requestLog = new Logger('requests');
+const formatFormData = (name, type, data) => {
+return `--canvas_blob
+Content-Disposition: form-data; name="file"; filename="${name}";
+Content-Type: ${type}
+
+${data}
+
+--canvas_blob--`
+}
+
 
 class Request {
 	/* An request context that manages retrieval and callbacks. */
@@ -19,6 +29,8 @@ class Request {
 		*		* `success` - A success callback (optional)
 		*		* `failure` - A failure callback (optional)
 		*		* `json` - A JSON-like object for the request body (optional)
+		*		* `file` - A file object to upload (optional)
+		*		* `headers` - A key, value header map (optional)
 		*/
 		//	Handle trivial request definition.
 		if (typeof options == 'string') options = {url: options, method: 'get'};
@@ -48,9 +60,10 @@ class Request {
 
 		this.logRepr = method + ' ' + fullURL;
 		requestLog.info('Sent ' + this.logRepr);
-		let serializedBody = this.serializeBody(options);
-		this.xhrObject.setRequestHeader('Content-Type', serializedBody[1]);
-		this.xhrObject.send(serializedBody[0]);
+		this.serializeBody(options, (mimetype, data) => {
+			this.xhrObject.setRequestHeader('Content-Type', mimetype);
+			this.xhrObject.send(data);
+		});
 	}
 
 	checkRequestState() {
@@ -88,15 +101,26 @@ class Request {
 		}
 	}
 
-	serializeBody(options) {
+	serializeBody(options, callback) {
 		/* Serialize and return a request body given `options`. */
 		//	TODO: Support more types or provide API.
 		if (options.json) {
 			requestLog.debug(options.json);
-			return [JSON.stringify(options.json), 'application/json']
+			callback('application/json', JSON.stringify(options.json));
 		}
-		
-		return ['', 0];
+		else if (options.file) {
+			let reader = new FileReader();
+			reader.onload = event => {
+				callback(
+					'multipart/form-data; boundary=canvas_blob', 
+					formatFormData(options.file.name, options.file.type, event.target.result)
+				);
+			}
+			reader.readAsDataURL(options.file);
+		}
+		else {
+			callback('', '');
+		}
 	}
 
 	processResponse(response) {

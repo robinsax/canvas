@@ -285,18 +285,25 @@ class Comparison(Node, MFlag):
 		if name_policy and isinstance(self.left, Column):
 			left = name_policy(self.left)
 		else:
-			left = self.left.serialize(values)
+			left = self.left.serialize(values, name_policy=name_policy)
 		if name_policy and isinstance(self.right, Column):
 			right = name_policy(self.right)
 		else:
-			right = self.right.serialize(values)
+			right = self.right.serialize(values, name_policy=name_policy)
 
 		#	Create SQL, applying inversion and grouping.
-		sql = ' '.join((left, self.comparator.value, right))
+		comparor = self.comparator.value
+		if right == 'NULL':
+			if self.comparator is Comparator.NOT_EQUALS:
+				comparor = 'IS NOT'
+			else:
+				comparor = 'IS'
+		sql = ' '.join((left, comparor, right))
 		if self.inverted:
 			sql = 'NOT %s'%sql
 		if self.is_grouped:
 			sql = '(%s)'%sql
+
 		return sql
 
 	@property

@@ -26,7 +26,7 @@ class VirtualDOMRenderer {
 			let result = callback(data[i], i);
 			if (result === undefined) continue;
 
-			if (result.tag && result.attributes && result.children) {
+			if (result.tag !== undefined && result.attributes !== undefined && result.children !== undefined) {
 				result.data = data[i];
 				result.index = i;
 			}

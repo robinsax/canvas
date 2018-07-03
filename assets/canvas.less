@@ -32,7 +32,7 @@ a {
 
 //	Paragraphs.
 p {
-	margin-top: 1rem;
+	margin: 0px;
 	font-size: 12pt;
 	line-height: 1.4;
 	color: @text;
@@ -46,7 +46,7 @@ li { line-height: 1.5; }
 h1, h2, h3, h4 {
 	margin: 0px;
 	padding: 0px;
-	padding-bottom: 1rem;
+	padding-bottom: 2rem;
 	font-weight: normal;
 	font-family: @title-font;
 	color: @title;
@@ -65,6 +65,7 @@ h4 { font-size: 16pt; }
 .success { color: @success; }
 .highlight { color: @highlight; }
 .background { color: @background; }
+.subtext { color: @subtext; }
 
 .theme1-bg { background-color: @theme1; }
 .theme2-bg { background-color: @theme2; }
@@ -77,6 +78,9 @@ h4 { font-size: 16pt; }
 
 .pointer { cursor: pointer; }
 .relative { position: relative; }
+
+.max-500 { max-width: 500px; }
+.max-600 { max-width: 600px; }
 
 //	Visiblity modifiers.
 .invisible { visibility: hidden !important; pointer-events: none; }
@@ -102,13 +106,13 @@ h4 { font-size: 16pt; }
 }
 .top-right {
 	position: absolute;
-	top: 15px;
-	right: 15px;
+	top: 10px;
+	right: 10px;
 }
 .top-left {
 	position: absolute;
-	top: 15px;
-	left: 15px;
+	top: 10px;
+	left: 10px;
 }
 
 .vertical-space { padding: 15px 0px; }
@@ -159,7 +163,8 @@ h4 { font-size: 16pt; }
 //	Forms.
 .form {
 	.inline-block();
-	padding: 0.5rem 1rem;
+	padding: 0rem 1rem;
+	padding-top: 2rem;
 	width: 32rem;
 }
 
@@ -180,7 +185,7 @@ input, textarea, .field .input {
 	padding: 0px 5px;
 	margin: 0.25rem;
 	outline: none;
-	border: 1px solid @text;
+	border: 1px solid @borders;
 	border-radius: 2px;
 	color: @text;
 	background-color: @input;
@@ -201,7 +206,6 @@ textarea {
 	.inline-block();
 	width: 28rem;
 	margin-bottom: 2rem;
-	&:last-child { margin-bottom: 1rem; }
 
 	label {
 		color: @text;
@@ -220,6 +224,7 @@ textarea {
 		margin-left: 9rem;
 		width: 19rem;
 		text-align: left;
+		font-size: 9.82pt; //	TODO: lol!
 	}
 	&.error {
 		margin-bottom: 1rem;
@@ -272,6 +277,10 @@ textarea {
 
 			&:hover { color: @highlight; }
 		}
+	}
+
+	.form {
+		padding: 1rem;
 	}
 }
 

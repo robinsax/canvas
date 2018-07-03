@@ -19,7 +19,7 @@ class CanvasCore {
 					this[methodName] = (function(...args) { return method.apply(this, args); }).bind(instance);
 				}
 			}
-		} 
+		}
 	}
 
 	iter(iterable, callback) {
@@ -33,6 +33,15 @@ class CanvasCore {
 				callback(key, iterable[key]);
 			}
 		}
+	}
+
+	//	TODO: extend.
+	aggr(iterable, callback) {
+		let total = 0;
+		for (let i = 0; i < iterable.length; i++) {
+			total += callback(iterable[i], i);
+		}
+		return total;
 	}
 
 	classify(element, className, flag=true) {

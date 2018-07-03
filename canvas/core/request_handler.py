@@ -78,12 +78,13 @@ def serve_controller(request):
 		RequestParameters(request.args), None
 	)
 	#	Read body if there is one.
-	if verb != 'get':
+	content_type = request.headers.get('Content-Type')
+	if verb != 'get' and content_type and content_type.startswith('multipart/form-data'):
+		#	TODO: Improve this.
+		request_parameters = request.files['file']
+	elif verb != 'get':
 		#	Retrieve body properties.
-		body_size, content_type = (
-			int(request.headers.get('Content-Length', 0)), 
-			request.headers.get('Content-Type')
-		)
+		body_size = int(request.headers.get('Content-Length', 0))
 		#	Assert size is safe.
 		if body_size > config.security.max_bytes_receivable:
 			raise OversizeEntity(body_size)

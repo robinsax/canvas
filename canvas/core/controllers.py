@@ -56,7 +56,13 @@ class Page(Controller):
 			title = self.__title__
 		if not description:
 			description = self.__description__
-		return PageView.resolved(title, description, self.__assets__, page_data)
+
+		#	TODO: Lazy hack.
+		context = RequestContext.get()
+		return PageView.resolved(title, description, self.get_assets(context), page_data)
+
+	def get_assets(self, context):
+		return self.__assets__
 
 	def render(self, title=None, description=None, page_data=dict(), code=200, headers=dict()):
 		'''Return the rendered view for this page as a response tuple.'''

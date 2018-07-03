@@ -13,8 +13,11 @@ type. The `ColumnType` of a `Column` is stored in the `type` attribute.
 import re
 import uuid
 
-from ...exceptions import InvalidSchema
+from datetime import datetime
+
+from ...exceptions import InvalidSchema, ValidationErrors, BadRequest
 from ...utils import logger
+from ..request_parsers import parse_datetime
 from .ast import Literal, ObjectReference, ILiteral, MAllTypes, Aggregation, \
 	OrderItem
 from .constraints import ForeignKeyConstraint, PrimaryKeyConstraint, \
@@ -42,8 +45,9 @@ class ColumnType:
 		if specifier.startswith('fk:'):
 			return ForeignKeyColumnType(specifier[3:])
 		for regex, checked_typ in _type_map.items():
-			if re.match(regex, specifier):
-				return checked_typ
+			fmt_match = re.match(regex, specifier)
+			if fmt_match:
+				return checked_typ.resolve_type(fmt_match)
 		raise InvalidSchema('Invalid column type specifier %s'%specifier)
 	
 	def bind(self, column):
@@ -63,6 +67,9 @@ class ColumnType:
 		'''
 		return _sentinel
 
+	def resolve_type(self, fmt):
+		return self
+
 class BasicColumnType(ColumnType):
 	'''
 	The trivial case of a column type. Instances are assumed to be singleton.
@@ -79,6 +86,12 @@ class BasicColumnType(ColumnType):
 		super().__init__(lazy)
 		self.type, self.input_type = typ, input_type
 		self.default_policy = default_policy
+
+	def resolve_type(self, fmt):
+		if callable(self.type):
+			return BasicColumnType(self.type(fmt), self.input_type, 
+					self.default_policy, self.lazy)
+		return self
 
 	def describe(self):
 		return self.type
@@ -119,6 +132,7 @@ class ForeignKeyColumnType(ColumnType):
 				self.target_ref
 			))
 
+		self.type = self.target.type.type
 		#	Add a foreign key constraint.
 		column.add_constraint(ForeignKeyConstraint(self.target))
 
@@ -129,13 +143,14 @@ class ForeignKeyColumnType(ColumnType):
 #	Define the default type map.
 _type_map = {
 	'int(?:eger)*': 	BasicColumnType('INTEGER', 'number'),
-	'real|float': 		BasicColumnType('REAL'),
+	'real|float': 		BasicColumnType('REAL', 'number'),
 	'serial': 			BasicColumnType('SERIAL'),
 	'text': 			BasicColumnType('TEXT'),
+	'char\(([0-9]+)\)':	BasicColumnType(lambda fmt: 'CHAR(%s)'%fmt.group(1)),
 	'longtext': 		BasicColumnType('TEXT', 'textarea'),
 	'bool(?:ean)*':		BasicColumnType('BOOLEAN', 'checkbox'),
 	'uuid': 			BasicColumnType('CHAR(32)', 'text', 
-							default_policy=uuid.uuid4),
+							default_policy=lambda: uuid.uuid4().hex),
 	'pass(?:word)*':	BasicColumnType('TEXT', 'password'),
 	'date$': 			BasicColumnType('DATE', 'date'),
 	'time$': 			BasicColumnType('TIME', 'time'),
@@ -265,3 +280,43 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 		for option in options:
 			query = (self == option) | query
 		return query.grouped
+
+	#	TODO: Refactor and make extendable.
+	#	TODO: Use in apiutils.
+	def cast(self, value):
+		typ = self.type.type
+		if value is None or (isinstance(value, str) and value == 'null'):
+			return None
+		if typ == 'TEXT' or (typ and 'CHAR' in typ):
+			#	Be strict about strings.
+			if isinstance(value, str):
+				return value
+			raise ValidationErrors({self.name: 'Expected string'})
+		if typ == 'BOOLEAN':
+			if isinstance(value, bool):
+				return value
+			if isinstance(value, str):
+				value = value.lower()
+				if value in ('true', 'false'):
+					return value == 'true'
+			raise ValidationErrors({self.name: 'Expected boolean'})
+		elif typ in ('INTEGER', 'SERIAL'):
+			try:
+				return int(value)
+			except:
+				raise ValidationErrors({self.name: 'Expected integer'})
+		elif typ in ('REAL',):
+			try:
+				return float(value)
+			except:
+				raise ValidationErrors({self.name: 'Expected number'})
+		elif typ == 'TIMESTAMP':
+			if isinstance(value, str):
+				try:
+					return parse_datetime(value)
+				except BadRequest:
+					raise ValidationErrors({self.name: 'Expected datetime'}) \
+							from None
+			elif isinstance(value, datetime):
+				return value
+		raise NotImplementedError(typ)

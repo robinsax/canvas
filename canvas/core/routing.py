@@ -45,9 +45,13 @@ class RouteString(str):
 	'''
 
 	def populated(self, variables):
+		self.__variables__ = list(variables.keys())
 		for key, value in variables.items():
 			setattr(self, key, value)
 		return self
+
+	def has_variable(self, variable):
+		return variable in self.__variables__
 
 def create_routing(controller_list):
 	'''

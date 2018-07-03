@@ -73,12 +73,19 @@ class DataManager {
 	constructor() {
 		//	Create a request representation to DataCache map.
 		this.dataCaches = {};
+		this.log = new Logger('data');
 
 		DataManager.instance = this;
 	}
 
 	@exposedMethod
 	dataCache(requestOptions) {
+		this.log.warning('dataCache is depricated, use data()');
+		return this.data(requestOptions);
+	}
+	
+	@exposedMethod
+	data(requestOptions) {
 		//	TODO: Better keying.
 		let key = typeof requestOptions == 'string' ? requestOptions : JSON.stringify(requestOptions);
 		let existing = this.dataCaches[key];

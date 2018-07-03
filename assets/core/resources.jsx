@@ -13,6 +13,8 @@ class ResourceManager {
 
 	constructor() {
 		this.log = new Logger('resources');
+
+		this.importQueue = [];
 	}
 	
 	export(moduleName, exportMap) {
@@ -20,7 +22,36 @@ class ResourceManager {
 		*	Export the contents of `exportMap` as `moduleName`. Powers the 
 		*	`::export` preprocessor directive.
 		*/ 
-		window[moduleName] = exportMap; 
+		window[moduleName] = exportMap;
+		this.processImports();
+	}
+
+	processImports() {
+		for (let i = 0; i < this.importQueue.length; i++) {
+			let importItem = this.importQueue[i];
+			let done = true;
+			//	Check library imports.
+			for (let j = 0; j < importItem.libs.length; j++) {
+				let hostCheck = importItem.libs[j];
+				if (!hostCheck()) {
+					done = false;
+					break;
+				}
+			}
+			if (!done) continue;
+			//	Check module imports.
+			for (let j = 0; j < importItem.modules.length; j++) {
+				if (!window[importItem.modules[j]]) {
+					done = false;
+					break;
+				}
+			}
+			if (!done) continue;
+			
+			setTimeout(importItem.callback, 1);
+			this.importQueue.splice(i, 1);
+			i--;
+		}
 	}
 
 	loadStyle(stylesheet) {
@@ -41,40 +72,33 @@ class ResourceManager {
 		*	Import a set of modules by name, invoking `callback` once they are 
 		*	available. This powers the `::import` preprocess directive.
 		*/
-		//	Define completion counter and threshold.
-		let importCount = 0, importTotal = moduleNames.length;
-		
-		//	Define a callback that invokes the callback if all imports are
-		//	complete.
-		const maybeFinishImport = () => {
-			if (++importCount == importTotal) callback();
-		}
+		let importItem = {
+			modules: [],
+			libs: [],
+			callback: callback
+		};
+		this.importQueue.push(importItem);
 
-		//	Iterate the moduels to import, importing each with a script tag.
-		for (var i = 0; i < importTotal; i++) {
-			let moduleName = moduleNames[i], path;
+		//	Iterate the moduels to import.
+		for (var i = 0; i < moduleNames.length; i++) {
+			let moduleName = moduleNames[i];
 
 			//	Decide the path.
-			if (moduleName[0] == '!') {
+			let path, isLibrary = moduleName[0] == '!';
+			if (isLibrary) {
 				path = '/assets/' + moduleName.substring(1) + '.js';
 			}
 			else {
 				path = '/assets/' + moduleName.replace('.', '/') + '.js';
-			}
-
-			if (window[moduleName]) {
-				maybeFinishImport();
-				continue;
+				importItem.modules.push(moduleName);
 			}
 			
-			let importHost = document.querySelector('script[src="' + path + '"]'),
-				didExist = !!importHost;
-			if (!didExist) {
-				importHost = document.createElement('script');
-				importHost.type = 'text/javascript';
-			}
-
+			if (document.querySelector('script[src="' + path + '"]')) continue;
+			
+			let importHost = document.createElement('script');
+			importHost.type = 'text/javascript';
 			this.log.debug('Importing ' + moduleName + ' from ' + path);
+			
 			//	Create and attach the host script tag.
 			if (importHost.readyState) {
 				//	Legacy IE watch.
@@ -83,21 +107,32 @@ class ResourceManager {
 					if (['loaded', 'complete'].indexOf(state) < 0) return;
 					
 					importHost.onreadystatechange = null;
-					maybeFinishImport();
+					this.processImports();
+				}
+				if (isLibrary) {
+					importItem.libs.push(importHost);
 				}
 			}
 			else {
 				//	Actually good browser watch.
-				importHost.addEventListener('load', maybeFinishImport);
+				if (isLibrary) {
+					importItem.libs.push(() => false);
+					let k = importItem.libs.length - 1;
+					importHost.addEventListener('load', () => {
+						importItem.libs[k] = () => true;
+						this.processImports();
+					});
+				}
 				importHost.addEventListener('error', () => this.log.critical(
 					'Failed to import "' + moduleName + '"'
 				));
 			}
-			if (!didExist) {
-				importHost.setAttribute('src', path);
-			}
+
+			importHost.setAttribute('src', path);
 			document.head.appendChild(importHost);
 		}
+
+		this.processImports();
 	}
 }
 

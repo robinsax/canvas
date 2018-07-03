@@ -45,7 +45,11 @@ class FormViewExposure {
 
 		@this.validator('existance')
 		class RequiredValidator {
-			validate(value, field) {
+			constructor(errorMessage='Required') {
+				this.errorMessage = errorMessage;
+			}
+
+			validate(value, view, field) {
 				if (field.type == 'file') return value.length > 0;
 
 				return value !== '' && value !== null;
@@ -91,33 +95,52 @@ class FormViewExposure {
 		
 		@core.view({
 			data: {},
-			state: {error: null, required: false, gone: true},
+			state: {
+				error: null, 
+				required: false, 
+				gone: true, 
+				classes: '',
+				extra: ''
+			},
 			template: (data, state) => 
-				state.gone ? <span/> : <div class={ "field" + (state.error ? " error" : "") + (state.required ? " required":  "") }>
+				state.gone ? <span/> : <div class={ "field" + state.classes + (state.error ? " error" : "") + (state.required ? " required":  "") }>
 					<label for={ data.name }>{ data.label }</label>
-					{ data.type =='textarea' ?
-						<textarea name={ data.name } class="input" placeholder={ data.placeholder }></textarea>
-						:
-						<input name={ data.name } class="input" type={ data.type } placeholder={ data.placeholder }/>
-					}
+					<span class="input-container">
+						{ data.type =='textarea' ?
+							<textarea name={ data.name } class="input" placeholder={ data.placeholder }></textarea>
+							:
+							<input name={ data.name } class="input" type={ data.type } placeholder={ data.placeholder }/>
+						}
+					</span>
 					<div class="error-message">{ state.error }</div>
+					{ state.extra }
 				</div>
 		})
 		class Field {
-			constructor(name, overrides={}) {
+			onceConstructed(name, overrides={}) {
 				this.name = name;
 				this.overrides = overrides;
 				this.unincluded = overrides.uninclude || false;
+				this.transform = overrides.transform || (x => x);
+				if (overrides.classes) {
+					this.state.classes = ' ' + overrides.classes;
+				}
+				if (overrides.extra) {
+					this.state.extra = overrides.extra;
+				}
 
 				this.validators = [];
 			}
 			
 			get value() {
+				if (this.data.type == 'file') {
+					return this.element.querySelector('.input').files[0];
+				}
 				let value = this.element.querySelector('.input').value;
 				if (this.data.type == 'number' && value != null) {
 					value = +value;
 				}
-				return value;
+				return this.transform(value);
 			}
 
 			get files() {
@@ -168,7 +191,7 @@ class FormViewExposure {
 				let input = this.element.querySelector('.input');
 				for (let i = 0; i < this.validators.length; i++) {
 					let validator = this.validators[i];
-					if (!validator.validate(input.value, input)) {
+					if (!validator.validate(input.value, this, input)) {
 						this.invalidate(validator.errorMessage);
 						return;
 					}

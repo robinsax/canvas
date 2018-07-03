@@ -113,7 +113,7 @@ class CheckConstraint(Constraint):
 		values = list()
 		sql = condition.serialize(values)
 		if not isinstance(condition, Unique):
-			sql = ' '.join(('CHECK', sql))
+			sql = ' '.join(('CHECK (', sql, ')'))
 		return sql%(*("'%s'"%v for v in values),)
 
 class PrimaryKeyConstraint(Constraint):
