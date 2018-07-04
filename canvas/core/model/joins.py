@@ -15,7 +15,7 @@ class Join(Node, ISelectable, IJoinable):
 	joinable.
 	'''
 
-	def __init__(self, source, dest, condition=None, attr=None):
+	def __init__(self, source, dest, condition=True, attr=None):
 		'''
 		Create a join. This should generally be done via the `Model` class 
 		level `join` method.

@@ -19,7 +19,7 @@ class Model:
 	__table__ = __session__ = __dirty__ = None
 
 	@classmethod
-	def join(cls, other, condition=None, attr=None):
+	def join(cls, other, condition=True, attr=None):
 		return cls.__table__.join(other, condition, attr)
 
 	@classmethod
