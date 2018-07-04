@@ -164,6 +164,35 @@ class UniquenessConstraint(Constraint):
 	def describe_rule(self):
 		return 'UNIQUE'
 
+class RangeConstraint(Constraint):
+	'''A range constraint.'''
+
+	def __init__(self, error_message, min_value=None, max_value=None):
+		super().__init__('range', error_message)
+		self.max_value, self.min_value = max_value, min_value
+
+	def precheck_violation(self, model, value):
+		return not ((self.max_value is None or value < self.max_value) and \
+			(self.min_value is None or value >= self.min_value))
+
+	def describe_rule(self):
+		values = list()
+		rule = True
+		if self.max_value is not None:
+			rule &= (self.host < self.max_value)
+		if self.min_value is not None:
+			rule &= (self.host >= self.min_value)
+		sql = rule.serialize(values)
+		return ' '.join((
+			'CHECK (', sql%tuple(values), ')'
+		))
+
+	def validator_info(self):
+		return {
+			'max': self.max_value,
+			'min': self.min_value
+		}
+
 class RegexConstraint(Constraint):
 	'''A regular expression constraint.'''
 

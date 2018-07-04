@@ -18,12 +18,13 @@ from .ast import Unique
 from .type_adapters import TypeAdapter, type_adapter
 from .model import Model, model
 from .tables import Table
-from .columns import Column
+from .columns import ColumnType, BasicColumnType, Column, update_column_types
 from .constraints import CheckConstraint, PrimaryKeyConstraint, \
 	ForeignKeyConstraint, NotNullConstraint, UniquenessConstraint, \
-	RegexConstraint
+	RegexConstraint, RangeConstraint
 from .session import Session, create_session
 from .dictizations import dictized_property, dictize
+from .relationalism import relational_property
 
 def initialize_model():
 	'''

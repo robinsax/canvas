@@ -4,9 +4,11 @@ The base `Model` class and `model` decorator definitions. Inheritance over
 `Model` occurs implicitly when the model decorator is used.
 '''
 
+from ...exceptions import NotFound
 from .tables import Table
 from .columns import Column
 from .dictizations import resolve_dictized_properties
+from .relationalism import RelationSpec
 
 class Model:
 	'''
@@ -19,6 +21,23 @@ class Model:
 	@classmethod
 	def join(cls, other, condition=None, attr=None):
 		return cls.__table__.join(other, condition, attr)
+
+	@classmethod
+	def rest_get(cls, pk_val, session):
+		instance = cls.get(pk_val, session)
+		if not instance:
+			raise NotFound(pk_val)
+		return instance
+
+	@classmethod
+	def with_relation(cls, relation):
+		rel_spec = RelationSpec.get(cls.__name__, relation)
+		#	TODO: Unsupport order?
+		return cls.join(
+			rel_spec.target, 
+			rel_spec.condition, 
+			attr=rel_spec.attr
+		)
 
 	@classmethod
 	def get(cls, pk_val, session):

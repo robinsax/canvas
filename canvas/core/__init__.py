@@ -23,10 +23,11 @@ from .routing import RouteVariable, RouteString, create_routing, resolve_route, 
 	on_routing
 from .assets import Palette, Asset, directive, apply_directives, \
 	transpile_jsx, compile_less, get_palette, get_asset, new_asset
-from .model import TypeAdapter, Model, Table, Column, CheckConstraint, \
-	PrimaryKeyConstraint, NotNullConstraint, UniquenessConstraint, RegexConstraint, \
-	Session, Unique, type_adapter, model, create_session, initialize_model, \
-	dictized_property, dictize
+from .model import ColumnType, BasicColumnType, TypeAdapter, Model, Table, \
+	Column, CheckConstraint, PrimaryKeyConstraint, NotNullConstraint, \
+	UniquenessConstraint, RegexConstraint, Session, Unique, RangeConstraint, \
+	type_adapter, model, create_session, initialize_model, dictized_property, \
+	dictize, update_column_types, relational_property
 
 #	Create a logger.
 log = logger(__name__)

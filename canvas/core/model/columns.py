@@ -158,6 +158,10 @@ _type_map = {
 	'json':				BasicColumnType('JSON', lazy=True)
 }
 
+def update_column_types(update_map):
+	for key, value in update_map.items():
+		_type_map[key] = value
+
 #	TODO: Disable lazy loading argument.
 class Column(ObjectReference, ILiteral, MAllTypes):
 	'''

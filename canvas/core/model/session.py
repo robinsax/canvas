@@ -259,16 +259,16 @@ class Session:
 		modifiers = list()
 
 		#	Transform optional arguments to modifiers.
-		if count:
-			modifiers.append(Literal('COUNT', count))
-		if offset:
-			modifiers.append(Literal('OFFSET', offset))
 		if order:
 			if not isinstance(order, (list, tuple)):
 				order = (order,)
 			modifiers.append(Literal('ORDER BY', Literal(*(
 				' '.join((target_node.name_column(item.column), item.which)) for item in order 
 			), joiner=', ')))
+		if count:
+			modifiers.append(Literal('COUNT', count))
+		if offset:
+			modifiers.append(Literal('OFFSET', str(offset)))
 		if for_share or for_update:
 			which = 'SHARE' if for_share else 'UPDATE'
 			modifiers.append(Literal('FOR', which))

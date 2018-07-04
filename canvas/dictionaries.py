@@ -5,7 +5,7 @@ A set of special dictionaries used throughout canvas.
 
 from datetime import datetime
 
-from .exceptions import Immutable, ValidationErrors
+from .exceptions import Immutable, BadRequest, ValidationErrors
 
 class AttributedDict(dict, object):
 	'''
@@ -97,7 +97,7 @@ class RequestParameters(AttributedDict):
 		
 		if key not in self:
 			#	This required parameter was not supplied.
-			raise ValidationErrors({key: 'Missing'})
+			raise BadRequest('Missing request parameter "%s"'%key)
 		
 		value = super().__getitem__(key)
 		if not expected_typ:

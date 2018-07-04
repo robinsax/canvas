@@ -109,7 +109,7 @@ class Unauthorized(HTTPException):
 	request.
 	'''
 
-	def __init__(self, description=None, realm=None):
+	def __init__(self, description=str(), realm=None):
 		'''
 		::realm The realm in which further requests should be authenticated, if 
 			any. Ignored if `authentication_method` is not specified in

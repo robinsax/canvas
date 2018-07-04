@@ -42,9 +42,10 @@ if __installed__:
 	#	Initialize core.
 	from .core import View, Column, CheckConstraint, PrimaryKeyConstraint, \
 		NotNullConstraint, UniquenessConstraint, RegexConstraint, Unique, \
-		alter_root_page_view, view, controller, endpoint, page, get_path, \
-		on_error, on_request_received, parse_datetime, create_json, \
-		create_redirect, create_page, on_routing, type_adapter, model, \
-		create_session, resolve_route, dictized_property, dictize, \
-		handle_request as application, initialize, on_init, on_post_init
+		RangeConstraint, alter_root_page_view, view, controller, endpoint, \
+		page, get_path, on_error, on_request_received, parse_datetime, \
+		create_json, create_redirect, create_page, on_routing, type_adapter, \
+		model, create_session, resolve_route, dictized_property, dictize, \
+		handle_request as application, initialize, on_init, on_post_init, \
+		relational_property
 	from . import ext, plugins

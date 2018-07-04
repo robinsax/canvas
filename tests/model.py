@@ -6,9 +6,12 @@ of a schema.
 
 import canvas.tests as cvt
 
+from datetime import datetime
+
 from canvas.exceptions import ValidationErrors, Frozen
 from canvas.core.model import Column, CheckConstraint, Unique, model, \
-	initialize_model, dictized_property, create_session, dictize
+	initialize_model, dictized_property, create_session, dictize, \
+	relational_property
 
 #	Define an accessible storage object for models.
 test_models = list()
@@ -201,3 +204,49 @@ def test_join_queries():
 		)
 
 	#	TODO: Assert contents correct.
+
+#	TODO: Finish test.
+#@cvt.test('Relational properties')
+def relational_properties():
+	@model('fruits', {
+		'id': Column('serial', primary_key=True),
+		'created': Column('datetime', default=datetime.now),
+		'tree_id': Column('fk:trees.id')
+	})
+	class Fruit:
+
+		@relational_property(dictized=False)
+		def tree(self):
+			return Tree
+
+	@model('trees', {
+		'id': Column('serial', primary_key=True),
+		'type': Column('text', nullable=False)
+	})
+	class Tree:
+
+		@classmethod
+		def with_fruits(cls):
+			return cls.with_relation('fruits')
+
+		@relational_property
+		def fruits(self):
+			return Fruit
+
+	initialize_model()
+
+	session = create_session()
+	tree = Tree()
+	tree.type = 'Apple'
+	session.save(tree)
+
+	fruit = Fruit()
+	fruit.tree_id = tree.id
+	session.save(fruit).commit()
+
+	from pprint import pprint
+	print(tree.fruits)
+	pprint(dictize(tree))
+	print(fruit.tree)
+
+	pprint(dictize(session.query(Tree.with_fruits())))

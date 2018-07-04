@@ -18,7 +18,7 @@ from ...json_io import json_serializer, serialize_json
 #	terminating model decorator.
 _dictized_prop_cache = list()
 
-def dictized_property(meth_or_flag):
+def dictized_property(*args, **kwargs):
 	'''
 	A decorator for model methods that transforms them into a property that is
 	dictized. This decorator can be used without trailing parenthesis or passed
@@ -39,11 +39,11 @@ def dictized_property(meth_or_flag):
 		return meth
 	
 	#	Check usage and return appropriately.
-	if isinstance(meth_or_flag, bool):
-		is_cached = meth_or_flag
+	if kwargs:
+		is_cached = kwargs.get('cached', False)
 		return resolve
 	else:
-		return resolve(meth_or_flag)
+		return resolve(args[0])
 
 def resolve_dictized_properties(model_cls):
 	'''

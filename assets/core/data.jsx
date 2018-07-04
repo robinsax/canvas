@@ -25,6 +25,12 @@ class DataCache {
 		return this;
 	}
 
+	copy(alias) {
+		let instance = new DataCache(this.requestOptions);
+		DataManager.instance.dataCaches[alias] = instance;
+		return instance;
+	}
+
 	fetch() {
 		/* Refresh this cache. */
 		(new Request(this.requestOptions)).success(this.completeFetch.bind(this));
