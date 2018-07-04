@@ -29,7 +29,7 @@ class Join(Node, ISelectable, IJoinable):
 		'''
 		self.source, self.dests = deproxy(source), [deproxy(dest)]
 		self.attrs = [attr]
-		self.condition = condition
+		self.condition = nodeify(condition)
 
 		self.reset()
 		self.set_name('_t')

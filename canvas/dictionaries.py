@@ -75,9 +75,9 @@ class RequestParameters(AttributedDict):
 		RequestParameters.propagate_onto(self)
 		self._locked = True
 
-	def get(self, key, default):
+	def get(self, key, default=None):
 		if key in self:
-			return self[(key, type(default))]
+			return self[key]
 		return default
 
 	def __setitem__(self, key, value):
