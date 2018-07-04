@@ -9,6 +9,8 @@
 class View {
 	/* The root view class. Override is invariantly implicit. */
 
+	updateOptions(options, ...args) { return args; }
+
 	onceConstructed() {}
 	onceCreated() {}
 	beforeDestroyed(replacement) {}
@@ -165,9 +167,13 @@ class ModalMixin {
 			host.open = (function() { this.state.open = true; }).bind(host);
 		}
 		if (!host.close) {
-			host.close = (function() { this.state.open = false; }).bind(host);
+			host.close = (function(context) { 
+				if (context && context.event && context.event.hitPanel) return;
+
+				this.state.open = false; 
+			}).bind(host);
 		}
-		host.__stopEvent__ = context => context.event.stopPropagation();
+		host.__stopEvent__ = context => { context.event.hitPanel = true };
 		host.__events__.push(
 			['.close', 'click', 'close'],
 			['.modal', 'click', 'close'],
@@ -280,6 +286,7 @@ class ViewProvider {
 			class DerivedViewClass extends ViewClass {
 				constructor(...args) {
 					super(...args);
+					args = this.updateOptions(options, ...args);
 
 					//	Process `options`.
 					this.element = this.referenceDOM = null;

@@ -308,8 +308,8 @@ class VirtualDOMRenderer {
 			while (this.renderBatch.length > 0) {
 				let next = this.renderBatch.pop();
 				if (next && !next.created) {
-					next.created = true;
 					next.onceCreated();
+					next.created = true;
 				}
 			}
 		}

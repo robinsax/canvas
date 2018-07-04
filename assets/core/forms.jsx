@@ -71,6 +71,29 @@ class FormViewExposure {
 			}
 		}
 
+		@this.validator('range')
+		class RangeValidator {
+			constructor(errorMessage='Out of range', minValue=null, maxValue=null) {
+				this.errorMessage = errorMessage;
+				this.minValue = minValue;
+				this.maxValue = maxValue;
+			}
+
+			setInfo(info) {
+				this.minValue = info.min;
+				this.maxValue = info.max;
+			}
+
+			validate(value) {
+				let v = +value;
+				return (
+					(this.minValue === null || v >= this.minValue) &&
+					(this.maxValue === null || v < this.maxValue)
+				);
+			}
+		}
+
+		core.RangeValidator = RangeValidator;
 		core.RegexValidator = RegexValidator;
 		core.RequiredValidator = RequiredValidator;
 		core.FileTypeValidator = FileTypeValidator;
@@ -100,7 +123,8 @@ class FormViewExposure {
 				required: false, 
 				gone: true, 
 				classes: '',
-				extra: ''
+				extra: '',
+				value: null
 			},
 			template: (data, state) => 
 				state.gone ? <span/> : <div class={ "field" + state.classes + (state.error ? " error" : "") + (state.required ? " required":  "") }>
@@ -122,6 +146,7 @@ class FormViewExposure {
 				this.overrides = overrides;
 				this.unincluded = overrides.uninclude || false;
 				this.transform = overrides.transform || (x => x);
+				this.valueRenderer = overrides.valueRenderer || (x => x);
 				if (overrides.classes) {
 					this.state.classes = ' ' + overrides.classes;
 				}
@@ -133,14 +158,7 @@ class FormViewExposure {
 			}
 			
 			get value() {
-				if (this.data.type == 'file') {
-					return this.element.querySelector('.input').files[0];
-				}
-				let value = this.element.querySelector('.input').value;
-				if (this.data.type == 'number' && value != null) {
-					value = +value;
-				}
-				return this.transform(value);
+				return this.transform(this.state.value);
 			}
 
 			get files() {
@@ -148,7 +166,8 @@ class FormViewExposure {
 			}
 
 			set value(value) {
-				return this.element.querySelector('.input').value = value;
+				setTimeout(() => this.state.value = value, 1);
+				return this.element.querySelector('.input').value = this.valueRenderer(value);
 			}
 
 			get disabled() {
@@ -178,6 +197,17 @@ class FormViewExposure {
 					this.parent.submitForm();
 				}
 				else {
+					let input = context.element;
+					if (this.data.type == 'file') {
+						this.state.value = input.files[0];
+					}
+					else {
+						let value = input.value;
+						if (this.data.type == 'number' && value != null) {
+							value = +value;
+						}
+						this.state.value = value;
+					}
 					this.validate();
 				}
 			}
@@ -227,7 +257,12 @@ class FormViewExposure {
 					if (!ValidatorClass) throw 'No such validator type ' + validatorDefn.type;
 					
 					let validator = new ValidatorClass();
-					validator.info = validatorDefn.info;
+					if (validator.setInfo) {
+						validator.setInfo(validatorDefn.info);
+					}
+					else {
+						validator.info = validatorDefn.info;
+					}
 					validator.errorMessage = validatorDefn.error_message;
 					addOne(validator);
 				}

@@ -32,8 +32,9 @@ class State {
 				let value = initialValue;
 				return {
 					set: newValue => {
+						let oldValue = value;
 						value = newValue;
-						callback();
+						if (oldValue != newValue) callback();
 					},
 					get: () => value
 				};

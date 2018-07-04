@@ -51,9 +51,23 @@ def apply_style_load(asset, *args):
 @directive('import', allow=('jsx',), priority=2)
 def apply_import(asset, *args):
 	'''The depenency declaration directive.'''
-	to_import = ', '.join(["'%s'"%i for i in args])
-
-	asset.source = 'resources.import([%s], () => {\n%s\n});'%(to_import, asset.source)
+	in_order = False
+	if args[-1].endswith('--inorder'):
+		args = list(args)
+		in_order = True
+		args[-1] = args[-1].split(' ')[0]
+	
+	def one_wrap(imports):
+		imports = ', '.join(["'%s'"%i for i in imports])
+		asset.source = 'resources.import([%s], () => {\n%s\n});'%(
+			imports, asset.source
+		)
+	
+	if not in_order:
+		one_wrap(args)
+	else:
+		for arg in reversed(args):
+			one_wrap((arg,))
 
 @directive('export', allow=('jsx',), priority=1)
 def apply_export(asset, *args):

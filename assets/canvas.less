@@ -46,15 +46,15 @@ li { line-height: 1.5; }
 h1, h2, h3, h4 {
 	margin: 0px;
 	padding: 0px;
-	padding-bottom: 2rem;
+	padding-bottom: 1rem;
 	font-weight: normal;
 	font-family: @title-font;
 	color: @title;
 }
-h1 { font-size: 28pt; }
-h2 { font-size: 25pt; }
-h3 { font-size: 18pt; }
-h4 { font-size: 16pt; }
+h1 { font-size: 24pt; }
+h2 { font-size: 20pt; }
+h3 { font-size: 16pt; }
+h4 { font-size: 14pt; }
 
 //	Palette applications.
 .theme1 { color: @theme1; }
@@ -78,6 +78,13 @@ h4 { font-size: 16pt; }
 
 .pointer { cursor: pointer; }
 .relative { position: relative; }
+
+.small-text { font-size: 9pt; }
+.half-width { 
+	display: inline-block;
+	vertical-align: top;
+	width: 50%; 
+}
 
 .max-500 { max-width: 500px; }
 .max-600 { max-width: 600px; }
@@ -112,6 +119,16 @@ h4 { font-size: 16pt; }
 .top-left {
 	position: absolute;
 	top: 10px;
+	left: 10px;
+}
+.bottom-right {
+	position: absolute;
+	bottom: 10px;
+	right: 10px;
+}
+.bottom-left {
+	position: absolute;
+	bottom: 10px;
 	left: 10px;
 }
 

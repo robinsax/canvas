@@ -4,12 +4,13 @@ Error handling and response dispatch logic.
 '''
 
 from ..configuration import config
-from ..utils import format_exception, create_callback_registrar
+from ..utils import format_exception, logger, create_callback_registrar
 from ..dictionaries import AttributedDict
 from ..json_io import serialize_json
 from .views import PageView, ErrorView
 from .responses import create_json, create_page
 
+log = logger(__name__)
 on_error = create_callback_registrar()
 
 def get_error_response(http_ex, source_ex, route, verb, context=None):
@@ -42,12 +43,17 @@ def get_error_response(http_ex, source_ex, route, verb, context=None):
 		error_dict=error_dict,
 		context=context
 	)
+	
 	#	Invoke callbacks.
-	on_error.invoke(error_data)
+	try:
+		on_error.invoke(error_data)
+	except BaseException as ex:
+		log.warn('Error handling callback errors:')
+		log.warn(format_exception(ex))
+	
 	if error_data.response:
 		#	A callback supplied a response.
 		return error_data.response
-	
 	if in_api_realm or verb != 'get':
 		#	Serve a JSON response.
 		return create_json('error', error_dict, http_ex.status_code, 
