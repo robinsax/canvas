@@ -121,12 +121,12 @@ class FormViewExposure {
 			state: {
 				error: null, 
 				required: false, 
-				gone: true, 
+				gone: false, 
 				classes: '',
 				extra: '',
 				value: null
 			},
-			template: (data, state) => 
+			template: (data, state) =>
 				state.gone ? <span/> : <div class={ "field" + state.classes + (state.error ? " error" : "") + (state.required ? " required":  "") }>
 					<label for={ data.name }>{ data.label }</label>
 					<span class="input-container">
@@ -166,12 +166,12 @@ class FormViewExposure {
 			}
 
 			set value(value) {
-				setTimeout(() => this.state.value = value, 1);
+				this.state.value = value;
 				return this.element.querySelector('.input').value = this.valueRenderer(value);
 			}
 
 			get disabled() {
-				return this.state.gone = (this.overrides.when && !this.overrides.when(this));
+				return !!(this.overrides.when && !this.overrides.when(this));
 			}
 
 			render() {
@@ -273,6 +273,7 @@ class FormViewExposure {
 					label: label,
 					placeholder: resolve('placeholder') || ''
 				}
+				setTimeout(this.render.bind(this), 1);
 			}
 		}
 

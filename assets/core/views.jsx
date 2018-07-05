@@ -138,7 +138,7 @@ class View {
 	render() {
 		/* Re-render this view. */
 		if (!this.created) return;
-		
+
 		VirtualDOMRenderer.instance.render(this);
 	}
 }
@@ -315,14 +315,14 @@ class ViewProvider {
 						}
 						
 						return {
-							set: set = newValue => {
+							set: newValue => {
 								if (newValue instanceof DataCache) {
 									newValue.addView(self);
 									self.dataCache = newValue;
 									newValue = newValue.data;
 								}
 								value = newValue;
-								self.render();	
+								self.render();
 							},
 							get: () => value
 						};
