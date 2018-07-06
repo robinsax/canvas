@@ -153,7 +153,7 @@ class VirtualDOMRenderer {
 			
 			for (let attr in virtual.attributes) {
 				let value = virtual.attributes[attr];
-				if (attr === 'safeHTML') {
+				if (attr === 'dangerous-markup') {
 					el.innerHTML = value;
 				}
 				else {
@@ -188,7 +188,12 @@ class VirtualDOMRenderer {
 
 	updateAttributes(targetEl, newAttrs, oldAttrs) {
 		for (let attr in newAttrs) {
-			targetEl.setAttribute(attr, newAttrs[attr]);
+			if (attr == 'dangerous-markup') {
+				targetEl.innerHTML = newAttrs[attr];
+			}
+			else {
+				targetEl.setAttribute(attr, newAttrs[attr]);
+			}
 		}
 
 		for (let attr in oldAttrs) {
