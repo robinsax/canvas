@@ -50,24 +50,18 @@ class FormViewExposure {
 			}
 
 			validate(value, view, field) {
-				if (field.type == 'file') return value.length > 0;
-				
 				return value !== '' && value !== null;
 			}
 		}
 
 		class FileTypeValidator {
 			constructor(errorMessage, type) {
-				this.errorMessage = this.errorMessage;
+				this.errorMessage = errorMessage;
 				this.type = type;
 			}
 
 			validate(value) {
-				for (let i = 0; i < value.length; i++) {
-					if (value[i].type != this.type) {
-						return false;
-					}
-				}
+				return value.type == this.type;
 			}
 		}
 
@@ -148,6 +142,7 @@ class FormViewExposure {
 				this.transform = overrides.transform || (x => x);
 				this.valueRenderer = overrides.valueRenderer || (x => x);
 				this.model = overrides.model || null;
+				this.changeCallback = overrides.changed || null;
 				if (overrides.classes) {
 					this.state.classes = ' ' + overrides.classes;
 				}
@@ -166,19 +161,21 @@ class FormViewExposure {
 				return this.element.querySelector('.input').files;
 			}
 
-			setValueWithValidation(value) {
+			_doUpdate(value) {
 				this.state.value = value;
-				if (this.element.querySelector('.input')) {
+				if (this.changeCallback) this.changeCallback(this, value);
+				if (this.element.querySelector('.input') && this.data.type != 'file') {
 					this.element.querySelector('.input').value = this.valueRenderer(value);
 				}
+			}
+
+			setValueWithValidation(value) {
+				this._doUpdate(value);
 				this.validate();
 			}
 
 			set value(value) {
-				this.state.value = value;
-				if (this.element.querySelector('.input')) {
-					this.element.querySelector('.input').value = this.valueRenderer(value);
-				}
+				this._doUpdate(value);
 				return value;
 			}
 
