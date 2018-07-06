@@ -23,6 +23,7 @@ from .routing import RouteString, resolve_route
 from .request_parsers import parse_request_body
 from .request_context import RequestContext
 from .request_errors import get_error_response
+from .file_upload import FileUpload
 from .responses import create_json
 from .assets import get_asset
 from .. import __version__ as canvas_version
@@ -81,7 +82,7 @@ def serve_controller(request):
 	content_type = request.headers.get('Content-Type')
 	if verb != 'get' and content_type and content_type.startswith('multipart/form-data'):
 		#	TODO: Improve this.
-		request_parameters = request.files['file']
+		request_parameters = FileUpload(request.files['file'])
 	elif verb != 'get':
 		#	Retrieve body properties.
 		body_size = int(request.headers.get('Content-Length', 0))
