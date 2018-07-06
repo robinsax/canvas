@@ -3,6 +3,8 @@
 *	asynchronously requested data.
 */
 
+const dataLog = new Logger('data');
+
 class DataCache {
 	/* A cache of retrieved data. */
 
@@ -43,6 +45,11 @@ class DataCache {
 	}
 
 	updateQuery(query) {
+		dataLog.warn('updateQuery is deprecated, use query()');
+		this.query(query);
+	}
+
+	query(query) {
 		this.requestOptions.query = query;
 		this.fetch();
 		return this;

@@ -34,7 +34,7 @@ class State {
 					set: newValue => {
 						let oldValue = value;
 						value = newValue;
-						if (oldValue != newValue) callback();
+						if (oldValue !== newValue) setTimeout(callback, 1);
 					},
 					get: () => value
 				};

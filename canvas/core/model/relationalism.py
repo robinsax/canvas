@@ -12,7 +12,7 @@ class RelationSpec:
 
 	def __init__(self, cls_name, attr, target, condition=True, order=None):
 		self.attr = attr
-		self.target, self.condition = target.__table__, nodeify(condition)
+		self.target_gen, self.condition = lambda: target(None).__table__, nodeify(condition)
 		self.order = order
 
 		RelationSpec.instance_map[''.join((cls_name, attr))] = self
@@ -25,7 +25,7 @@ class RelationSpec:
 	#	Also should be resolved at create time.
 	def find_link_column(self, source):
 		source_columns = source.get_columns()
-		dest_columns = self.target.get_columns()
+		dest_columns = self.target_gen().get_columns()
 
 		#	Check the source.
 		for column in source_columns:
@@ -48,24 +48,17 @@ class RelationSpec:
 def relational_property(*args, **kwargs):
 	def relational_property_inner(meth):
 		safe_key = ''.join(('__', meth.__name__))
+		cls_name = meth.__qualname__.split('.')[-2]
 
-		#	Enclosing usage scope requires us to be lazy
-		def get_relation_spec():
-			cls_name = meth.__qualname__.split('.')[-2]
-			existing = RelationSpec.get(cls_name, safe_key)
-			if existing:
-				return existing
-			
-			rel = meth(None)
-			return RelationSpec(cls_name, safe_key,
-					*(rel if isinstance(rel, (list, tuple)) else (rel,)))
+		relation_spec = RelationSpec.get(cls_name, safe_key)
+		if not relation_spec:
+			relation_spec = RelationSpec(cls_name, safe_key, meth)
 
 		def meth_replacement(self):
 			existing = getattr(self, safe_key, None)
 			if existing:
 				return existing
 			else:
-				relation_spec = get_relation_spec()
 				table = self.__class__.__table__
 				link, one_to_many = relation_spec.find_link_column(table)
 

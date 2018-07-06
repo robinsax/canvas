@@ -51,7 +51,7 @@ class FormViewExposure {
 
 			validate(value, view, field) {
 				if (field.type == 'file') return value.length > 0;
-
+				
 				return value !== '' && value !== null;
 			}
 		}
@@ -147,6 +147,7 @@ class FormViewExposure {
 				this.unincluded = overrides.uninclude || false;
 				this.transform = overrides.transform || (x => x);
 				this.valueRenderer = overrides.valueRenderer || (x => x);
+				this.model = overrides.model || null;
 				if (overrides.classes) {
 					this.state.classes = ' ' + overrides.classes;
 				}
@@ -165,20 +166,30 @@ class FormViewExposure {
 				return this.element.querySelector('.input').files;
 			}
 
+			setValueWithValidation(value) {
+				this.state.value = value;
+				if (this.element.querySelector('.input')) {
+					this.element.querySelector('.input').value = this.valueRenderer(value);
+				}
+				this.validate();
+			}
+
 			set value(value) {
 				this.state.value = value;
-				return this.element.querySelector('.input').value = this.valueRenderer(value);
+				if (this.element.querySelector('.input')) {
+					this.element.querySelector('.input').value = this.valueRenderer(value);
+				}
+				return value;
 			}
 
 			get disabled() {
-				return !!(this.overrides.when && !this.overrides.when(this));
+				let disabled = !!(this.overrides.when && !this.overrides.when(this));
+				this.state.gone = disabled;
+				return disabled;
 			}
 
 			render() {
-				if (this.rendering) return;
-				this.rendering = true;
-				this.state.gone = this.disabled;
-				this.rendering = false;
+				this.disabled;
 				return super.render();
 			}
 
@@ -199,16 +210,15 @@ class FormViewExposure {
 				else {
 					let input = context.element;
 					if (this.data.type == 'file') {
-						this.state.value = input.files[0];
+						this.setValueWithValidation(input.files[0]);
 					}
 					else {
 						let value = input.value;
 						if (this.data.type == 'number' && value != null) {
 							value = +value;
 						}
-						this.state.value = value;
+						this.setValueWithValidation(value);
 					}
-					this.validate();
 				}
 			}
 
@@ -218,10 +228,10 @@ class FormViewExposure {
 					this.parent.errorSummary.hide();
 				}
 				
-				let input = this.element.querySelector('.input');
+				let value = this.value, input = this.element.querySelector('.input');
 				for (let i = 0; i < this.validators.length; i++) {
 					let validator = this.validators[i];
-					if (!validator.validate(input.value, this, input)) {
+					if (!validator.validate(value, this, input)) {
 						this.invalidate(validator.errorMessage);
 						return;
 					}
@@ -230,7 +240,8 @@ class FormViewExposure {
 			}
 
 			onceCreated() {
-				let base = this.parent.formModel ? this.parent.formModel[this.overrides.like || this.name] : {},
+				let model = this.model || this.parent.formModel || {},
+					base = model[this.overrides.like || this.name] || {},
 					resolve = key => (this.overrides[key] ? this.overrides[key] : base[key]);
 				
 				let label = this.overrides.label ? this.overrides.label 

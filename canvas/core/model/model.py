@@ -34,7 +34,7 @@ class Model:
 		rel_spec = RelationSpec.get(cls.__name__, relation)
 		#	TODO: Unsupport order?
 		return cls.join(
-			rel_spec.target, 
+			rel_spec.target_gen(), 
 			rel_spec.condition, 
 			attr=rel_spec.attr
 		)

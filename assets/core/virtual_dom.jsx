@@ -22,6 +22,8 @@ class VirtualDOMRenderer {
 		*	the result items are JSX snippets.
 		*/
 		let results = [];
+		if (!data) return results;
+
 		for (var i = start; i < data.length && (end < 0 || i < end); i++) {
 			let result = callback(data[i], i);
 			if (result === undefined) continue;
@@ -196,6 +198,10 @@ class VirtualDOMRenderer {
 		}
 	}
 
+	isNothing(x) {
+		return x === undefined || x === null;
+	}
+
 	update(parentEl, newVirtual, oldVirtual, index=0) {
 		if (newVirtual instanceof View){
 			//	TODO: This is a hotfix. onceCreated should never be invoked for
@@ -204,10 +210,10 @@ class VirtualDOMRenderer {
 			newVirtual.onceCreated = () => {}
 		}
 
-		if (oldVirtual === undefined || oldVirtual === null) {
+		if (this.isNothing(oldVirtual) && !this.isNothing(newVirtual)) {
 			parentEl.appendChild(this.devirtualize(newVirtual));
 		}
-		else if (newVirtual === undefined || newVirtual === null) {
+		else if (this.isNothing(newVirtual)) {
 			if (parentEl.childNodes[index]) {
 				parentEl.removeChild(parentEl.childNodes[index]);
 				throw 'x';	//	TODO: What the fuck.
@@ -270,12 +276,6 @@ class VirtualDOMRenderer {
 
 	@exposedMethod
 	render(view) {
-		if (!(view instanceof View)) {
-			let parentEl = document.createDocumentFragment();
-			this.update(parentEl, view, null);
-			return parentEl.children[0];
-		}
-		
 		this.renderStack.push(view);
 		let parentEl, index = 0;
 		if (view.element) {
@@ -297,7 +297,6 @@ class VirtualDOMRenderer {
 		view.referenceDOM = newDOM;
 		
 		view.state.bind(view.render.bind(view));
-
 		this.renderBatch.push(view);
 		this.renderStack.pop();
 		view.element = parentEl.children[index];
