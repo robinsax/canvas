@@ -80,8 +80,10 @@ def serve_controller(request):
 	)
 	#	Read body if there is one.
 	content_type = request.headers.get('Content-Type')
-	if verb != 'get' and content_type and content_type.startswith('multipart/form-data'):
+	if verb != 'get' and getattr(controller, '__expects__', None) == 'form-data':
 		#	TODO: Improve this.
+		if not (content_type and content_type.startswith('multipart/form-data')):
+			raise cv.UnsupportedMediaType('Expected a file')
 		request_parameters = FileUpload(request.files['file'])
 	elif verb != 'get':
 		#	Retrieve body properties.

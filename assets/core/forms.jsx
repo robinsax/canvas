@@ -24,7 +24,7 @@ class FormViewExposure {
 		reader.onload = event => {
 			callback(event.target.result);
 		}
-		return reader.readAsBinaryString(file);
+		return reader.readAsDataURL(file);
 	}
 	
 	defineDefaultValidators(core) {
@@ -50,7 +50,7 @@ class FormViewExposure {
 			}
 
 			validate(value, view, field) {
-				return value !== '' && value !== null;
+				return value !== '' && value !== null && value !== undefined;
 			}
 		}
 
@@ -61,7 +61,7 @@ class FormViewExposure {
 			}
 
 			validate(value) {
-				return value.type == this.type;
+				return value && value.type == this.type;
 			}
 		}
 
@@ -201,7 +201,7 @@ class FormViewExposure {
 			@core.event('.input', 'keyup')
 			@core.event('.input', 'change')
 			validateOrSubmit(context) {
-				if (context.event.keyCode == 13) {
+				if (context.event.keyCode == 13 && this.data.type != 'textarea') {
 					this.parent.submitForm();
 				}
 				else {
