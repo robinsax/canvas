@@ -7,6 +7,8 @@ from .ast import nodeify
 from .dictizations import dictized_property
 from .columns import ForeignKeyColumnType
 
+_meta_null = object()
+
 class RelationSpec:
 	instance_map = dict()
 
@@ -55,8 +57,8 @@ def relational_property(*args, **kwargs):
 			relation_spec = RelationSpec(cls_name, safe_key, meth)
 
 		def meth_replacement(self):
-			existing = getattr(self, safe_key, None)
-			if existing:
+			existing = getattr(self, safe_key, _meta_null)
+			if existing is not _meta_null:
 				return existing
 			else:
 				table = self.__class__.__table__
@@ -67,7 +69,7 @@ def relational_property(*args, **kwargs):
 				else:
 					cond = relation_spec.condition & (link.type.target == link.value_on(self))
 
-				result = self.__session__.query(relation_spec.target, 
+				result = self.__session__.query(relation_spec.target_gen(), 
 						cond,
 						order=relation_spec.order, one=not one_to_many)
 				setattr(self, safe_key, result)
