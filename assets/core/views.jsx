@@ -174,6 +174,7 @@ class ModalMixin {
 			}).bind(host);
 		}
 		host.__stopEvent__ = context => { context.event.hitPanel = true };
+		host.__events__ = host.__events__ || [];
 		host.__events__.push(
 			['.close', 'click', 'close'],
 			['.modal', 'click', 'close'],

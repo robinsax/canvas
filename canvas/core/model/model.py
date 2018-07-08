@@ -35,7 +35,7 @@ class Model:
 		#	TODO: Unsupport order?
 		return cls.join(
 			rel_spec.target_gen(), 
-			rel_spec.condition, 
+			rel_spec.condition,
 			attr=rel_spec.attr
 		)
 

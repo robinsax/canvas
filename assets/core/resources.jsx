@@ -57,8 +57,9 @@ class ResourceManager {
 	loadStyle(stylesheet) {
 		/* Load a stylesheet. Powers the `::style` preprocessor directive. */
 		let path = '/assets/' + stylesheet.replace('.', '/') + '.css';
-		this.log.debug('Loading stylesheet ' + path);
+		if (document.querySelector('link[href="' + path + '"]')) return;
 
+		this.log.debug('Loading stylesheet ' + path);
 		//	Create and attach the element.
 		let importHost = document.createElement('link');
 		importHost.setAttribute('type', 'text/css');

@@ -231,7 +231,7 @@ class VirtualDOMRenderer {
 			else {
 				if (!oldVirtual.element) return;
 				
-				//	TODO: Sometimes oldVirtual is destroyed before it is created.
+				//	TODO: Sometimes oldVirtual is destroyed before it is created & sometimes it isnt called.
 				oldVirtual.beforeDestroyed(newVirtual);
 				newVirtual.onceCreated = newVirtual._onceCreated;
 				let parentView = this.renderStack[this.renderStack.length - 1];
@@ -312,8 +312,8 @@ class VirtualDOMRenderer {
 			while (this.renderBatch.length > 0) {
 				let next = this.renderBatch.pop();
 				if (next && !next.created) {
-					next.onceCreated();
 					next.created = true;
+					next.onceCreated();
 				}
 			}
 		}
