@@ -55,13 +55,23 @@ class FormViewExposure {
 		}
 
 		class FileTypeValidator {
-			constructor(errorMessage, type) {
+			constructor(errorMessage, ...types) {
 				this.errorMessage = errorMessage;
-				this.type = type;
+				this.types = types;
 			}
 
 			validate(value) {
-				return value && value.type == this.type;
+				if (!value) return true;
+				
+				let pass = false;
+				cv.iter(this.types, type => {
+					if (value.type == type) {
+						pass = true;
+						return false;
+					}
+				});
+
+				return pass;
 			}
 		}
 
@@ -113,11 +123,8 @@ class FormViewExposure {
 		@core.view({
 			data: {},
 			state: {
-				error: null, 
-				required: false, 
-				gone: false, 
-				classes: '',
-				extra: '',
+				error: null, required: false, gone: false, 
+				classes: '', extra: '',
 				value: null
 			},
 			template: (data, state) =>
@@ -127,6 +134,14 @@ class FormViewExposure {
 						{ data.type =='textarea' ?
 							<textarea name={ data.name } class="input" placeholder={ data.placeholder }></textarea>
 							:
+						  data.type == 'select' ?
+							<select name={ data.name } class="input">
+								{ data.placeholder ? <option selected="true" disabled="true">{ data.placeholder }</option> : <span/> }
+								{ cv.comp(data.options, option => 
+									<option value={ option[0] }>{ option[1] }</option>
+								) }
+							</select>  
+						 	:
 							<input name={ data.name } class="input" type={ data.type } placeholder={ data.placeholder }/>
 						}
 					</span>
@@ -164,8 +179,17 @@ class FormViewExposure {
 			_doUpdate(value) {
 				this.state.value = value;
 				if (this.changeCallback) this.changeCallback(this, value);
-				if (this.element.querySelector('.input') && this.data.type != 'file') {
-					this.element.querySelector('.input').value = this.valueRenderer(value);
+				
+				let input = this.element.querySelector('.input');
+				if (input) {
+					if (this.data.type == 'file') {
+						if (!value) {
+							input.value = '';
+						}
+					}
+					else {
+						input.value = this.valueRenderer(value);
+					}
 				}
 			}
 
@@ -279,7 +303,8 @@ class FormViewExposure {
 					name: this.name,
 					type: resolve('type') || 'text',
 					label: label,
-					placeholder: resolve('placeholder') || ''
+					placeholder: resolve('placeholder') || '',
+					options: resolve('options') || []
 				}
 				setTimeout(this.render.bind(this), 1);
 			}

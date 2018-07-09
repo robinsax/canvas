@@ -13,7 +13,7 @@ class Logger {
 		this.enabled = document.head.getAttribute('data-debug') == 'true';
 	}
 
-	log(prefix, color, item) {
+	log(prefix, color, item, toCall=console.log) {
 		if (!this.enabled || LoggerFactory.instance.suppressed) return;
 
 		let time = ((new Date()).getTime() - this.initMS)/1000;
@@ -24,11 +24,11 @@ class Logger {
 		let message = '%c' + time + this.name + prefix,
 			style = 'color: ' + color + '; background-color: #f0f0f0;';
 		if (typeof item == 'string') {
-			console.log(message + item, style);
+			toCall(message + item, style);
 		}
 		else {
-			console.log(message + ':', style);
-			console.log(item);
+			toCall(message + ':', style);
+			toCall(item);
 		}
 	}
 
@@ -46,7 +46,7 @@ class Logger {
 
 	warning(item) {
 		/* Log an item at the WARNING level. */
-		this.log('WARN', 'orange', item);
+		this.log('WARN', 'orange', item, console.warn);
 		return item;
 	}
 

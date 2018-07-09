@@ -7,6 +7,8 @@ const log = new Logger('canvas');
 class CanvasCore {
 	constructor() {
 		this.route = document.head.getAttribute('data-route');
+		this.query = this.parseQuery();
+
 		this.onceReady = onceReady;
 		for (var i = 0; i < coreComponents.length; i++) {
 			let ComponentClass = coreComponents[i],
@@ -20,6 +22,19 @@ class CanvasCore {
 				}
 			}
 		}
+	}
+
+	parseQuery() {
+		let queryStr = window.location.search;
+		if (queryStr.length < 2) return {};
+
+		queryStr = queryStr.substring(1);
+		let query = {};
+		this.iter(queryStr.split('&'), item => {
+			let parts = item.split('=');
+			query[parts[0]] = decodeURIComponent(parts[1]);
+		});
+		return query;
 	}
 
 	iter(iterable, callback) {
