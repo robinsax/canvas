@@ -284,10 +284,11 @@ class ViewProvider {
 					mixin.updateHostOptions(options);
 				}
 			}
-			class DerivedViewClass extends ViewClass {
+			class _View extends ViewClass {
 				constructor(...args) {
 					super(...args);
 					args = this.updateOptions(options, ...args);
+					this.__events__ = this.__events__ ? [].slice.call(this.__events__) : [];
 
 					//	Process `options`.
 					this.element = this.referenceDOM = null;
@@ -341,7 +342,7 @@ class ViewProvider {
 			}
 
 			//	Ensure this class extends the View prototype.
-			let Current = DerivedViewClass.prototype;
+			let Current = _View.prototype;
 			while (Object.getPrototypeOf(Current) !== Object.prototype) {
 				Current = Object.getPrototypeOf(Current);
 				if (Current === View.prototype) return;
@@ -349,7 +350,7 @@ class ViewProvider {
 			
 			Object.setPrototypeOf(Current, View.prototype);
 			
-			return DerivedViewClass;
+			return _View;
 		}
 	}
 }

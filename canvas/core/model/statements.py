@@ -38,8 +38,12 @@ class SelectStatement(Statement):
 	def write(self):
 		name_policy = self.target.name_column if isinstance(self.target, Join) else None
 		values = list()
+
+		selection = '*'
+		if not isinstance(self.target, Join):
+			selection = self.target.serialize_selection()
 		sql = ' '.join((
-			'SELECT', self.target.serialize_selection(),
+			'SELECT', selection,
 			'FROM', self.target.serialize_source(values),
 			'WHERE', nodeify(self.condition).serialize(values, name_policy=name_policy),
 			*(modifier.serialize(values) for modifier in self.modifiers)

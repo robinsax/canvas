@@ -8,6 +8,8 @@ from .ast import Node, ISelectable, IJoinable, deproxy, nodeify
 from .columns import Column, ForeignKeyColumnType
 from .tables import Table
 
+#	TODO: Statefulness is a side-effect.
+
 class Join(Node, ISelectable, IJoinable):
 	'''
 	`Join`s are selectable, joinable AST nodes. They represent the join of one
@@ -251,6 +253,7 @@ class Join(Node, ISelectable, IJoinable):
 						return '.'.join((dest.name, dest.name_column(column)))
 					break
 		return '_%s_%s'%(column.table.name, column.name)
+
 
 	def get_columns(self):
 		'''Return all constituent columns.'''

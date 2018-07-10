@@ -72,6 +72,7 @@ class VirtualDOMRenderer {
 	}
 
 	hydrateElement(el, virtual, wasCreated=false) {
+		if (this.renderStack.length == 0) return;
 		//	TODO: Use for rehydration.
 		if (el.__listeners__) {
 			for (let i = 0; i < el.__listeners__.length; i++) {
@@ -83,7 +84,6 @@ class VirtualDOMRenderer {
 		el.__listeners__ = [];
 		let currentView = this.renderStack[this.renderStack.length - 1],
 			checkEvents = currentView.__events__ || [];
-
 		const findData = cur => {
 			while (cur && cur != document) {
 				if (cur.__data__) return cur
@@ -113,7 +113,7 @@ class VirtualDOMRenderer {
 				}
 				currentView[checkEvent[2]](context);
 			};
-
+			
 			el.__listeners__.push({
 				listener: listener,
 				selector: checkEvent[1]
@@ -281,6 +281,12 @@ class VirtualDOMRenderer {
 
 	@exposedMethod
 	render(view) {
+		if (!(view instanceof View)) {
+			let root = document.createDocumentFragment();
+			this.update(root, view, null);
+			return root.children[0];
+		}
+
 		this.renderStack.push(view);
 		let parentEl, index = 0;
 		if (view.element) {

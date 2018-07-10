@@ -193,6 +193,11 @@ class FormViewExposure {
 				}
 			}
 
+			setOptions(options) {
+				this.data.options = options;
+				this.render();
+			}
+
 			setValueWithValidation(value) {
 				this._doUpdate(value);
 				this.validate();

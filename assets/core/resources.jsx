@@ -13,6 +13,7 @@ class ResourceManager {
 
 	constructor() {
 		this.log = new Logger('resources');
+		this.loadedModules = {};
 
 		this.importQueue = [];
 	}
@@ -22,7 +23,16 @@ class ResourceManager {
 		*	Export the contents of `exportMap` as `moduleName`. Powers the 
 		*	`::export` preprocessor directive.
 		*/ 
-		window[moduleName] = exportMap;
+		this.loadedModules[moduleName] = true;
+		let parts = moduleName.split('.'), cur = window;
+		cv.iter(parts, (part, i) => {
+			if (i == parts.length - 1) {
+				cur[part] = exportMap;
+			}
+			else {
+				cur = cur[part] = cur[part] || {};
+			}
+		});
 		this.processImports();
 	}
 
@@ -41,7 +51,7 @@ class ResourceManager {
 			if (!done) continue;
 			//	Check module imports.
 			for (let j = 0; j < importItem.modules.length; j++) {
-				if (!window[importItem.modules[j]]) {
+				if (!this.loadedModules[importItem.modules[j]]) {
 					done = false;
 					break;
 				}
