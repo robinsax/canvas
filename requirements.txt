@@ -2,3 +2,4 @@ werkzeug
 psycopg2
 coverage
 python-coveralls
+sqlparse

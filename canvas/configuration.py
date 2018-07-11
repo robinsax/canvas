@@ -76,7 +76,7 @@ def load_config():
 		config[key] = value
 	
 	#	Apply logging configuration.
-	log_levels = ['debug', 'info', 'warning', 'error', 'critical']
+	log_levels = ('debug', 'info', 'warning', 'error', 'critical')
 	logging.basicConfig(
 		level=(1 + log_levels.index(config.development.log_level))*10,
 		format='%(asctime)s %(name)-30s %(levelname)-10s %(message)s'

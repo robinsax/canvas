@@ -7,14 +7,10 @@ not be specified when defining controller classes.
 
 from ..exceptions import IllegalEndpointRoute
 from ..configuration import config
-from ..utils import logger
 from .. import __verbs__
 from .views import PageView
 from .request_context import RequestContext
 from .responses import create_page
-
-#	Create a log.
-log = logger(__name__)
 
 class _ControllerRegistration:
 	'''A class used internaly for controller registratiom management.'''
@@ -141,9 +137,5 @@ def create_controllers():
 			if hasattr(controller, 'on_%s'%verb):
 				supported_verbs.append(verb)
 		controller.__verbs__ = supported_verbs
-
-		log.debug('Created controller %s (Verbs: %s, Routes: %s)'%(
-			controller.__class__.__name__, supported_verbs, registration.routes
-		))
 		created.append(controller)
 	return created

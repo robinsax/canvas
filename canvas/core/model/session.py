@@ -3,6 +3,8 @@
 The `Session` class definition.
 '''
 
+import sqlparse
+
 from collections import OrderedDict
 from psycopg2 import IntegrityError, connect
 
@@ -143,16 +145,16 @@ class Session:
 
 		if config.development.log_emitted_sql:
 			#	Log the prepared statement.
-			log.debug(sql)
-			if values:
-				log.debug('\t%s'%str(values))
-			
+			#	TODO: TF going on with CREATE statements - they format bad.
+			sql_str = self.cursor.mogrify(sql, values if values else tuple()).decode()
+			if not sql_str.startswith('CREATE'):
+				sql_str = sqlparse.format(sql_str, reindent=True, truncate_strings=100)
+			log.debug('\n'.join(('Emitting: ', sql_str)).replace('\n', '\n\t'))
 		try:
 			self.cursor.execute(sql, values)
 		except IntegrityError as ex:
 			#	Retrieve the violated constraint.
 			constraint = Constraint.get(ex.diag.constraint_name)
-			print(ex.diag.constraint_name)
 			if not constraint:
 				#	TODO: Some cases are not yet handled.
 				raise NotImplementedError() from ex

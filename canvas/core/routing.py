@@ -10,8 +10,13 @@ The return value of the callback will be ignored.
 
 import re
 
+from yapf.yapflib.yapf_api import FormatCode
+
 from ..exceptions import NotFound
-from ..utils import create_callback_registrar
+from ..utils import create_callback_registrar, logger
+
+#	Create a log.
+log = logger(__name__)
 
 #	Define a variable sentinel that keyed RouteVariables can use to recognize each
 #	other.
@@ -36,6 +41,9 @@ class RouteVariable:
 	
 	def __eq__(self, other):
 		return other is _variable_sentinel
+
+	def __repr__(self):
+		return '<RouteVariable "%s">'%self.name
 
 class RouteString(str):
 	'''
@@ -94,6 +102,8 @@ def create_routing(controller_list):
 
 	#	Invoke modification callbacks.
 	on_routing.invoke(_route_map)
+	
+	log_routing(_route_map)
 
 def resolve_route(route):
 	current_node, variables = _route_map, dict()
@@ -125,3 +135,38 @@ def resolve_route(route):
 		#	Didn't reach a controller.
 		raise NotFound(route)
 	return current_node, variables
+
+def log_routing(routing):
+	'''Log a formatted representation of the given route map.'''
+	def name_key(key):
+		if key is _here_sentinel:
+			return '/.'
+		elif isinstance(key, RouteVariable):
+			return '/<%s>'%key.name
+		else:
+			return '/%s'%key
+	
+	def name_value(value):
+		return '%s (%s)'%(
+			value.__class__.__name__,
+			', '.join(value.__verbs__)
+		)
+
+	def key_sort_child(child):
+		if not isinstance(child[1], dict):
+			return -1
+		else:
+			return len(child[1])
+
+	def format_one(level):
+		if not isinstance(level, dict):
+			return name_value(level)
+		else:
+			indent = ' '*(max(*(len(name_key(key)) for key in level.keys()), 10) + 1)
+			parts = list()
+			for key, value in sorted(level.items(), key=key_sort_child):
+				child_str = format_one(value).replace('\n', '\n' + indent)
+				parts.append(name_key(key) + (indent[len(name_key(key)):]) + child_str)
+			return '\n'.join(parts)
+
+	log.info('Created routing:\n%s', format_one(routing))
