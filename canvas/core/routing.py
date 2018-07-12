@@ -10,8 +10,6 @@ The return value of the callback will be ignored.
 
 import re
 
-from yapf.yapflib.yapf_api import FormatCode
-
 from ..exceptions import NotFound
 from ..utils import create_callback_registrar, logger
 
@@ -138,6 +136,10 @@ def resolve_route(route):
 
 def log_routing(routing):
 	'''Log a formatted representation of the given route map.'''
+	if not len(routing):
+		log.info('Created null routing')
+		return
+
 	def name_key(key):
 		if key is _here_sentinel:
 			return '/.'
@@ -162,7 +164,9 @@ def log_routing(routing):
 		if not isinstance(level, dict):
 			return name_value(level)
 		else:
-			indent = ' '*(max(*(len(name_key(key)) for key in level.keys()), 10) + 1)
+			key_lengths = list(len(name_key(key)) for key in level.keys())
+			key_lengths.append(10)
+			indent = ' '*(max(key_lengths) + 1)
 			parts = list()
 			for key, value in sorted(level.items(), key=key_sort_child):
 				child_str = format_one(value).replace('\n', '\n' + indent)

@@ -6,6 +6,7 @@ for indentation. Usage of this interface should be minimized as it is
 unstable.
 '''
 
+from uuid import uuid4
 from pyxl import html
 from pyxl.element import x_element
 
@@ -82,7 +83,7 @@ class PageView:
             <meta charset="utf-8"></meta>
             <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
             <link rel="stylesheet" href="/assets/lib/font-awesome.min.css"/>
-            <link rel="icon" type="image/png" href="/assets/media/site_icon.png"/>
+            <link rel="icon" type="image/png" href={ "/assets/media/site_icon.png?v=%s"%uuid4().hex }></link>
             <meta name="description" content={ description }></meta>
         </frag>
         if self.page_data:
@@ -191,7 +192,7 @@ class ErrorView:
         self.error = error
 
     def render(self):
-        return <div class="align-center fill-parent">
+        return <div class="align-center fill-parent error-status">
             <div class="col-6 vertical-center">
                 <h2 class="align-left">
                     { ' '.join((str(self.error['code']), self.error['title'])) }
