@@ -202,7 +202,7 @@ class RegexConstraint(Constraint):
 		self.ignore_case, self.invert = ignore_case, invert
 
 	def precheck_violation(self, model, value):
-		return bool(re.match(self.regex, value)) == self.invert
+		return (value is not None) and (bool(re.match(self.regex, value)) == self.invert)
 	
 	def describe_rule(self):
 		opr = '~'

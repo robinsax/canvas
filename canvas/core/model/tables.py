@@ -69,6 +69,13 @@ class Table(ObjectReference, IJoinable):
 		return Table.reference_map.get(reference_key)
 
 	@classmethod
+	def get_by_name(cls, name):
+		for table in Table.instances:
+			if table.name == name:
+				return table
+		return None
+
+	@classmethod
 	def topo_order(cls):
 		'''
 		Return a topological sort of all tables, suitable for issuing creation
