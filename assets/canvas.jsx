@@ -38,7 +38,7 @@ class CanvasCore {
 	}
 
 	iter(iterable, callback) {
-		if (iterable instanceof Array) {
+		if (iterable.length !== undefined) {
 			for (let i = 0; i < iterable.length; i++) {
 				callback(iterable[i], i);
 			}
