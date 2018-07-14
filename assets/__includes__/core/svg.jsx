@@ -9,10 +9,10 @@ class SVGExposure {
 	/* A trivial SVG exposure */
 	constructor(core) {
 		@core.view({
-			template: () => <div class="svg-placeholder"/>
+			template: () => <div/>
 		})
 		class SVG {
-			constructor(url) {
+			onceConstructed(url) {
 				this.url = url;
 			}
 			

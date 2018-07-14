@@ -101,8 +101,16 @@ def apply_include(asset, *args):
 			os.path.join('assets', inclusion.replace('.', os.path.sep)), 
 			_output_to_input[asset.ext]
 		))
+		qualified_path = get_path(inclusion_path)
+		if not qualified_path:
+			#	Check __includes__ fragment.
+			inclusion_path = '.'.join((
+				os.path.join('assets', '__includes__', inclusion.replace('.', os.path.sep)), 
+				_output_to_input[asset.ext]
+			))
+			qualified_path = get_path(inclusion_path)
 		
-		with open(get_path(inclusion_path), 'r') as included_file:
+		with open(qualified_path, 'r') as included_file:
 			included_source = included_file.read()
 
 		asset.paths.append(inclusion_path)

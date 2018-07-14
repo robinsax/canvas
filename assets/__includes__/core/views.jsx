@@ -1,7 +1,7 @@
 /*
 *	Views are classes that render data as HTML using an associated JSX 
 *	template. The default render context for a given view's template is its
-*	data, state, and subtemplate map. In canvas a template does not have
+*	data, state, and macro map. In canvas a template does not have
 *	access to the `this` of its view to encourage maintainable frontend 
 *	architecture.
 */
@@ -55,8 +55,8 @@ class View {
 			context.push(this.state);
 		}
 		
-		if (this.subtemplates) {
-			context.push(this.subtemplates);
+		if (this.macros) {
+			context.push(this.macros);
 		}
 		return context;
 	}
@@ -294,7 +294,7 @@ class ViewProvider {
 					this.element = this.referenceDOM = null;
 					this.state = new State(options.state);
 					this.template = options.template;
-					this.subtemplates = options.subtemplates || null;
+					this.macros = options.macros || null;
 					this.formModel = options.formModel || null;
 					this.formMethod = options.formMethod || 'post';
 					this.formRoute = options.formRoute || document.head.getAttribute('data-route');

@@ -86,7 +86,7 @@ class VirtualDOMRenderer {
 			checkEvents = currentView.__events__ || [];
 		const findData = cur => {
 			while (cur && cur != document) {
-				if (cur.__data__) return cur
+				if (cur.__data__ !== undefined) return cur
 				
 				cur = cur.parentNode;
 			}
@@ -161,7 +161,7 @@ class VirtualDOMRenderer {
 				}
 			}
 
-			if (virtual.data) {
+			if (virtual.data !== undefined) {
 				el.__data__ = virtual.data;
 				el.__index__ = virtual.index;
 			}
