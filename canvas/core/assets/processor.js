@@ -47,6 +47,8 @@ const compileLESS = source => {
 }
 
 //	Read stdin.
+process.stdin.setEncoding('utf-8');
+process.stdout.setEncoding('utf-8');
 getStdIn().then(input => {
 	try {
 		const which = process.argv[2];
