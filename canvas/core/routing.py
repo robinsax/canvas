@@ -27,6 +27,9 @@ _route_map = dict()
 #	Define the route map modification callback.
 on_routing = create_callback_registrar()
 
+def routing_diag():
+	return (_route_map, _here_sentinel, _variable_sentinel)
+
 class RouteVariable:
 	'''Used to store named variable route parts.'''
 

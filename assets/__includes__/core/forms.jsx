@@ -265,6 +265,11 @@ class FormViewExposure {
 				return !this.state.error;
 			}
 
+			setOptions(options) {
+				this.data.options = options;
+				this.render();
+			}
+
 			onceCreated() {
 				let model = this.model || this.parent.formModel || {},
 					base = model[this.overrides.like || this.name] || {},

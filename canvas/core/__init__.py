@@ -20,7 +20,7 @@ from .request_parsers import parse_datetime, request_body_parser, \
 	parse_request_body, parse_json_request
 from .responses import create_json, create_redirect, create_page
 from .routing import RouteVariable, RouteString, create_routing, resolve_route, \
-	on_routing
+	on_routing, routing_diag
 from .assets import Palette, Asset, directive, apply_directives, \
 	transpile_jsx, compile_less, get_palette, get_asset, new_asset
 from .model import ColumnType, BasicColumnType, TypeAdapter, Model, Table, \
