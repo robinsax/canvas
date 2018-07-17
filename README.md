@@ -1,4 +1,4 @@
-<img align="left" width="140" height="80" title="canvas" src="http://canvas-framework.com/assets/media/canvas_logo.svg">
+<img align="left" width="140" height="80" title="canvas" src="https://canvas-framework.com/assets/media/canvas_logo.svg">
 
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
@@ -147,4 +147,4 @@ python3 canvas --config "plugins.activated=<plugin_name>,"
 ```
 
 For more in depth documentation about developing web applications with canvas, 
-see the `./docs` directory of this repository or its [website](http://canvas-framework.com).
+see the `./docs` directory of this repository or its [website](https://canvas-framework.com).
