@@ -14,6 +14,7 @@ from ...utils import logger
 from .ast import Literal, Aggregation, deproxy
 from .constraints import Constraint
 from .columns import Column
+from .joins import Join
 from .statements import InsertStatement, CreateStatement, UpdateStatement, \
 	DeleteStatement, SelectStatement
 from . import _sentinel
@@ -249,6 +250,8 @@ class Session:
 		target_node = deproxy(target)
 		if isinstance(target_node, Column):
 			target_node = target_node.table
+		if isinstance(target_node, Join):
+			target_node.set_name('_t')
 
 		if condition is False:
 			#	Nothing would be returned.

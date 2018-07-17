@@ -19,9 +19,9 @@ class Model:
 	__table__ = __session__ = __dirty__ = None
 
 	@classmethod
-	def join(cls, other, condition=True, attr=None):
+	def join(cls, other=None, condition=True, attr=None):
 		return cls.__table__.join(other, condition, attr)
-
+	
 	@classmethod
 	def rest_get(cls, pk_val, session):
 		instance = cls.get(pk_val, session)

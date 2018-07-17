@@ -17,7 +17,7 @@ class Join(Node, ISelectable, IJoinable):
 	joinable.
 	'''
 
-	def __init__(self, source, dest, condition=True, attr=None):
+	def __init__(self, source):
 		'''
 		Create a join. This should generally be done via the `Model` class 
 		level `join` method.
@@ -29,12 +29,15 @@ class Join(Node, ISelectable, IJoinable):
 			as the singular or plural form of the destination table, depending on
 			the cardinality of it's relationship to the source joinable.
 		'''
-		self.source, self.dests = deproxy(source), [deproxy(dest)]
-		self.attrs = [attr]
-		self.condition = nodeify(condition)
+		self.source, self.dests = deproxy(source), list()
+		self.attrs = list()
+		self.condition = True
 
 		self.reset()
-		self.set_name('_t')
+
+	@property
+	def is_empty(self):
+		return len(self.dests) == 0
 
 	def reset(self):
 		'''Reset this join's load state.'''
@@ -94,6 +97,10 @@ class Join(Node, ISelectable, IJoinable):
 			self.source_obj = self.source.load_next(row_segment, session)
 			self.current_source_id = row_segment[0]
 		
+		if not hasattr(self.source_obj, '__joined__'):
+			self.source_obj.__joined__ = list()
+		self.source_obj.__joined__.extend(self.attrs)
+
 		#	k tracks the current offset into the row segment.
 		k = len(self.source.get_columns())
 		#	Iterate destination constituents.

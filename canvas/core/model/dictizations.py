@@ -69,6 +69,7 @@ def dictize(target, include=tuple(), omit=tuple()):
 	column_set = target.__table__.columns.values()
 	target_attrs = (attr for attr in (
 		*(column.name for column in column_set if column.dictized),
+		*(getattr(target, '__joined__', tuple())),
 		*(target.__class__.__dictized__),
 		*include
 	) if attr not in omit and hasattr(target, attr))

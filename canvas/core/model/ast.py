@@ -96,11 +96,14 @@ class IJoinable:
 	join other `IJoinable`s onto them.
 	'''
 
-	def join(self, other, condition=None, attr=None):
+	def join(self, other=None, condition=None, attr=None):
 		'''Create a join of `other` onto this joinable.'''
 		from .joins import Join
-		return Join(self, other, condition, attr)
-	
+		join = Join(self)
+		if other:
+			join.add(other, condition, attr)
+		return join
+
 	def name_column(self, column):
 		'''
 		Return the name of the constituent `column` given that this joinable 
