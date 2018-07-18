@@ -109,7 +109,7 @@ def launch_configuration(args):
 	return True
 
 @launcher('write-setup-sql',
-	description='Output SQL which can be used to initialize the database.'
+	description='Output SQL which can be used to initialize the database'
 )
 def launch_init_db(args):
 	from ..configuration import load_config, config

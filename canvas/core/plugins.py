@@ -7,12 +7,15 @@ filesystem access of plugin contents.
 import os
 import re
 import sys
+import git
 import traceback
 
-from ..exceptions import DependencyError
+from zipfile import ZipFile, ZIP_DEFLATED
+
+from ..exceptions import DependencyError, Failed
 from ..utils import logger
 from ..configuration import config, add_importer_override
-from ..json_io import deserialize_json
+from ..json_io import serialize_json, deserialize_json
 from .. import __home__
 
 #	Create a logger.
@@ -28,6 +31,62 @@ def plugin_base_path(name):
 	'''
 	name = name.split('.')[-1]
 	return os.path.join(__home__, config.plugins.directory, 'cvpl-%s'%name)
+
+def package_plugin(name, directory, dest_file):
+	'''Package a plugin for repository deposit.'''
+	if not dest_file.endswith('.cvpl'):
+		dest_file = '.'.join((dest_file, 'cvpl'))
+	log.info('Packaging plugin "%s": %s -> %s'%(name, directory, dest_file))
+
+	#	Collect package metadata.
+	try:
+		repo = git.Repo(directory)
+	except git.InvalidGitRepositoryError:
+		raise Failed('Must be a git repository') from None
+	repo_url = repo.remotes[0].url
+	
+	try:
+		with open(os.path.join(directory, 'plugin.json')) as plugin_file:
+			plugin_config = deserialize_json(plugin_file.read())
+		dependencies = list(
+			d[0] if isinstance(d, list) else d for d in plugin_config['dependencies']
+		)
+	except:
+		raise Failed('Invalid plugin.json') from None
+
+	meta_dir = os.path.join(directory, '.canvas')
+	if not os.path.exists(meta_dir):
+		os.mkdir(meta_dir)
+	with open(os.path.join(meta_dir, 'meta.json'), 'w') as meta_file:
+		meta_file.write(serialize_json({
+			'repo_url': repo_url,
+			'description': input('Provide a short description: '),
+			'dependencies': dependencies
+		}))
+	
+	dirs_to_package = list(
+		os.path.join(directory, d) for d in (
+			name, '.canvas', 'assets', 'palettes', 'tests'
+		)
+	)
+	#	Package.
+	package = ZipFile(dest_file, 'w', compression=ZIP_DEFLATED)
+	for root, dirs, files in os.walk(directory):
+		if root != directory:
+			should_package = False
+			for dir_name in dirs_to_package:
+				if dir_name in root:
+					should_package = True
+					break
+			if not should_package:
+				continue
+		for item in files:
+			package.write(
+				os.path.join(root, item), 
+				arcname=os.path.join(root[len(directory):], item)
+			)
+	
+	log.info('Packaged to "%s"'%dest_file)
 
 def load_plugins():
 	'''Load all active plugins and their dependencies.'''

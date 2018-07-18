@@ -14,6 +14,25 @@ from .api import launcher
 #	Create a logger.
 log = logger(__name__)
 
+@launcher('package-plugin', 
+	argspec='<name> <destfile>',
+	description='Package a plugin for upload',
+	init=True
+)
+def launch_package_plugin(args):
+	from ..core.plugins import plugin_base_path, package_plugin
+
+	if len(args) != 2:
+		return False
+	plugin_name, dest_file = args
+	plugin_dir = plugin_base_path(plugin_name)
+	if not os.path.isdir(plugin_dir):
+		print('No plugin "%s" to package'%plugin_name)
+		return False
+
+	package_plugin(plugin_name, plugin_dir, dest_file)
+	return True
+
 @launcher('make-plugin',
 	argspec='<name>', 
 	description='Create a new plugin', 
