@@ -10,7 +10,6 @@ The return value of the callback will be ignored.
 
 import re
 
-from ..exceptions import NotFound
 from ..utils import create_callback_registrar, logger
 
 #	Create a log.
@@ -54,9 +53,11 @@ class RouteString(str):
 	'''
 
 	def populated(self, variables):
-		self.__variables__ = list(variables.keys())
-		for key, value in variables.items():
-			setattr(self, key, value)
+		self.__variables__ = list()
+		if variables:
+			self.__variables__.extend(variables.keys())
+			for key, value in variables.items():
+				setattr(self, key, value)
 		return self
 
 	def has_variable(self, variable):
@@ -109,12 +110,12 @@ def create_routing(controller_list):
 def resolve_route(route):
 	current_node, variables = _route_map, dict()
 
-	#	Follow this route into the map to a controller leaf, raising `NotFound`
+	#	Follow this route into the map to a controller leaf, returning `None, None`
 	#	if any traversal error occurs and collecting encountered variables.
 	for route_part in route[1:].split('/'):
 		if not isinstance(current_node, dict):
 			#	Went too far.
-			raise NotFound(route)
+			return None, None
 		if route_part in current_node:
 			#	Traverse deeper.
 			current_node = current_node[route_part]
@@ -128,13 +129,13 @@ def resolve_route(route):
 			current_node = current_node[_variable_sentinel]
 		else:
 			#	No further branch.
-			raise NotFound(route)
+			return None, None
 	if isinstance(current_node, dict):
 		#	Check for an on-branch leaf.
 		if _here_sentinel in current_node:
 			return current_node[_here_sentinel], variables
 		#	Didn't reach a controller.
-		raise NotFound(route)
+		return None, None
 	return current_node, variables
 
 def log_routing(routing):

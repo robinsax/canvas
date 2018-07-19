@@ -171,7 +171,7 @@ class MString:
 	def matches(self, regex, ignore_case=False):
 		'''Return a regular expression match operation against this `Node`.'''
 		oper = Comparator.MATCHES_I if ignore_case else Comparator.MATCHES
-		return Comparison(self, oper, Literal(regex))
+		return Comparison(self, oper, Value(regex))
 
 class MNumerical:
 	'''

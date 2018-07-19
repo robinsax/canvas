@@ -8,8 +8,9 @@ from base64 import b64decode
 
 class FileUpload:
 
-	def __init__(self, _file_obj):
+	def __init__(self, _file_obj, decode):
 		self._file_obj = _file_obj
+		self.decode = decode
 
 	@property
 	def mimetype(self):
@@ -25,7 +26,9 @@ class FileUpload:
 
 	@property
 	def data(self):
-		data = b64decode(self._file_obj.read().split(b',')[1])
+		data = self._file_obj.read()
+		if self.decode:
+			data = b64decode(data.split(b',')[1])
 		self._file_obj.close()
 		return data
 	

@@ -3,10 +3,11 @@
 Error handling and response dispatch logic.
 '''
 
+from pprint import pformat
+
 from ..configuration import config
 from ..utils import format_exception, logger, create_callback_registrar
 from ..dictionaries import AttributedDict
-from ..json_io import serialize_json
 from .views import PageView, ErrorView
 from .responses import create_json, create_page
 
@@ -23,7 +24,7 @@ def get_error_response(http_ex, source_ex, route, verb, context=None):
 	if config.development.debug:
 		context_repr = 'No request context'
 		if context:
-			context_repr = serialize_json(context, fallback=repr)
+			context_repr = pformat(context)
 		error_dict['debug_info'] = {
 			'traceback': format_exception(source_ex),
 			'context': context_repr

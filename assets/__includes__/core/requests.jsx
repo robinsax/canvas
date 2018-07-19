@@ -57,6 +57,7 @@ class Request {
 		this.xhrObject = new XMLHttpRequest();
 		this.xhrObject.onreadystatechange = this.checkRequestState.bind(this);
 		this.xhrObject.open(method.toUpperCase(), fullURL, true);
+		this.xhrObject.setRequestHeader('X-cv-View', 1);
 
 		this.logRepr = method + ' ' + fullURL;
 		requestLog.info('Sent ' + this.logRepr);

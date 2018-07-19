@@ -68,11 +68,8 @@ def serve_controller(request):
 	controller, variables = resolve_route(route)
 	#	Resolve the request verb.
 	verb = request.method.lower()
-	if verb not in controller.__verbs__:
-		#	This controller doesn't support that verb.
-		raise UnsupportedVerb(verb, [v.upper() for v in controller.__verbs__])
 	#	Retrieve the handler method.
-	handler = getattr(controller, ''.join(('on_', verb)))
+	handler = getattr(controller, ''.join(('on_', verb)), None)
 
 	#	Resolve parameters.
 	query_parameters, request_parameters = (
@@ -80,11 +77,13 @@ def serve_controller(request):
 	)
 	#	Read body if there is one.
 	content_type = request.headers.get('Content-Type')
-	if verb != 'get' and getattr(controller, '__expects__', None) == 'form-data':
-		#	TODO: Improve this.
+	if not controller:
+		pass
+	elif verb != 'get' and getattr(controller, '__expects__', None) == 'form-data':
+		#	TODO: Improve this!!
 		if not (content_type and content_type.startswith('multipart/form-data')):
 			raise UnsupportedMediaType('Expected a file')
-		request_parameters = FileUpload(request.files['file'])
+		request_parameters = FileUpload(request.files['file'], request.headers.get('X-cv-View', None))
 	elif verb != 'get':
 		#	Retrieve body properties.
 		body_size = int(request.headers.get('Content-Length', 0))
@@ -158,17 +157,27 @@ def serve_controller(request):
 	try:
 		#	Invoke request handling kickoff callbacks.
 		on_request_received.invoke(context)
+
+		if not controller:
+			raise NotFound(route)
+		if not handler:
+			raise UnsupportedVerb(verb, list(v.upper() for v in controller.__verbs__))
+
 		#	Invoke the handler.
 		response = handler(context)
 	except BaseException as ex:
-		cleanup()
 		#	Ensure the exception is an HTTP exception and reraise
 		log.critical(format_exception(ex))
 		http_ex = ex
 		if not isinstance(ex, HTTPException):
 			http_ex = InternalServerError(ex)
-		http_ex.context = context
-		raise http_ex from ex
+		
+		#	TODO: Refactor this logic some.
+		response = parse_response_tuple(
+			get_error_response(http_ex, ex, route, verb, context)
+		)
+		cleanup()
+		return response
 	
 	#	Clean up and return parsed response.
 	response = parse_response_tuple(response)

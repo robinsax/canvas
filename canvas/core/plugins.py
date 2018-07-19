@@ -60,6 +60,7 @@ def package_plugin(name, directory, dest_file):
 	with open(os.path.join(meta_dir, 'meta.json'), 'w') as meta_file:
 		meta_file.write(serialize_json({
 			'repo_url': repo_url,
+			'name': name,
 			'description': input('Provide a short description: '),
 			'dependencies': dependencies
 		}))
