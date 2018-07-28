@@ -153,6 +153,8 @@ class VirtualDOMRenderer {
 			
 			for (let attr in virtual.attributes) {
 				let value = virtual.attributes[attr];
+				if (value === null || value === undefined) continue;
+
 				if (attr === 'dangerous-markup') {
 					el.innerHTML = value;
 				}

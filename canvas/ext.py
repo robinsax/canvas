@@ -11,4 +11,4 @@ from .core import View, PageView, ErrorView, Controller, Endpoint, Page, \
 	ColumnType, BasicColumnType, Model, Table, plugin_base_path, \
 	load_plugins, get_path_occurrences, request_body_parser, resolve_route, \
 	directive, transpile_jsx, compile_less, get_palette, get_asset, \
-	type_adapter, update_column_types, routing_diag
+	type_adapter, update_column_types, routing_diag, _loaded_plugins as plugin_list

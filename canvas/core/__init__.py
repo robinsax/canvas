@@ -12,7 +12,7 @@ from .views import View, PageView, ErrorView, alter_root_page_view, view
 from .controllers import Controller, Endpoint, Page, controller, endpoint, \
 	page, create_controllers
 from .plugins import plugin_base_path, load_plugins, get_path_occurrences, \
-	get_path
+	get_path, _loaded_plugins
 from .request_context import RequestContext
 from .request_errors import on_error, get_error_response
 from .request_handler import on_request_received, handle_request
