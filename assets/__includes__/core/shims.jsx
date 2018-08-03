@@ -30,3 +30,6 @@ Element.prototype.matches = Element.prototype.matches || Element.prototype.msMat
         });
     }
 })(window.Node || window.Element);
+
+//  console (I.E. without devtools)
+window.console = window.console || {log: () => {}, warn: () => {}};

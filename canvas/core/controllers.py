@@ -62,7 +62,7 @@ class Page(Controller):
 
 	def render(self, title=None, description=None, page_data=dict(), code=200, headers=dict()):
 		'''Return the rendered view for this page as a response tuple.'''
-		view = self.get_view(title, description, page_data)
+		view = self.get_view(title=title, description=description, page_data=page_data)
 		return create_page(view, code, headers)
 
 def controller(*routes, _destiny=Controller, **attrs):

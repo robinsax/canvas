@@ -23,6 +23,9 @@ class VirtualDOMRenderer {
 		*/
 		let results = [];
 		if (!data) return results;
+		if (typeof data == 'number') {
+			data = {length: data};
+		}
 
 		for (var i = start; i < data.length && (end < 0 || i < end); i++) {
 			let result = callback(data[i], i);

@@ -51,7 +51,7 @@ class PageView:
     #    Used to store the plugin-modified version of this class.
     resolved_class = None
 
-    def __init__(self, title, description=None, assets=tuple(), page_data=None):
+    def __init__(self, title, description=None, assets=tuple(), page_data=dict()):
         '''
         Configure an overriding page view. Overrides of this class must have
         the same argument specification.
@@ -61,6 +61,8 @@ class PageView:
         self.assets = list(assets)
         self.header_views, self.page_views, self.footer_views = list(), \
                 list(), list()
+        self.top_body_views = list()
+        self.top_head_views = list()
 
         self.setup()
         
@@ -87,7 +89,7 @@ class PageView:
             <meta name="description" content={ description }></meta>
         </frag>
         if self.page_data:
-            page_data = ''.join(('var page = ', serialize_json(self.page_data)))
+            page_data = ''.join(('window.page = ', serialize_json(self.page_data)))
             meta_fragment.append(
                 <script type="text/javascript">{ html.rawhtml(page_data) }</script>
             )
@@ -97,7 +99,7 @@ class PageView:
         '''
         Create a tag for the asset at `route`, which for ambiguous assets 
         should be an iterable containing the asset route and a string 
-		representation of the equivalent asset extension ('js' or 'css').
+        representation of the equivalent asset extension ('js' or 'css').
         '''
         which = None
         if isinstance(route, (list, tuple)):
@@ -105,9 +107,9 @@ class PageView:
         
         #    Ensure route is asset prefixed.
         if (
-			not route.startswith('http') and 
-			not route.startswith(config.route_prefixes.assets)
-		):
+            not route.startswith('http') and 
+            not route.startswith(config.route_prefixes.assets)
+        ):
             route = '/'.join((
                 '', config.route_prefixes.assets, route
             ))
@@ -153,9 +155,10 @@ class PageView:
         request_context = RequestContext.get()
         route = request_context.route if request_context else None
         def render_views(views):
-            return (html.rawhtml(view.render()) for view in views)
+            return list(html.rawhtml(view.render()) for view in views)
 
         head = <head>
+            { *render_views(self.top_head_views) }
             { self.meta_fragment() }
             <title>{ self.get_title() }</title>
             { self.asset_fragment() }
@@ -164,6 +167,7 @@ class PageView:
             head.set_attr(key, value)
         
         body = <body>
+            { *render_views(self.top_body_views) }
             <header class="header">{ *render_views(self.header_views) }</header>
             <div class="page">{ *render_views(self.page_views) }</div>
             <footer class="footer">{ *render_views(self.footer_views) }</footer>

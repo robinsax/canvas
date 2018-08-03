@@ -15,6 +15,7 @@ class Logger {
 
 	log(prefix, color, item, toCall=console.log) {
 		if (!this.enabled || LoggerFactory.instance.suppressed) return;
+		toCall = toCall.bind(console); // I.E. fix.
 
 		let time = ((new Date()).getTime() - this.initMS)/1000;
 		time = (time > 99 ? time.toFixed(0) : time.toFixed(2)) + 's';
@@ -52,7 +53,7 @@ class Logger {
 
 	critical(item) {
 		/* Log an item at the CRITICAL level. */
-		this.log('CRIT', 'red', item);
+		this.log('CRIT', 'red', item, console.warn);
 		return item;
 	}
 }
