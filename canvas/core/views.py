@@ -6,6 +6,8 @@ for indentation. Usage of this interface should be minimized as it is
 unstable.
 '''
 
+import re
+
 from uuid import uuid4
 from pyxl import html
 from pyxl.element import x_element
@@ -86,7 +88,7 @@ class PageView:
             <meta name="viewport" content="width=device-width, initial-scale=1"></meta>
             <link rel="stylesheet" href="/assets/lib/font-awesome.min.css"/>
             <link rel="icon" type="image/png" href={ "/assets/media/site_icon.png?v=%s"%uuid4().hex }></link>
-            <meta name="description" content={ description }></meta>
+            <meta name="description" content={ re.sub(r'\s+', ' ', description).strip() }></meta>
         </frag>
         if self.page_data:
             page_data = ''.join(('window.page = ', serialize_json(self.page_data)))
