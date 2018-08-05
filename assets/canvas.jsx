@@ -38,6 +38,8 @@ class CanvasCore {
 	}
 
 	iter(iterable, callback) {
+		if (iterable === undefined) return;
+		
 		if (iterable.length !== undefined) {
 			for (let i = 0; i < iterable.length; i++) {
 				callback(iterable[i], i);
