@@ -372,25 +372,3 @@ code { background-color: @input; }
 		border-top: 5px solid @highlight;
 	}
 }
-
-//	Message area.
-.flash-message {
-	display: inline-block;
-	position: fixed;
-	z-index: 200;
-	bottom: 0px; left: 0px;
-	margin: 20px; padding: 10px;
-
-	background-color: @highlight;
-	color: @background;
-}
-
-.dnd {
-	&.target { cursor: -webkit-grab; cursor: grab; }
-
-	&.drag {
-		pointer-events: none;
-		position: fixed;
-		opacity: 0.5;
-	}
-}
