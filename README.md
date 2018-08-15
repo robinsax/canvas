@@ -1,4 +1,4 @@
-<img align="left" width="140" height="80" title="canvas" src="https://canvas-framework.com/assets/media/canvas_logo.svg?rev=1">
+# canvas
 
 [![Build Status](https://travis-ci.org/robinsax/canvas.svg?branch=master)](https://travis-ci.org/robinsax/canvas)
 [![Coverage Status](https://coveralls.io/repos/github/robinsax/canvas/badge.svg?branch=master)](https://coveralls.io/github/robinsax/canvas?branch=master)
