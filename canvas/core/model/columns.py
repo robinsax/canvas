@@ -98,7 +98,7 @@ class BasicColumnType(ColumnType):
 
 	def get_default(self):
 		'''Return the result of `default_policy` or the sentinel value.'''
-		return self.default_policy() if self.default_policy else _sentinel
+		return self.default_policy() if self.default_policy else None
 
 class ForeignKeyColumnType(ColumnType):
 	'''

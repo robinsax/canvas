@@ -15,9 +15,6 @@ from ..utils import create_callback_registrar, logger
 #	Create a log.
 log = logger(__name__)
 
-#	Define a variable sentinel that keyed RouteVariables can use to recognize each
-#	other.
-_variable_sentinel = object()
 #	Define a sentinel key for on-branch leaf controllers.
 _here_sentinel = object()
 #	Define the root of the route map, a dictionary tree with controller leaves.
@@ -27,7 +24,7 @@ _route_map = dict()
 on_routing = create_callback_registrar()
 
 def routing_diag():
-	return (_route_map, _here_sentinel, _variable_sentinel)
+	return (_route_map, _here_sentinel)
 
 class RouteVariable:
 	'''Used to store named variable route parts.'''
@@ -35,12 +32,6 @@ class RouteVariable:
 	def __init__(self, name):
 		'''::name The name of the variable for the eventual `RouteString`.'''
 		self.name = name
-
-	def __hash__(self):
-		return hash(_variable_sentinel)
-	
-	def __eq__(self, other):
-		return other is _variable_sentinel
 
 	def __repr__(self):
 		return '<RouteVariable "%s">'%self.name
@@ -107,36 +98,42 @@ def create_routing(controller_list):
 	
 	log_routing(_route_map)
 
+#	TODO: De-shit.
 def resolve_route(route):
-	current_node, variables = _route_map, dict()
-
-	#	Follow this route into the map to a controller leaf, returning `None, None`
-	#	if any traversal error occurs and collecting encountered variables.
-	for route_part in route[1:].split('/'):
+	def check_one(current_node, part_stack, variables):
+		if not part_stack:
+			#	Reached bottom.
+			if isinstance(current_node, dict):
+				if _here_sentinel in current_node:
+					return current_node[_here_sentinel], variables
+				return None
+			return current_node, variables
+		
+		route_part = part_stack.pop(0)
+		
 		if not isinstance(current_node, dict):
-			#	Went too far.
-			return None, None
-		if route_part in current_node:
-			#	Traverse deeper.
-			current_node = current_node[route_part]
-		elif _variable_sentinel in current_node:
-			#	Retreive the encountered RouteVariable and store a value for it.
-			#	Optimized for the non-variable case.
-			key_list = list(current_node.keys())
-			variable_name = key_list[key_list.index(_variable_sentinel)].name
-			variables[variable_name] = route_part
-			#	Traverse deeper.
-			current_node = current_node[_variable_sentinel]
+			return None
+		elif route_part in current_node:
+			return check_one(current_node[route_part], part_stack, variables)
 		else:
-			#	No further branch.
-			return None, None
-	if isinstance(current_node, dict):
-		#	Check for an on-branch leaf.
-		if _here_sentinel in current_node:
-			return current_node[_here_sentinel], variables
-		#	Didn't reach a controller.
+			for key, node in current_node.items():
+				if not isinstance(key, RouteVariable):
+					continue
+				
+				copy_variables = dict(variables)
+				copy_stack = list(part_stack)
+				variables[key.name] = route_part
+				checked = check_one(current_node[key], copy_stack, copy_variables)
+				if checked is None:
+					continue
+				
+				return checked	
+			return None
+
+	result = check_one(_route_map, route[1:].split('/'), dict())
+	if result is None:
 		return None, None
-	return current_node, variables
+	return result
 
 def log_routing(routing):
 	'''Log a formatted representation of the given route map.'''
@@ -146,7 +143,7 @@ def log_routing(routing):
 
 	def name_key(key):
 		if key is _here_sentinel:
-			return '/.'
+			return '.'
 		elif isinstance(key, RouteVariable):
 			return '/<%s>'%key.name
 		else:

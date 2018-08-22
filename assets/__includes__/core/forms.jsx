@@ -238,6 +238,9 @@ class FormViewExposure {
 					if (this.data.type == 'file') {
 						this.setValueWithValidation(input.files[0]);
 					}
+					if (this.data.type == 'checkbox') {
+						this.setValueWithValidation(input.checked);
+					}
 					else {
 						let value = input.value;
 						if (this.data.type == 'number' && value != null) {

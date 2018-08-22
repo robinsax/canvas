@@ -346,14 +346,14 @@ class Aggregation(Node, ISelectable, ILiteral, MNumerical):
 class Unique(Node, MFlag):
 	'''A call to the unique operator on a set of columns.'''
 
-	def __init__(self, *columns):
-		self.columns = columns
+	def __init__(self, *parts):
+		self.parts = parts
 	
 	def serialize(self, values=None, name_policy=None):
 		return ' '.join((
-			'UNIQUE (',
-			', '.join(column.name for column in self.columns),
-			')'
+			'UNIQUE (', ', '.join(
+				part.serialize(name_policy=name_policy) for part in self.parts
+			), ')'
 		))
 
 class OrderItem:
