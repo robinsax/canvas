@@ -121,8 +121,8 @@ def resolve_route(route):
 					continue
 				
 				variables[key.name] = route_part
-				copy_variables = dict(variables)
-				copy_stack = list(part_stack)
+				copy_variables, copy_stack = dict(variables), list(part_stack)
+
 				checked = check_one(current_node[key], copy_stack, copy_variables)
 				if checked is None:
 					continue				
