@@ -120,19 +120,19 @@ def resolve_route(route):
 				if not isinstance(key, RouteVariable):
 					continue
 				
+				variables[key.name] = route_part
 				copy_variables = dict(variables)
 				copy_stack = list(part_stack)
-				variables[key.name] = route_part
 				checked = check_one(current_node[key], copy_stack, copy_variables)
 				if checked is None:
-					continue
-				
+					continue				
 				return checked	
 			return None
 
 	result = check_one(_route_map, route[1:].split('/'), dict())
 	if result is None:
 		return None, None
+	print(result)
 	return result
 
 def log_routing(routing):
