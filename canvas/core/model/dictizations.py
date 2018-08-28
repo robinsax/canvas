@@ -58,7 +58,6 @@ def resolve_dictized_properties(model_cls):
 def dictize(target, include=tuple(), omit=tuple()):
 	'''Recursively return a dictization of `target`.''' 
 	from .model import Model
-	print(target, include, omit)
 
 	if isinstance(target, (list, tuple)):
 		return [dictize(item, include, omit) for item in target]
@@ -75,6 +74,8 @@ def dictize(target, include=tuple(), omit=tuple()):
 		*include
 	) if attr not in omit and hasattr(target, attr))
 	
-	return {
-		attr: dictize(getattr(target, attr), include, omit) for attr in target_attrs
-	}
+	dictization = dict()
+	for attr in target_attrs:
+		print(target, attr)
+		dictization[attr] = dictize(getattr(target, attr), include, omit)
+	return dictization
