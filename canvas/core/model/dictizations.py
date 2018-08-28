@@ -58,6 +58,7 @@ def resolve_dictized_properties(model_cls):
 def dictize(target, include=tuple(), omit=tuple()):
 	'''Recursively return a dictization of `target`.''' 
 	from .model import Model
+	print(target, include, omit)
 
 	if isinstance(target, (list, tuple)):
 		return [dictize(item, include, omit) for item in target]

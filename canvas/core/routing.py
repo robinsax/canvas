@@ -132,7 +132,6 @@ def resolve_route(route):
 	result = check_one(_route_map, route[1:].split('/'), dict())
 	if result is None:
 		return None, None
-	print(result)
 	return result
 
 def log_routing(routing):

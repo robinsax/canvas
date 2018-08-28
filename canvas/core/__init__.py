@@ -71,4 +71,4 @@ def serve(port=80):
 	from werkzeug.serving import run_simple
 
 	initialize()
-	run_simple('localhost', port, handle_request)
+	run_simple('0.0.0.0', port, handle_request)
