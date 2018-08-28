@@ -76,6 +76,6 @@ def dictize(target, include=tuple(), omit=tuple()):
 	
 	dictization = dict()
 	for attr in target_attrs:
-		print(target, attr)
+		#print(target, attr)
 		dictization[attr] = dictize(getattr(target, attr), include, omit)
 	return dictization
