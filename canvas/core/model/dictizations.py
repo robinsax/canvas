@@ -10,7 +10,7 @@ Attributes can be added to the dictization of a model with the
 To generate a dictization of a model, pass the model to `dictize`.
 '''
 
-from ...utils import cached_property
+from ...utils import cached_property, logger
 from ...json_io import json_serializer, serialize_json
 
 #	Define a property name list that will be populated over the course of a 
@@ -73,6 +73,8 @@ def dictize(target, include=tuple(), omit=tuple()):
 		*(target.__class__.__dictized__),
 		*include
 	) if attr not in omit and hasattr(target, attr))
+	log.debug(str(type(target)))
+	log.debug(target_attrs)
 	
 	dictization = dict()
 	for attr in target_attrs:
