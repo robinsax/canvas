@@ -73,10 +73,6 @@ def dictize(target, include=tuple(), omit=tuple()):
 		*(target.__class__.__dictized__),
 		*include
 	) if attr not in omit and hasattr(target, attr))
-	#	XXX
-	log = logger('wat')
-	log.debug(str(type(target)))
-	log.debug(target_attrs)
 	
 	dictization = dict()
 	for attr in target_attrs:
