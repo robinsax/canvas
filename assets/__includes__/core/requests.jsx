@@ -119,6 +119,9 @@ class Request {
 			}
 			reader.readAsDataURL(options.file);
 		}
+		else if (options.rawData) {
+			callback(options.rawData[0], options.rawData[1]);
+		}
 		else {
 			callback('', '');
 		}
