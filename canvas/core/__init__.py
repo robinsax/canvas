@@ -27,7 +27,7 @@ from .model import ColumnType, BasicColumnType, TypeAdapter, Model, Table, \
 	Column, CheckConstraint, PrimaryKeyConstraint, NotNullConstraint, \
 	UniquenessConstraint, RegexConstraint, Session, Unique, RangeConstraint, \
 	type_adapter, model, create_session, initialize_model, dictized_property, \
-	dictize, update_column_types, relational_property
+	dictize, update_column_types, relational_property, _sentinel
 
 #	Create a logger.
 log = logger(__name__)
@@ -71,4 +71,4 @@ def serve(port=80):
 	from werkzeug.serving import run_simple
 
 	initialize()
-	run_simple('localhost', port, handle_request)
+	run_simple('0.0.0.0', port, handle_request)

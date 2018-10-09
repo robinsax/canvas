@@ -47,5 +47,5 @@ if __installed__:
 		create_json, create_redirect, create_page, on_routing, type_adapter, \
 		model, create_session, resolve_route, dictized_property, dictize, \
 		handle_request as application, initialize, on_init, on_post_init, \
-		relational_property
+		relational_property, _sentinel
 	from . import ext, plugins
