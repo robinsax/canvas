@@ -87,9 +87,12 @@ class VirtualDOMRenderer {
 		el.__listeners__ = [];
 		let currentView = this.renderStack[this.renderStack.length - 1],
 			checkEvents = currentView.__events__ || [];
-		const findData = cur => {
+		const findData = (cur, k=0, pure=false) => {
 			while (cur && cur != document) {
-				if (cur.__data__ !== undefined) return cur
+				if (cur.__data__) {
+					if (k == 0) return pure ? cur : cur.__data__;
+					k--;
+				}
 				
 				cur = cur.parentNode;
 			}
@@ -108,9 +111,9 @@ class VirtualDOMRenderer {
 			let listener = event => {
 				event.keyCode = event.keyCode || event.which;
 				let context = {element: el, event: event},
-					dataHost = findData(el);
+					dataHost = findData(el, 0, true);
 				if (dataHost) {
-					context.dataAbove = (start => () => findData(start))(dataHost.parentNode);
+					context.dataAbove = (start => k => findData(start, k))(dataHost.parentNode);
 					context.data = dataHost.__data__;
 					context.index = dataHost.__index__;
 				}
@@ -192,6 +195,9 @@ class VirtualDOMRenderer {
 	}
 
 	updateAttributes(targetEl, newAttrs, oldAttrs) {
+		newAttrs = newAttrs || {};
+		oldAttrs = oldAttrs || {};
+		
 		for (let attr in newAttrs) {
 			if (attr == 'dangerous-markup') {
 				targetEl.innerHTML = newAttrs[attr];
