@@ -323,4 +323,8 @@ class Column(ObjectReference, ILiteral, MAllTypes):
 							from None
 			elif isinstance(value, datetime):
 				return value
+		elif typ == 'JSON':
+			if not isinstance(value, (dict, list)):
+				raise ValidationErrors({self.name: 'Invalid JSON'})
+			return value
 		raise NotImplementedError(typ)
